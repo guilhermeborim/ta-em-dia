@@ -20,7 +20,8 @@ Veja também o `CLAUDE.md` da raiz. O `AGENTS.md` acima veio do template do Expo
 - Recurso Premium: `useFlag('<chave>')`, nunca `if (plan === 'premium')`.
 - Botão "Entrar com Apple" só no iOS (`Platform.OS === 'ios'`).
 - Textos de interface em português (BR); valores em R$ com `Intl.NumberFormat('pt-BR')`.
-- Suporte a tema claro e escuro e a fonte grande do sistema. Alvos de toque ≥ 44 pt.
+- Só tema claro (sem tema escuro). Suporte à fonte grande do sistema. Alvos de toque ≥ 44 pt.
+- Cores, tipografia, raios e sombras vêm de `src/ui` (tokens do Figma). Não escreva cor ou tamanho de fonte solto nas telas.
 - Dependência nativa nova: `npx expo install <pacote>` (versão compatível com o SDK) e avise que exige development build.
 - Segredos e tokens em `expo-secure-store`, nunca em AsyncStorage ou SQLite.
 
