@@ -26,6 +26,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     isOnboardingDone(db).then((value) => {
+      // Mude o setDone para false quando quiser ver o onboarding novamente. Isso é útil para testes.
       if (active) setDone(value);
     });
     return () => {
