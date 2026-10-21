@@ -25,6 +25,7 @@
     "@types/jest": "^30.0.0"
   },
   "scripts": {
+    "eas-build-post-install": "pnpm --filter @ta-em-dia/shared build",
     "start": "expo start",
     "dev": "expo start",
     "android": "expo start --android",
