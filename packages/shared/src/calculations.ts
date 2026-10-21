@@ -22,11 +22,25 @@ export interface OdometerReading {
 }
 
 /**
- * Consumo (km/l) entre os dois últimos abastecimentos de tanque cheio.
+ * Média do período (principal): km rodados entre o primeiro e o último
+ * abastecimento ÷ litros colocados depois do primeiro. Funciona com
+ * abastecimento parcial. Retorna null com menos de dois abastecimentos.
+ */
+export function periodKmPerLiter(entries: FuelEntryInput[]): number | null {
+  if (entries.length < 2) return null;
+  const sorted = [...entries].sort((a, b) => a.km - b.km);
+  const distance = sorted[sorted.length - 1].km - sorted[0].km;
+  const liters = sorted.slice(1).reduce((sum, e) => sum + e.liters, 0);
+  if (distance <= 0 || liters <= 0) return null;
+  return distance / liters;
+}
+
+/**
+ * Média exata (km/l) entre os dois últimos abastecimentos de tanque cheio.
  * Abastecimentos parciais no meio somam litros ao trecho.
  * Retorna null se não houver dois tanques cheios.
  */
-export function kmPerLiter(entries: FuelEntryInput[]): number | null {
+export function exactKmPerLiter(entries: FuelEntryInput[]): number | null {
   const sorted = [...entries].sort((a, b) => a.km - b.km);
   const fullIdx = sorted.flatMap((e, i) => (e.fullTank ? [i] : []));
   if (fullIdx.length < 2) return null;

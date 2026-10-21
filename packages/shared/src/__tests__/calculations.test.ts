@@ -3,7 +3,8 @@ import {
   DEFAULT_DAILY_KM,
   costPerKm,
   dailyAverageKm,
-  kmPerLiter,
+  exactKmPerLiter,
+  periodKmPerLiter,
   monthOverMonth,
   monthProjection,
   nextMaintenance,
@@ -11,9 +12,9 @@ import {
 
 const d = (iso: string) => new Date(`${iso}T12:00:00Z`);
 
-describe('kmPerLiter', () => {
+describe('exactKmPerLiter', () => {
   it('calcula entre dois tanques cheios somando parciais', () => {
-    const result = kmPerLiter([
+    const result = exactKmPerLiter([
       { date: d('2026-10-01'), km: 10000, liters: 40, total: 240, fullTank: true },
       { date: d('2026-10-05'), km: 10200, liters: 10, total: 60, fullTank: false },
       { date: d('2026-10-10'), km: 10500, liters: 40, total: 240, fullTank: true },
@@ -23,7 +24,28 @@ describe('kmPerLiter', () => {
 
   it('retorna null sem dois tanques cheios', () => {
     expect(
-      kmPerLiter([{ date: d('2026-10-01'), km: 10000, liters: 40, total: 240, fullTank: true }]),
+      exactKmPerLiter([
+        { date: d('2026-10-01'), km: 10000, liters: 40, total: 240, fullTank: true },
+      ]),
+    ).toBeNull();
+  });
+});
+
+describe('periodKmPerLiter', () => {
+  it('funciona sem nenhum tanque cheio', () => {
+    const result = periodKmPerLiter([
+      { date: d('2026-10-01'), km: 10000, liters: 20, total: 120, fullTank: false },
+      { date: d('2026-10-05'), km: 10200, liters: 10, total: 60, fullTank: false },
+      { date: d('2026-10-10'), km: 10500, liters: 40, total: 240, fullTank: false },
+    ]);
+    expect(result).toBe(10);
+  });
+
+  it('retorna null com um só abastecimento', () => {
+    expect(
+      periodKmPerLiter([
+        { date: d('2026-10-01'), km: 10000, liters: 40, total: 240, fullTank: false },
+      ]),
     ).toBeNull();
   });
 });
