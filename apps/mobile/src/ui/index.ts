@@ -1,2 +1,11 @@
-export { useTheme, type Theme } from './theme/useTheme';
-export { palette, TOUCH_TARGET } from './theme/tokens';
+export { fontAssets } from './theme/fonts';
+export {
+  colors,
+  fontFamily,
+  primaryGradient,
+  radius,
+  shadows,
+  size,
+  spacing,
+  typography,
+} from './theme/tokens';
