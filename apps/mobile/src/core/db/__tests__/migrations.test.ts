@@ -9,7 +9,13 @@ describe('migrate', () => {
     const tables = await db.getAllAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
     );
-    expect(tables.map((t) => t.name)).toEqual(['fuel_entries', 'outbox', 'sync_state', 'vehicles']);
+    expect(tables.map((t) => t.name)).toEqual([
+      'app_settings',
+      'fuel_entries',
+      'outbox',
+      'sync_state',
+      'vehicles',
+    ]);
 
     const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
     expect(row?.user_version).toBe(MIGRATIONS.length);
