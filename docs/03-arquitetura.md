@@ -104,17 +104,17 @@ apps/mobile/
 | ViewModel | Estado da tela, validação, ações (`save()`, `delete()`) | Models, `core/flags`, `@ta-em-dia/shared`   |
 | Model     | Ler/gravar no SQLite, regras, enfileirar sync           | `core/db`, `core/sync`, `@ta-em-dia/shared` |
 
-| Tema               | Escolha                                                                      |
-| ------------------ | ---------------------------------------------------------------------------- |
-| Navegação          | Expo Router                                                                  |
-| Banco local        | `expo-sqlite` (+ Drizzle ORM, a decidir ao implementar)                      |
-| Estado do servidor | Sem React Query no MVP: a fonte da verdade é o SQLite                        |
-| Estado global leve | Zustand (sessão, veículo selecionado)                                        |
-| Formulários        | React Hook Form + Zod                                                        |
-| Segredos           | `expo-secure-store` (tokens e id anônimo)                                    |
-| Notificações       | `expo-notifications` locais, reagendadas a cada mudança de km ou data        |
-| Testes             | Jest + `jest-expo` nos ViewModels e Models; Maestro para fluxos E2E (depois) |
-| Atualizações       | EAS Update (OTA) por canal de ambiente                                       |
+| Tema               | Escolha                                                                       |
+| ------------------ | ----------------------------------------------------------------------------- |
+| Navegação          | Expo Router                                                                   |
+| Banco local        | `expo-sqlite` com SQL puro e migrations por `PRAGMA user_version` (`core/db`) |
+| Estado do servidor | Sem React Query no MVP: a fonte da verdade é o SQLite                         |
+| Estado global leve | Zustand (sessão, veículo selecionado)                                         |
+| Formulários        | React Hook Form + Zod                                                         |
+| Segredos           | `expo-secure-store` (tokens e id anônimo)                                     |
+| Notificações       | `expo-notifications` locais, reagendadas a cada mudança de km ou data         |
+| Testes             | Jest + `jest-expo` nos ViewModels e Models; Maestro para fluxos E2E (depois)  |
+| Atualizações       | EAS Update (OTA) por canal de ambiente                                        |
 
 ## Modelo de dados
 
