@@ -2,7 +2,8 @@ name: Deploy da API
 
 # Merge na main → staging automático → produção depois de aprovação
 # (o environment "production" deve ter você como revisor obrigatório).
-# Desligado até a variável API_DEPLOY_ENABLED=true existir no repositório.
+# Staging liga com a variável API_DEPLOY_ENABLED=true; produção com API_PRODUCTION_ENABLED=true
+# (variáveis do repositório). Passo a passo em docs/04-staging.md.
 
 on:
   push:
@@ -32,7 +33,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Migrations
-        run: pnpm --filter @ta-em-dia/api db:deploy
+        run: |
+          if [ -d apps/api/prisma/migrations ]; then
+            pnpm --filter @ta-em-dia/api db:deploy
+          else
+            echo "Sem migrations ainda, nada a aplicar."
+          fi
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
@@ -42,13 +48,14 @@ jobs:
       - name: Health check
         run: |
           for i in $(seq 1 30); do
-            curl -fsS "${{ vars.API_URL }}/health" && exit 0
+            curl -fsS "${{ vars.API_URL }}/health" && echo && exit 0
             sleep 10
           done
           exit 1
 
   production:
     needs: staging
+    if: vars.API_PRODUCTION_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -61,7 +68,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Migrations
-        run: pnpm --filter @ta-em-dia/api db:deploy
+        run: |
+          if [ -d apps/api/prisma/migrations ]; then
+            pnpm --filter @ta-em-dia/api db:deploy
+          else
+            echo "Sem migrations ainda, nada a aplicar."
+          fi
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
@@ -71,7 +83,7 @@ jobs:
       - name: Health check
         run: |
           for i in $(seq 1 30); do
-            curl -fsS "${{ vars.API_URL }}/health" && exit 0
+            curl -fsS "${{ vars.API_URL }}/health" && echo && exit 0
             sleep 10
           done
           exit 1

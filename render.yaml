@@ -1,0 +1,28 @@
+# Blueprint do Render: cria o serviço da API de staging.
+# O deploy é disparado pelo workflow (.github/workflows/api-deploy.yml) via
+# Deploy Hook, por isso o auto deploy do Render fica desligado.
+services:
+  - type: web
+    name: ta-em-dia-api-staging
+    runtime: node
+    plan: free
+    region: virginia
+    buildCommand: >-
+      npm install -g pnpm@10.28.0 &&
+      HUSKY=0 pnpm install --frozen-lockfile --prod=false &&
+      pnpm --filter @ta-em-dia/shared build &&
+      pnpm --filter @ta-em-dia/api build
+    startCommand: pnpm --filter @ta-em-dia/api start
+    healthCheckPath: /health
+    autoDeployTrigger: 'off'
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: APP_ENV
+        value: staging
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true

@@ -15,8 +15,10 @@ describe('API (e2e)', () => {
 
   afterAll(() => app.close());
 
-  it('GET /health', () =>
-    request(app.getHttpServer()).get('/health').expect(200, { status: 'ok' }));
+  it('GET /health', async () => {
+    const res = await request(app.getHttpServer()).get('/health').expect(200);
+    expect(res.body).toMatchObject({ status: 'ok', version: 'local' });
+  });
 
   it('GET /v1/config', async () => {
     const res = await request(app.getHttpServer()).get('/v1/config').expect(200);

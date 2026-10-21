@@ -32,5 +32,9 @@ jobs:
       - name: Build e envio
         working-directory: apps/mobile
         run: |
-          PROFILE=${{ contains(github.ref_name, '-rc') && 'staging' || 'production' }}
-          eas build --platform all --profile "$PROFILE" --non-interactive --no-wait --auto-submit
+          if [[ "${{ github.ref_name }}" == *-rc* ]]; then
+            # Staging: APK Android com link de instalação (iOS exige conta Apple paga)
+            eas build --platform android --profile staging --non-interactive --no-wait
+          else
+            eas build --platform all --profile production --non-interactive --no-wait --auto-submit
+          fi
