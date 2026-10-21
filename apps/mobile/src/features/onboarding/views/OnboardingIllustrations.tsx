@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import {
   AlertCard,
   colors,
@@ -11,7 +11,13 @@ import {
 } from '../../../ui';
 import type { OnboardingSlideId } from '../models/slides';
 
-/** Cartões do design, só para mostrar. Não recebem toque. */
+/** Margem lateral das telas de boas-vindas (spacing.lg). */
+const ILLUSTRATION_PADDING = 16;
+
+/**
+ * Cartões do design, só para mostrar (não recebem toque). A escala não muda o layout,
+ * então a largura é fixada na do quadro: o cartão renderiza no tamanho real e depois encolhe.
+ */
 function Preview({
   children,
   rotate,
@@ -21,8 +27,12 @@ function Preview({
   rotate: string;
   scale: number;
 }) {
+  const { width } = useWindowDimensions();
   return (
-    <View pointerEvents="none" style={{ transform: [{ rotate }, { scale }] }}>
+    <View
+      pointerEvents="none"
+      style={{ width: width - ILLUSTRATION_PADDING * 2, transform: [{ rotate }, { scale }] }}
+    >
       {children}
     </View>
   );
@@ -163,8 +173,8 @@ export function OnboardingIllustration({ id }: { id: OnboardingSlideId }) {
 
 const styles = StyleSheet.create({
   stack: { alignItems: 'center', alignSelf: 'stretch' },
-  overlap: { marginTop: -56, alignSelf: 'stretch' },
-  gap: { marginTop: -20, alignSelf: 'stretch' },
+  overlap: { marginTop: -56, alignItems: 'center', alignSelf: 'stretch' },
+  gap: { marginTop: 8, alignItems: 'center', alignSelf: 'stretch' },
   list: {
     alignSelf: 'stretch',
     marginHorizontal: 16,

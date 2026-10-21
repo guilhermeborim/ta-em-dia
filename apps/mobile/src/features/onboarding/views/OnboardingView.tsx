@@ -78,7 +78,7 @@ export function OnboardingView() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   skipRow: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, alignItems: 'flex-end' },
-  skip: { width: 90, height: 44 },
+  skip: { height: 44, paddingHorizontal: spacing.lg },
   pager: { flex: 1 },
   page: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl, gap: spacing.xl },
   illustration: {
