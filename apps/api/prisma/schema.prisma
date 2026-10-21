@@ -1,0 +1,237 @@
+// Modelo de dados (ver docs/arquitetura). Tabelas sincronizáveis têm
+// id gerado no app (UUID v7), updatedAt, deletedAt e version para o sync.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Plan {
+  free
+  premium
+}
+
+enum AuthProvider {
+  google
+  apple
+  anonymous
+}
+
+enum VehicleType {
+  combustion
+  flex
+  electric
+}
+
+enum FuelType {
+  gasoline
+  ethanol
+  diesel
+  gnv
+}
+
+enum OdometerSource {
+  manual
+  fuel
+  maintenance
+}
+
+enum DocumentKind {
+  ipva
+  licensing
+  insurance
+  cnh
+}
+
+model User {
+  id          String         @id @db.Uuid
+  email       String?
+  name        String?
+  plan        Plan           @default(free)
+  isAnonymous Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  identities  AuthIdentity[]
+  devices     Device[]
+  vehicles    Vehicle[]
+  documents   Document[]
+
+  @@map("users")
+}
+
+model AuthIdentity {
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String       @db.Uuid
+  provider        AuthProvider
+  providerSubject String
+  email           String?
+  createdAt       DateTime     @default(now())
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerSubject])
+  @@map("auth_identities")
+}
+
+model Device {
+  id             String         @id @default(uuid()) @db.Uuid
+  userId         String         @db.Uuid
+  installationId String         @unique
+  platform       String
+  pushToken      String?
+  lastSyncAt     DateTime?
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokens  RefreshToken[]
+
+  @@map("devices")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  deviceId  String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  device    Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Vehicle {
+  id                 String              @id @db.Uuid
+  userId             String              @db.Uuid
+  name               String
+  type               VehicleType
+  brand              String?
+  model              String?
+  year               Int?
+  plate              String?
+  initialKm          Int
+  photoUrl           String?
+  archived           Boolean             @default(false)
+  createdAt          DateTime
+  updatedAt          DateTime
+  deletedAt          DateTime?
+  version            BigInt
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  odometerReadings   OdometerReading[]
+  fuelEntries        FuelEntry[]
+  maintenancePlans   MaintenancePlan[]
+  maintenanceRecords MaintenanceRecord[]
+  documents          Document[]
+
+  @@index([userId, version])
+  @@map("vehicles")
+}
+
+model OdometerReading {
+  id        String         @id @db.Uuid
+  vehicleId String         @db.Uuid
+  km        Int
+  readAt    DateTime
+  source    OdometerSource
+  createdAt DateTime
+  updatedAt DateTime
+  deletedAt DateTime?
+  version   BigInt
+  vehicle   Vehicle        @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, version])
+  @@map("odometer_readings")
+}
+
+model FuelEntry {
+  id            String    @id @db.Uuid
+  vehicleId     String    @db.Uuid
+  date          DateTime
+  km            Int
+  fuelType      FuelType
+  liters        Decimal   @db.Decimal(8, 3)
+  pricePerLiter Decimal   @db.Decimal(8, 3)
+  total         Decimal   @db.Decimal(10, 2)
+  fullTank      Boolean
+  stationName   String?
+  note          String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  deletedAt     DateTime?
+  version       BigInt
+  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, version])
+  @@map("fuel_entries")
+}
+
+model MaintenancePlan {
+  id               String              @id @db.Uuid
+  vehicleId        String              @db.Uuid
+  type             String
+  intervalKm       Int?
+  intervalMonths   Int?
+  lastDoneKm       Int
+  lastDoneAt       DateTime
+  enabled          Boolean             @default(true)
+  notifyBeforeKm   Int?
+  notifyBeforeDays Int?
+  createdAt        DateTime
+  updatedAt        DateTime
+  deletedAt        DateTime?
+  version          BigInt
+  vehicle          Vehicle             @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  records          MaintenanceRecord[]
+
+  @@index([vehicleId, version])
+  @@map("maintenance_plans")
+}
+
+model MaintenanceRecord {
+  id        String           @id @db.Uuid
+  vehicleId String           @db.Uuid
+  planId    String?          @db.Uuid
+  type      String
+  date      DateTime
+  km        Int
+  cost      Decimal?         @db.Decimal(10, 2)
+  shop      String?
+  note      String?
+  createdAt DateTime
+  updatedAt DateTime
+  deletedAt DateTime?
+  version   BigInt
+  vehicle   Vehicle          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  plan      MaintenancePlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  @@index([vehicleId, version])
+  @@map("maintenance_records")
+}
+
+model Document {
+  id         String       @id @db.Uuid
+  userId     String       @db.Uuid
+  vehicleId  String?      @db.Uuid
+  kind       DocumentKind
+  dueDate    DateTime     @db.Date
+  notifyDays Int[]
+  note       String?
+  createdAt  DateTime
+  updatedAt  DateTime
+  deletedAt  DateTime?
+  version    BigInt
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle    Vehicle?     @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([userId, version])
+  @@map("documents")
+}
+
+model FeatureFlag {
+  key   String
+  plan  Plan
+  value Json
+
+  @@id([key, plan])
+  @@map("feature_flags")
+}

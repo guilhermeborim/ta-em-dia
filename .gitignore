@@ -12,3 +12,4 @@ coverage/
 ios/
 android/
 *.tsbuildinfo
+src/generated/
