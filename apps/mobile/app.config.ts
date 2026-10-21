@@ -13,13 +13,16 @@ const variants: Record<AppEnv, { name: string; id: string }> = {
 
 const variant = variants[APP_ENV];
 
+// Roxo da marca: fundo da splash e do ícone adaptativo do Android.
+const PURPLE = '#4637EB';
+
 const config: ExpoConfig = {
   name: variant.name,
   slug: 'ta-em-dia',
   scheme: 'taemdia',
   version: '0.1.0',
   orientation: 'portrait',
-  icon: './assets/icon.png',
+  icon: './assets/images/icon.png',
   userInterfaceStyle: 'automatic',
   ios: {
     bundleIdentifier: variant.id,
@@ -28,13 +31,24 @@ const config: ExpoConfig = {
   android: {
     package: variant.id,
     adaptiveIcon: {
-      backgroundColor: '#E6F4FE',
-      foregroundImage: './assets/android-icon-foreground.png',
-      backgroundImage: './assets/android-icon-background.png',
-      monochromeImage: './assets/android-icon-monochrome.png',
+      backgroundColor: PURPLE,
+      foregroundImage: './assets/images/adaptive-icon.png',
     },
   },
-  plugins: ['expo-router', 'expo-sqlite', 'expo-secure-store', 'expo-updates'],
+  plugins: [
+    'expo-router',
+    'expo-sqlite',
+    'expo-secure-store',
+    'expo-updates',
+    [
+      'expo-splash-screen',
+      {
+        image: './assets/images/splash-icon.png',
+        imageWidth: 160,
+        backgroundColor: PURPLE,
+      },
+    ],
+  ],
   owner: 'guiborim',
   updates: { url: 'https://u.expo.dev/ccd0ca56-3132-4ae9-b6e0-b6e858af14cb' },
   runtimeVersion: { policy: 'appVersion' },
