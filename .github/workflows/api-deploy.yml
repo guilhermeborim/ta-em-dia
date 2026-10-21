@@ -1,0 +1,77 @@
+name: Deploy da API
+
+# Merge na main → staging automático → produção depois de aprovação
+# (o environment "production" deve ter você como revisor obrigatório).
+# Desligado até a variável API_DEPLOY_ENABLED=true existir no repositório.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - apps/api/**
+      - packages/**
+      - pnpm-lock.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: api-deploy
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    if: vars.API_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Migrations
+        run: pnpm --filter @ta-em-dia/api db:deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Deploy (deploy hook do host)
+        run: curl -fsS -X POST "${{ secrets.DEPLOY_HOOK_URL }}"
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS "${{ vars.API_URL }}/health" && exit 0
+            sleep 10
+          done
+          exit 1
+
+  production:
+    needs: staging
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Migrations
+        run: pnpm --filter @ta-em-dia/api db:deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Deploy (deploy hook do host)
+        run: curl -fsS -X POST "${{ secrets.DEPLOY_HOOK_URL }}"
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS "${{ vars.API_URL }}/health" && exit 0
+            sleep 10
+          done
+          exit 1

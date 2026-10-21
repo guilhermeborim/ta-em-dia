@@ -1,0 +1,36 @@
+name: Release do app
+
+# Tag mobile-v1.2.0-rc.1 → build staging + envio para TestFlight / teste interno
+# Tag mobile-v1.2.0       → build produção + envio para as lojas
+# Desligado até a variável EAS_ENABLED=true e o secret EXPO_TOKEN existirem.
+
+on:
+  push:
+    tags:
+      - mobile-v*
+
+jobs:
+  release:
+    if: vars.EAS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ contains(github.ref_name, '-rc') && 'staging' || 'production' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ta-em-dia/shared build
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build e envio
+        working-directory: apps/mobile
+        run: |
+          PROFILE=${{ contains(github.ref_name, '-rc') && 'staging' || 'production' }}
+          eas build --platform all --profile "$PROFILE" --non-interactive --no-wait --auto-submit
