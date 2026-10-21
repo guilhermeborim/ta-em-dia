@@ -35,7 +35,9 @@ const config: ExpoConfig = {
     },
   },
   plugins: ['expo-router', 'expo-sqlite', 'expo-secure-store'],
+  owner: 'guiborim',
   extra: {
+    eas: { projectId: 'ccd0ca56-3132-4ae9-b6e0-b6e858af14cb' },
     appEnv: APP_ENV,
     apiUrl: process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000',
   },
