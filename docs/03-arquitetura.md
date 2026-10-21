@@ -213,20 +213,20 @@ Chave → valor por plano, servidas pela API e com padrão embutido no app; cobr
 
 ## Ambientes: dev, staging e produção
 
-Cada ambiente tem banco, URL, credenciais e app próprios, para que um teste nunca toque dados reais. Tudo em planos gratuitos; os limites mudam, então confirme na hora de criar.
+Passo a passo do staging em [04-staging.md](04-staging.md). Cada ambiente tem banco, URL, credenciais e app próprios, para que um teste nunca toque dados reais. Tudo em planos gratuitos; os limites mudam, então confirme na hora de criar.
 
-| Item                | dev                                                               | staging                                                    | produção                                                             |
-| ------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------- |
-| Para que serve      | Desenvolvimento diário                                            | Teste final antes da loja                                  | Usuários reais                                                       |
-| API                 | Local (`pnpm --filter @ta-em-dia/api dev`) com Postgres em Docker | `api-staging` num host grátis (ex.: Render)                | `api` no mesmo host                                                  |
-| Deploy da API       | Manual/local                                                      | Automático a cada merge em `main`                          | Mesmo workflow, depois de staging passar e de um clique de aprovação |
-| Banco               | Docker local                                                      | Neon grátis, branch `staging`                              | Neon grátis, branch `main`                                           |
-| Bundle id / package | `com.guilhermeborim.taemdia.dev`                                  | `com.guilhermeborim.taemdia.staging`                       | `com.guilhermeborim.taemdia`                                         |
-| Nome no celular     | Tá em Dia (Dev)                                                   | Tá em Dia (Staging)                                        | Tá em Dia                                                            |
-| Build do app        | Development build                                                 | `eas build --profile staging` → TestFlight / teste interno | `eas build --profile production` → lojas                             |
-| EAS Update (canal)  | `development`                                                     | `staging`                                                  | `production`                                                         |
-| Google OAuth        | Client IDs dev                                                    | Client IDs staging                                         | Client IDs produção                                                  |
-| GitHub Environment  | —                                                                 | `staging` (secrets próprios)                               | `production` (secrets próprios + revisor obrigatório)                |
+| Item                | dev                                                               | staging                                                                          | produção                                                             |
+| ------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Para que serve      | Desenvolvimento diário                                            | Teste final antes da loja                                                        | Usuários reais                                                       |
+| API                 | Local (`pnpm --filter @ta-em-dia/api dev`) com Postgres em Docker | `ta-em-dia-api-staging` no Render grátis (`render.yaml`)                         | `api` no mesmo host                                                  |
+| Deploy da API       | Manual/local                                                      | Automático a cada merge em `main`                                                | Mesmo workflow, depois de staging passar e de um clique de aprovação |
+| Banco               | Docker local                                                      | Neon grátis, branch `staging`                                                    | Neon grátis, branch `main`                                           |
+| Bundle id / package | `com.guilhermeborim.taemdia.dev`                                  | `com.guilhermeborim.taemdia.staging`                                             | `com.guilhermeborim.taemdia`                                         |
+| Nome no celular     | Tá em Dia (Dev)                                                   | Tá em Dia (Staging)                                                              | Tá em Dia                                                            |
+| Build do app        | Development build                                                 | `eas build --profile staging`: APK Android por link (iOS exige conta Apple paga) | `eas build --profile production` → lojas                             |
+| EAS Update (canal)  | `development`                                                     | `staging`                                                                        | `production`                                                         |
+| Google OAuth        | Client IDs dev                                                    | Client IDs staging                                                               | Client IDs produção                                                  |
+| GitHub Environment  | —                                                                 | `staging` (secrets próprios)                                                     | `production` (secrets próprios + revisor obrigatório)                |
 
 **Variáveis**
 
