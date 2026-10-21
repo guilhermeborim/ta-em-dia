@@ -64,6 +64,13 @@ export const MIGRATIONS: string[] = [
     value  TEXT NOT NULL
   );
   `,
+  `
+  -- Preferências locais do app (ex.: boas-vindas já vistas). Não sincroniza.
+  CREATE TABLE app_settings (
+    key    TEXT PRIMARY KEY NOT NULL,
+    value  TEXT NOT NULL
+  );
+  `,
 ];
 
 export async function migrate(db: Db, migrations: string[] = MIGRATIONS): Promise<void> {
