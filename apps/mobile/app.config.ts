@@ -34,8 +34,10 @@ const config: ExpoConfig = {
       monochromeImage: './assets/android-icon-monochrome.png',
     },
   },
-  plugins: ['expo-router', 'expo-sqlite', 'expo-secure-store'],
+  plugins: ['expo-router', 'expo-sqlite', 'expo-secure-store', 'expo-updates'],
   owner: 'guiborim',
+  updates: { url: 'https://u.expo.dev/ccd0ca56-3132-4ae9-b6e0-b6e858af14cb' },
+  runtimeVersion: { policy: 'appVersion' },
   extra: {
     eas: { projectId: 'ccd0ca56-3132-4ae9-b6e0-b6e858af14cb' },
     appEnv: APP_ENV,
