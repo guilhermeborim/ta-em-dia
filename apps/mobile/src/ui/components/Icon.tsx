@@ -87,6 +87,9 @@ const icons = {
 
 export type IconName = keyof typeof icons;
 
+/** Todos os nomes de ícone, para o catálogo de componentes. */
+export const iconNames = Object.keys(icons) as IconName[];
+
 interface IconProps {
   name: IconName;
   /** Tamanho em pt. O design usa 24 como base (12 a 22 em selos e avatares). */

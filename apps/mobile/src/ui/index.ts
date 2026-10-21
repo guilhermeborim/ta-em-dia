@@ -16,7 +16,7 @@ export { Button, type ButtonVariant } from './components/Button';
 export { Chip } from './components/Chip';
 export { ConsumptionCard } from './components/ConsumptionCard';
 export { FloatingButton } from './components/FloatingButton';
-export { Icon, type IconName } from './components/Icon';
+export { Icon, iconNames, type IconName } from './components/Icon';
 export { IconAvatar } from './components/IconAvatar';
 export { FuelItem, MenuItem } from './components/ListItems';
 export { BrandSymbol, Logo } from './components/Logo';
