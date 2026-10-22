@@ -67,8 +67,8 @@ São 22 telas, agrupadas por área.
 
 | #   | Tela                   | Conteúdo                                                                                                             | Ações                                   |
 | --- | ---------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| 16  | Meus veículos          | Cartões com foto, apelido, modelo, km atual                                                                          | Adicionar, abrir, reordenar (segurar)   |
-| 17  | Detalhe/editar veículo | Dados completos, placa, foto, km atual, média diária de km calculada                                                 | Atualizar km, editar, arquivar, excluir |
+| 16  | Meus veículos          | Cartões com ícone (carro ou moto), apelido, modelo, km atual                                                         | Adicionar, abrir, reordenar (arrastar)  |
+| 17  | Detalhe/editar veículo | Dados completos, placa, km atual, média diária de km calculada                                                       | Atualizar km, editar, arquivar, excluir |
 | 18  | Documentos e prazos    | IPVA, licenciamento, seguro (por veículo) e CNH (por pessoa), com data e status (em dia / vence em X dias / vencido) | Adicionar data, editar lembrete         |
 | 19  | Conta                  | Modo anônimo: chamada "Salve seus dados" com Google (e Apple, no iPhone). Logado: nome, e-mail, último sync          | Vincular conta, sair, excluir conta     |
 | 20  | Configurações          | Tema, notificações por tipo, antecedência dos alertas, unidades, exportar dados (futuro)                             | Alterar                                 |

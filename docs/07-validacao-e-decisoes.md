@@ -66,7 +66,7 @@ Lápis no topo do detalhe.
 
 - [ ] Editar marca, modelo, ano, apelido e placa. Placa inválida ("12") dá erro; "bra2e19" vira "BRA2E19"; vazia remove.
 - [ ] **Arquivar**: o veículo some das listas e do Início; vira o ativo o próximo da ordem; aparece em "Arquivados". **Restaurar** devolve ao fim da ordem.
-- [ ] Arquivar o **único** veículo: o app fica sem veículo ativo (telas mostram "Cadastre seu veículo"). Ver decisão 3.8.
+- [ ] Arquivar o **único** veículo: o app fica sem veículo ativo (telas mostram "Cadastre seu veículo").
 - [ ] **Excluir**: alerta de confirmação; depois some tudo dele (abastecimentos, manutenções, prazos do veículo, leituras de km) e os avisos agendados dele. A CNH continua.
 - [ ] Depois de arquivar ou excluir, o app volta direto para Meus veículos (não para um detalhe que não existe mais).
 - [ ] Tocar numa notificação antiga de um veículo/plano excluído não trava o app.
@@ -83,7 +83,7 @@ Mais → Documentos e prazos.
 - [ ] Chips "Avisar antes" (30, 15, 7, 3, 1 dia); sem nenhum, a tela mostra "Os prazos estão sem aviso".
 - [ ] Banner de pé: "Avisamos 30 e 7 dias antes de cada vencimento." muda quando os prazos usam dias diferentes.
 - [ ] **Notificações** (só Android com development build e permissão dada): cadastre um prazo para daqui a 8 dias e confirme o aviso "IPVA do Gol vence em 7 dias" às 9h do dia certo; "Sua CNH vence em 30 dias" para a CNH. Tocar no aviso abre Documentos e prazos.
-- [ ] Prazo cadastrado já dentro da janela (ex.: faltam 10 dias) **não** dispara o aviso de 30 dias de forma retroativa. Ver decisão 3.7.
+- [ ] Prazo cadastrado já dentro da janela (ex.: faltam 10 dias) **não** dispara o aviso de 30 dias de forma retroativa.
 - [ ] Prazo vencido não avisa mais.
 - [ ] Início: prazo vencido ou perto de vencer aparece em "Próximos alertas" junto com a manutenção (máximo 2 no total, vencidos primeiro); tocar abre Documentos e prazos.
 - [ ] Mais → "Documentos e prazos" mostra "1 vencido" em vermelho (ou "N perto de vencer" em âmbar).
@@ -175,48 +175,7 @@ Com um aparelho que já tem dados da versão anterior ao PR #28:
 
 ## 3. Decisões em aberto
 
-Cada item traz minha recomendação. Nenhuma foi tomada por você ainda.
-
-### 3.1 Seletor de datas (digitar × calendário)
-
-**Hoje:** todas as datas (abastecimento, manutenção, prazo de documento) são digitadas em `dd/mm/aaaa` com máscara. O Figma mostra o campo de data como um chip com ícone de calendário, sugerindo um seletor.
-
-| Opção                                                                             | Prós                                                                | Contras                                                                                                       |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Manter digitado                                                                   | Rápido com uma mão, sem dependência nativa, funciona em tudo        | Errar o dia/mês é fácil; sem calendário                                                                       |
-| Seletor nativo (`@react-native-community/datetimepicker`, via `npx expo install`) | Padrão do sistema, difícil de errar a data                          | Dependência nativa: exige novo development build; mais toques para registrar um abastecimento (meta é < 20 s) |
-| Os dois: chip "Hoje" + toque abre o calendário                                    | Hoje continua a 1 toque; calendário só quando precisa de outra data | Mais código e mais telas para testar                                                                          |
-
-**Recomendação:** os dois (o padrão "Hoje" cobre 90% dos abastecimentos). Antes, valide se digitar `dd/mm/aaaa` incomoda no uso real.
-
-### 3.2 Reordenar veículos: segurar e escolher × arrastar
-
-Hoje: segurar o cartão abre "Mover para cima/baixo" (sem dependência nativa; funciona com leitor de tela). O Figma diz "Segure e arraste". Arrastar de verdade pede `react-native-gesture-handler` + `react-native-reanimated` (nativas, novo development build).
-**Recomendação:** manter como está até alguém reclamar; a maioria terá 1 ou 2 veículos.
-
-### 3.3 Foto do veículo e foto da nota
-
-Os cartões mostram só um ícone de carro. Foto exige armazenamento de arquivos e o limite `attachments.max` (`01-roadmap.md`, `05-privacidade-lgpd.md`). **Decidir:** entra no MVP, na Fase 2, ou só no Premium?
-
-### 3.4 "Avise-me quando lançar" (Premium em breve)
-
-Só grava uma preferência local; ainda não há como avisar. A tela promete "Avisamos você quando o Premium sair." **Decidir:** manter o texto (e enviar a lista pela API na Fase B), ou trocar por algo que não prometa ("Anotado!").
-
-### 3.5 Prazos de documentos: um por tipo × histórico
-
-Hoje cada tipo tem um prazo só (o próximo vencimento); ao renovar, troca-se a data. O Figma mostra "IPVA 2026" (com ano) e "Pago · até set/2027", sugerindo histórico e estado "pago". **Decidir:** manter simples, ou guardar cada ano (e um estado "pago")?
-
-### 3.6 Documentos só do veículo ativo
-
-A tela de Documentos, os avisos e o selo de Mais olham só o veículo ativo (e a CNH). Quem tem dois carros não vê nem recebe aviso do segundo. **Decidir:** seletor de veículo na tela de documentos, ou avisos de todos os veículos ativos.
-
-### 3.7 Aviso retroativo de prazo
-
-Prazo cadastrado já dentro da janela (ex.: faltam 10 dias) não dispara o aviso de 30 dias; só os que ainda vêm. A manutenção faz diferente (avisa uma vez no próximo 9h). **Decidir:** igualar os dois (avisar uma vez no próximo 9h) ou manter.
-
-### 3.8 Arquivar o único veículo
-
-Deixa o app sem veículo ativo; as telas pedem "Cadastre seu veículo" até restaurar. **Decidir:** bloquear (avisar que precisa de outro veículo ativo) ou permitir como está.
+Cada item traz minha recomendação. As decisões já tomadas saíram daqui e estão em `docs/01-roadmap.md`, `docs/03-arquitetura.md` e no backlog (`docs/06-backlog.md`, "Decisões do dono"). A numeração não é refeita: os números que faltam já foram decididos.
 
 ### 3.9 Relatórios
 
@@ -242,14 +201,6 @@ Pedir ao designer, ou aprovar o que foi feito seguindo os formulários do app: *
 
 Escritos por mim, sem revisão de redação: alerta "Excluir veículo?" e "Excluir prazo?", avisos de arquivar/restaurar, "Anotado! Avisamos você...", mensagens de erro ("O km não pode ser menor que o atual (N km)", "Placa inválida (ex.: ABC1D23)"), estados vazios, mensagens do banner de prazos, e em Configurações "Notificações desativadas / Ative nos ajustes do aparelho para receber os avisos.", "Marque ao menos um dia" e o texto "Às 9h do dia marcado. Vale para os prazos novos; os que já existem mantêm os próprios dias.".
 
-### 3.13 Moto
-
-Moto vira tipo `combustion` e carro `flex`, e os dois usam o ícone de carro. **Decidir:** tipo `motorcycle` no schema (migration + API) e ícone próprio.
-
-### 3.14 Limite de veículos no plano grátis
-
-A flag `vehicles.max` existe (`01-roadmap.md` sugere 2 grátis), mas hoje é ilimitado e nada a aplica em "Adicionar veículo". **Decidir:** aplicar o limite já no lançamento ou deixar para a Fase 2.
-
 ### 3.15 Ajuda e contato, Termos e Privacidade
 
 "Ajuda e contato" mostra "Em breve": falta um e-mail ou página de suporte. As telas de Termos e Privacidade dependem das URLs públicas (`05-privacidade-lgpd.md`, checklist antes de publicar).
@@ -265,22 +216,6 @@ A flag `vehicles.max` existe (`01-roadmap.md` sugere 2 grátis), mas hoje é ili
 
 Sem development build para iOS, nenhum aviso agenda. Quando houver, apague `scheduler.ios.ts` e `permission.ios.ts` e repita as validações de notificação (2.5 e manutenção).
 
-### 3.18 Criar conta anônima é aberto ao mundo
-
-`POST /v1/auth/anonymous` não exige token (é a porta de entrada) e cada `installationId` novo cria um usuário. Sem limite de chamadas, alguém pode encher o banco (o plano grátis do Neon é pequeno). A arquitetura prevê rate limit (`@nestjs/throttler`, grátis), que ainda não existe na API. **Decidir:** adicionar rate limit por IP já no próximo PR da API (recomendado, antes de divulgar a URL) ou esperar o sync. O job que apaga contas anônimas sem uso por 12 meses também não existe.
-
-### 3.19 Renovar o token sem `/auth/refresh`
-
-A API devolve um refresh token (guardado só como hash, 90 dias), mas ainda não há rota para trocá-lo. Enquanto isso, o app renova o acesso chamando `POST /v1/auth/anonymous` de novo (idempotente: mesmo usuário, tokens novos), e cada chamada guarda mais um refresh token que ninguém usa. Hoje o app só renova ao abrir ou voltar a ele (o acesso dura 15 min); o motor de sync precisará renovar na hora de enviar. **Decidir:** criar `POST /v1/auth/refresh` junto do sync (com rotação do token), ou deixar o app sempre chamar `/auth/anonymous` e parar de devolver o refresh token até o login social existir. Recomendação: `/auth/refresh` no PR do sync, que é quando o token passa a ser necessário.
-
 ### 3.20 `GET /v1/config` continua público
 
 Devolve sempre o plano `free`. Com o guard global agora existindo, ele ficou marcado `@Public()`. Quando o app mandar o token, a rota deve passar a ler o plano do usuário. Nada a decidir agora; só não esquecer no PR do app ou do sync.
-
-### 3.21 Tentar de novo sem saber se a internet voltou
-
-O app não detecta a volta da conexão (isso pede `expo-network` ou `@react-native-community/netinfo`, nativos, com novo development build). Em vez disso tenta ao abrir, ao voltar para a frente e a cada 15 s, 30 s, 1, 2 e 5 min enquanto está na frente. Quem liga a internet com o app aberto pode esperar até 5 minutos. **Decidir:** manter assim (recomendado: o app é offline-first e nada depende disso agora) ou adicionar o módulo de rede quando o sync precisar reagir ao sinal.
-
-### 3.22 Reinstalar o app no iPhone mantém o usuário anônimo
-
-O Keychain do iOS pode sobreviver à desinstalação: o app reinstalado reaproveita o `installation_id` e o segredo e volta ao mesmo usuário na API (no Android, o SecureStore some junto com o app e nasce um usuário novo). Quando o sync existir, isso devolve os dados no iPhone, mas deixa o usuário antigo órfão no Android. **Decidir** se isso é o desejado ou se o app deve apagar as credenciais na primeira abertura depois de reinstalar (o que perde o backup anônimo). Recomendação: manter.

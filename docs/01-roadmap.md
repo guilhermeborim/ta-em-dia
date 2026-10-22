@@ -19,7 +19,7 @@ O MVP entrega o essencial para controlar um carro: veículos, abastecimentos, ma
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | Conta                 | Login Google (iOS e Android), Sign in with Apple (só iOS), "Continuar sem login", vincular conta anônima depois, sair, excluir conta         | No iOS, a Apple exige Sign in with Apple quando há login com Google; no Android não há botão da Apple. Exclusão de conta no app é obrigatória |
 | Onboarding            | Cadastro do primeiro veículo, permissão de notificações                                                                                      | Localização não é pedida no MVP                                                                                                               |
-| Veículos              | Múltiplos veículos (combustão/flex), marca, modelo, ano, placa, apelido, foto, hodômetro inicial                                             | Limite por plano via flag (grátis ilimitado no lançamento)                                                                                    |
+| Veículos              | Múltiplos veículos (carro e moto; combustão/flex), marca, modelo, ano, placa, apelido, hodômetro inicial                                     | Grátis: 1 veículo, aplicado já no lançamento pela flag `vehicles.max`. Sem foto do veículo (ver Futuro)                                       |
 | Hodômetro             | Atualização manual e automática a cada abastecimento; média diária de km calculada                                                           | Base para prever manutenções                                                                                                                  |
 | Abastecimentos        | Cadastro manual: data, km, litros, preço/litro, total, combustível, tanque cheio (opcional), posto (texto)                                   | Foto da bomba/OCR fica para a Fase 2                                                                                                          |
 | Resumo de consumo     | Média do período (km/l), média exata quando há dois tanques cheios, custo por km, gasto do mês, projeção do mês, comparação com mês anterior | A média do período funciona com abastecimento parcial; a exata só entre dois tanques cheios                                                   |
@@ -65,6 +65,7 @@ Ideias sem data, avaliadas depois de medir o uso real.
 | Comparar preço de combustível | Preços reportados pela comunidade perto do usuário                                               |
 | Versão web                    | Painel para ver relatórios no computador                                                         |
 | Frotas                        | Plano para pequenas empresas com vários motoristas                                               |
+| Fotos do veículo e da nota    | Foto no cartão do veículo e anexo de foto da nota (limite `attachments.max`, bucket privado)     |
 
 ## Premium por feature flags
 
@@ -72,16 +73,16 @@ Tudo é grátis no lançamento; cada recurso candidato a Premium já nasce atrá
 
 | Recurso                            | Grátis (sugestão)          | Premium (sugestão)             | Flag               |
 | ---------------------------------- | -------------------------- | ------------------------------ | ------------------ |
-| Veículos                           | 2 veículos                 | Ilimitados                     | `vehicles.max`     |
+| Veículos                           | 1 veículo                  | Mais veículos                  | `vehicles.max`     |
 | Backup na nuvem e troca de celular | Só local, ou sync limitado | Sync completo                  | `sync.cloud`       |
 | Relatórios avançados               | Mês atual e anterior       | Todo o histórico, comparativos | `reports.advanced` |
 | Exportar PDF/CSV                   | —                          | Sim                            | `export.pdf`       |
 | Lembrete no posto                  | —                          | Sim                            | `geo.fuelReminder` |
 | Widget                             | 1 widget simples           | Widgets extras                 | `widget.extra`     |
 | FIPE                               | Valor atual                | Histórico do valor             | `fipe.history`     |
-| Anexos                             | 5 fotos de nota            | Ilimitado                      | `attachments.max`  |
+| Anexos (Futuro)                    | 5 fotos de nota            | Ilimitado                      | `attachments.max`  |
 | Anúncios                           | —                          | Sem anúncios (se houver)       | `ads.off`          |
 
 As flags vêm da API (`GET /v1/config`) por plano, com valores padrão embutidos no app (`packages/shared/src/flags.ts`) para funcionar offline.
 
-**Decisão em aberto:** limites exatos do plano grátis e preço (definir na Fase 2, com dados de uso).
+O limite de veículos do plano grátis já vale no lançamento (1). **Decisão em aberto:** os demais limites do plano grátis e o preço (definir na Fase 2, com dados de uso).
