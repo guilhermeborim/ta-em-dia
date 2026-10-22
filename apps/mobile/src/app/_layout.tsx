@@ -45,6 +45,8 @@ function AppReady() {
       <Stack.Protected guard={done === true && loginDone === true}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="novo-abastecimento" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="plano-manutencao/[id]" />
+        <Stack.Screen name="plano-manutencao/[id]/editar" options={{ presentation: 'modal' }} />
       </Stack.Protected>
     </Stack>
   );

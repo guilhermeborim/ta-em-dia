@@ -143,19 +143,108 @@ export interface MaintenanceData {
   plans: MaintenancePlan[];
 }
 
+/** Km atual e média diária do veículo, pelo km inicial e pelos abastecimentos. */
+async function loadVehicleKm(
+  db: Db,
+  vehicleId: string,
+  initialKm: number,
+): Promise<{ currentKm: number; dailyKm: number }> {
+  const entries = await listFuelEntries(db, vehicleId);
+  return {
+    currentKm: Math.max(initialKm, ...entries.map((e) => e.km)),
+    dailyKm: dailyAverageKm(entries.map((e) => ({ km: e.km, readAt: e.date }))),
+  };
+}
+
 /** Lê do SQLite o que a aba Manutenção precisa: veículo, km atual, média diária e planos. */
 export async function loadMaintenance(db: Db): Promise<MaintenanceData> {
   const vehicle = await findActiveVehicle(db);
   if (!vehicle) return { vehicle: null, currentKm: 0, dailyKm: dailyAverageKm([]), plans: [] };
 
-  const entries = await listFuelEntries(db, vehicle.id);
-  const currentKm = Math.max(vehicle.initial_km, ...entries.map((e) => e.km));
-  const dailyKm = dailyAverageKm(entries.map((e) => ({ km: e.km, readAt: e.date })));
-
   return {
     vehicle: { id: vehicle.id, name: vehicle.name },
-    currentKm,
-    dailyKm,
+    ...(await loadVehicleKm(db, vehicle.id, vehicle.initial_km)),
     plans: await listPlans(db, vehicle.id),
   };
+}
+
+export interface PlanDetailData {
+  plan: MaintenancePlan;
+  currentKm: number;
+  dailyKm: number;
+}
+
+/** Um plano (não excluído) com o km atual e a média diária do veículo dele. `null` se não existe. */
+export async function loadPlanDetail(db: Db, planId: string): Promise<PlanDetailData | null> {
+  const row = await db.getFirstAsync<PlanRow>(
+    `SELECT ${COLUMNS} FROM maintenance_plans WHERE id = ? AND deleted_at IS NULL`,
+    planId,
+  );
+  if (!row) return null;
+  const vehicle = await db.getFirstAsync<{ initial_km: number }>(
+    'SELECT initial_km FROM vehicles WHERE id = ?',
+    row.vehicle_id,
+  );
+  return {
+    plan: toPlan(row),
+    ...(await loadVehicleKm(db, row.vehicle_id, vehicle?.initial_km ?? 0)),
+  };
+}
+
+/** Grava a mudança de um plano e enfileira o upsert para o sync, na mesma transação. */
+async function updatePlan(
+  db: Db,
+  planId: string,
+  sql: string,
+  params: (string | number | null)[],
+  now: Date,
+): Promise<MaintenancePlan> {
+  const at = now.toISOString();
+  let updated: MaintenancePlan | undefined;
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      `UPDATE maintenance_plans SET ${sql}, updated_at = ? WHERE id = ? AND deleted_at IS NULL`,
+      ...params,
+      at,
+      planId,
+    );
+    const row = await db.getFirstAsync<PlanRow>(
+      `SELECT ${COLUMNS} FROM maintenance_plans WHERE id = ? AND deleted_at IS NULL`,
+      planId,
+    );
+    if (!row) throw new Error('Plano não encontrado');
+    updated = maintenancePlanSchema.parse(toPlan(row));
+    await enqueue(db, 'maintenance_plans', planId, 'upsert', updated, at);
+  });
+  return updated!;
+}
+
+/** Liga ou desliga o lembrete. O plano e a última vez continuam guardados. */
+export function setPlanEnabled(
+  db: Db,
+  planId: string,
+  enabled: boolean,
+  now: Date = new Date(),
+): Promise<MaintenancePlan> {
+  return updatePlan(db, planId, 'enabled = ?', [enabled ? 1 : 0], now);
+}
+
+/** Muda o intervalo. Os dois vazios deixam o item só como histórico (sem alerta). */
+export async function updatePlanInterval(
+  db: Db,
+  planId: string,
+  interval: { intervalKm?: number; intervalMonths?: number },
+  now: Date = new Date(),
+): Promise<MaintenancePlan> {
+  // Valida antes de gravar (valor fora do schema não chega ao banco).
+  maintenancePlanSchema
+    .pick({ intervalKm: true, intervalMonths: true })
+    .parse({ intervalKm: interval.intervalKm, intervalMonths: interval.intervalMonths });
+  return await updatePlan(
+    db,
+    planId,
+    'interval_km = ?, interval_months = ?',
+    [interval.intervalKm ?? null, interval.intervalMonths ?? null],
+    now,
+  );
 }

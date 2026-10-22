@@ -2,7 +2,14 @@ import { migrate } from '../../../core/db/migrations';
 import { createTestDb } from '../../../core/db/testing/testDb';
 import type { Db } from '../../../core/db';
 import { addFuelEntry } from '../../../core/fuel';
-import { activatePlan, listPlans, loadMaintenance } from '../models/plans.repository';
+import {
+  activatePlan,
+  listPlans,
+  loadMaintenance,
+  loadPlanDetail,
+  setPlanEnabled,
+  updatePlanInterval,
+} from '../models/plans.repository';
 
 const VEHICLE_ID = '018bcfe5-6800-7000-8000-000000000001';
 const PLAN_ID = '018bcfe5-6800-7000-8000-0000000000a1';
@@ -123,5 +130,87 @@ describe('loadMaintenance', () => {
     expect(data.currentKm).toBe(48820);
     // 420 km em 10 dias.
     expect(data.dailyKm).toBeCloseTo(42);
+  });
+});
+
+describe('loadPlanDetail', () => {
+  it('traz o plano com o km atual e a média diária do veículo', async () => {
+    await activatePlan(db, { ...oil, currentKm: 48910 }, { id: PLAN_ID, now: NOW });
+    const detail = await loadPlanDetail(db, PLAN_ID);
+    expect(detail).toMatchObject({
+      plan: { id: PLAN_ID, type: 'oil' },
+      currentKm: 48320,
+      dailyKm: 30,
+    });
+  });
+
+  it('plano que não existe ou foi excluído: null', async () => {
+    expect(await loadPlanDetail(db, PLAN_ID)).toBeNull();
+    await activatePlan(db, { ...oil, currentKm: 48910 }, { id: PLAN_ID, now: NOW });
+    await db.runAsync(
+      'UPDATE maintenance_plans SET deleted_at = ? WHERE id = ?',
+      '2026-10-22',
+      PLAN_ID,
+    );
+    expect(await loadPlanDetail(db, PLAN_ID)).toBeNull();
+  });
+});
+
+describe('updatePlanInterval', () => {
+  beforeEach(async () => {
+    await activatePlan(db, { ...oil, currentKm: 48910 }, { id: PLAN_ID, now: NOW });
+  });
+
+  it('muda o intervalo e enfileira o upsert', async () => {
+    const later = new Date(2026, 10, 1);
+    const plan = await updatePlanInterval(db, PLAN_ID, { intervalKm: 5000 }, later);
+
+    expect(plan).toMatchObject({ intervalKm: 5000, intervalMonths: undefined, lastDoneKm: 48910 });
+    expect((await listPlans(db, VEHICLE_ID))[0]).toEqual(plan);
+    const outbox = await db.getAllAsync<{ op: string; payload: string; updated_at: string }>(
+      'SELECT op, payload, updated_at FROM outbox ORDER BY id',
+    );
+    expect(outbox).toHaveLength(2);
+    expect(outbox[1]).toMatchObject({ op: 'upsert', updated_at: later.toISOString() });
+    expect(JSON.parse(outbox[1].payload)).toMatchObject({ id: PLAN_ID, intervalKm: 5000 });
+  });
+
+  it('os dois vazios removem o intervalo (só histórico)', async () => {
+    const plan = await updatePlanInterval(db, PLAN_ID, {});
+    expect(plan.intervalKm).toBeUndefined();
+    expect(plan.intervalMonths).toBeUndefined();
+    expect(plan.enabled).toBe(true);
+  });
+
+  it('valor inválido não grava nada', async () => {
+    await expect(updatePlanInterval(db, PLAN_ID, { intervalKm: -1 })).rejects.toThrow();
+    expect((await listPlans(db, VEHICLE_ID))[0].intervalKm).toBe(10000);
+    expect(await db.getAllAsync('SELECT * FROM outbox')).toHaveLength(1);
+  });
+
+  it('plano que não existe: erro e nada na outbox', async () => {
+    await expect(
+      updatePlanInterval(db, '018bcfe5-6800-7000-8000-0000000000ff', { intervalKm: 1000 }),
+    ).rejects.toThrow('Plano não encontrado');
+    expect(await db.getAllAsync('SELECT * FROM outbox')).toHaveLength(1);
+  });
+});
+
+describe('setPlanEnabled', () => {
+  it('desativa mantendo o plano e a última vez, e enfileira o upsert', async () => {
+    await activatePlan(db, { ...oil, currentKm: 48910 }, { id: PLAN_ID, now: NOW });
+    const plan = await setPlanEnabled(db, PLAN_ID, false);
+
+    expect(plan).toMatchObject({ enabled: false, lastDoneKm: 48910, intervalKm: 10000 });
+    expect((await listPlans(db, VEHICLE_ID))[0].enabled).toBe(false);
+    const ops = await db.getAllAsync<{ op: string }>('SELECT op FROM outbox ORDER BY id');
+    expect(ops).toEqual([{ op: 'upsert' }, { op: 'upsert' }]);
+  });
+
+  it('reativar pelo "Ativar" mantém o plano desativado antes', async () => {
+    await activatePlan(db, { ...oil, currentKm: 48910 }, { id: PLAN_ID, now: NOW });
+    await setPlanEnabled(db, PLAN_ID, false);
+    const plan = await activatePlan(db, { ...oil, currentKm: 49500 });
+    expect(plan).toMatchObject({ id: PLAN_ID, enabled: true, lastDoneKm: 48910 });
   });
 });

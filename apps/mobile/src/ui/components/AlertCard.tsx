@@ -88,6 +88,8 @@ interface NoIntervalCardProps {
   own?: boolean;
   /** Ex.: "Última vez: 12 out · 50.110 km". */
   lastDone: string;
+  /** Toque no cartão (abre o item). */
+  onPress?: () => void;
   onDefineInterval?: () => void;
 }
 
@@ -97,10 +99,16 @@ export function NoIntervalCard({
   title,
   own = false,
   lastDone,
+  onPress,
   onDefineInterval,
 }: NoIntervalCardProps) {
   return (
-    <View style={[styles.card, shadows.card]}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${title}, só histórico`}
+      onPress={onPress}
+      style={[styles.card, shadows.card]}
+    >
       <View style={styles.header}>
         <IconAvatar
           icon={icon}
@@ -133,7 +141,7 @@ export function NoIntervalCard({
           </Text>
         </Pressable>
       </View>
-    </View>
+    </Pressable>
   );
 }
 

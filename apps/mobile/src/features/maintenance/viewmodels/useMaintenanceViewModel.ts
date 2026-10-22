@@ -65,6 +65,9 @@ export function useMaintenanceViewModel() {
     suggestions: list?.suggestions ?? [],
     setTab,
     activate,
+    openPlan: (id: string) => router.push({ pathname: '/plano-manutencao/[id]', params: { id } }),
+    defineInterval: (id: string) =>
+      router.push({ pathname: '/plano-manutencao/[id]/editar', params: { id } }),
     openNewFuelEntry: () => router.push('/novo-abastecimento'),
     addVehicle: () => router.push('/primeiro-veiculo'),
   };
