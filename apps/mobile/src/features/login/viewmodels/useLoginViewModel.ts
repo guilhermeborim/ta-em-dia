@@ -30,7 +30,7 @@ export function useLoginViewModel() {
     setBusy(true);
     try {
       await continueWithoutLogin();
-      router.replace('/aviso-sem-login');
+      router.push('/aviso-sem-login');
     } finally {
       setBusy(false);
     }

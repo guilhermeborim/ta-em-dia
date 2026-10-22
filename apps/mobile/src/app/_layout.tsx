@@ -30,7 +30,7 @@ function AppReady() {
       <Stack.Protected guard={!done}>
         <Stack.Screen name="boas-vindas" />
       </Stack.Protected>
-      <Stack.Protected guard={done === true && !loginDone}>
+      <Stack.Protected guard={done === true}>
         <Stack.Screen name="login" />
       </Stack.Protected>
       <Stack.Protected guard={done === true}>
