@@ -2,6 +2,8 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAnonymousSession } from '../core/auth';
 import { DatabaseProvider } from '../core/db';
 import { useReminderLifecycle } from '../core/reminders';
@@ -75,12 +77,17 @@ function AppReady() {
 
 export default function RootLayout() {
   return (
-    <DatabaseProvider>
-      <OnboardingProvider>
-        <LoginProvider>
-          <AppReady />
-        </LoginProvider>
-      </OnboardingProvider>
-    </DatabaseProvider>
+    // Os gestos (arrastar para reordenar) precisam desta raiz.
+    <GestureHandlerRootView style={styles.root}>
+      <DatabaseProvider>
+        <OnboardingProvider>
+          <LoginProvider>
+            <AppReady />
+          </LoginProvider>
+        </OnboardingProvider>
+      </DatabaseProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({ root: { flex: 1 } });
