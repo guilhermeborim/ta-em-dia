@@ -1,0 +1,57 @@
+name: Limpeza da API
+
+# Apaga as contas anônimas sem uso por 12 meses e os refresh tokens vencidos
+# (docs/05-privacidade-lgpd.md). Roda toda semana; "Run workflow" aceita simulação (só conta).
+# Usa as mesmas variáveis e segredos do deploy: API_DEPLOY_ENABLED / API_PRODUCTION_ENABLED e
+# DATABASE_URL de cada environment (o production exige a aprovação do revisor, como no deploy).
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Só contar, sem apagar
+        type: boolean
+        default: true
+
+jobs:
+  staging:
+    if: vars.API_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ta-em-dia/shared build
+      - run: pnpm --filter @ta-em-dia/api build
+      - name: Limpeza
+        # Agendado (sem input): apaga de verdade. Manual: respeita "Só contar".
+        run: pnpm --filter @ta-em-dia/api job:purge ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '-- --dry-run' || '' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  production:
+    needs: staging
+    if: vars.API_PRODUCTION_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ta-em-dia/shared build
+      - run: pnpm --filter @ta-em-dia/api build
+      - name: Limpeza
+        run: pnpm --filter @ta-em-dia/api job:purge ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '-- --dry-run' || '' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

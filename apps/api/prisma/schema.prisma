@@ -85,6 +85,8 @@ model Device {
   platform       String
   pushToken      String?
   lastSyncAt     DateTime?
+  // Última vez que o aparelho abriu ou renovou a sessão; o job de limpeza usa para achar contas sem uso.
+  lastSeenAt     DateTime       @default(now())
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshTokens  RefreshToken[]
 
