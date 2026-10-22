@@ -11,6 +11,7 @@ import {
   Button,
   Chip,
   colors,
+  DatePicker,
   EmptyState,
   Icon,
   NumberField,
@@ -106,6 +107,11 @@ export function RegisterMaintenanceView() {
                     placeholder="dd/mm/aaaa"
                     keyboardType="number-pad"
                     maxLength={10}
+                    action={{
+                      icon: 'calendar',
+                      label: 'Abrir calendário',
+                      onPress: vm.openDatePicker,
+                    }}
                   />
                 </View>
                 <View style={styles.flex}>
@@ -156,6 +162,14 @@ export function RegisterMaintenanceView() {
           </View>
         ) : null}
       </KeyboardAvoidingView>
+      <DatePicker
+        visible={vm.pickerOpen}
+        value={vm.pickerValue}
+        minimumDate={vm.pickerMin}
+        maximumDate={vm.pickerMax}
+        onChange={vm.pickDate}
+        onClose={vm.closeDatePicker}
+      />
     </SafeAreaView>
   );
 }

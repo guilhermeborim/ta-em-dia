@@ -11,6 +11,7 @@ import {
   Button,
   Chip,
   colors,
+  DatePicker,
   EmptyState,
   Icon,
   size,
@@ -105,6 +106,7 @@ function DocumentFormView({ mode }: { mode: 'add' | 'edit' }) {
                 placeholder="dd/mm/aaaa"
                 keyboardType="number-pad"
                 maxLength={10}
+                action={{ icon: 'calendar', label: 'Abrir calendário', onPress: vm.openDatePicker }}
               />
 
               <View style={styles.kinds}>
@@ -146,6 +148,14 @@ function DocumentFormView({ mode }: { mode: 'add' | 'edit' }) {
           </View>
         )}
       </KeyboardAvoidingView>
+      <DatePicker
+        visible={vm.pickerOpen}
+        value={vm.pickerValue}
+        minimumDate={vm.pickerMin}
+        maximumDate={vm.pickerMax}
+        onChange={vm.pickDueDate}
+        onClose={vm.closeDatePicker}
+      />
     </SafeAreaView>
   );
 }

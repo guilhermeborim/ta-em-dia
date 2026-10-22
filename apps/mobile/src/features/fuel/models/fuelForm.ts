@@ -1,5 +1,12 @@
 import { calculateMissingFuelAmount, type FuelAmountField } from '@ta-em-dia/shared';
-import { MONTH_NAMES_SHORT, parseDecimal, parseKm, sanitizeDecimal } from '../../../core/format';
+import {
+  atNoon,
+  MONTH_NAMES_SHORT,
+  parseDecimal,
+  parseKm,
+  sameDay,
+  sanitizeDecimal,
+} from '../../../core/format';
 
 export { parseDecimal, sanitizeDecimal };
 import { fuelTypeOptions, type FuelType, type NewFuelEntry } from '../../../core/fuel';
@@ -80,14 +87,19 @@ export function deriveAmounts(form: FuelForm): {
   };
 }
 
-/** "Hoje, 21 out" para o dia de hoje; "20 out" para os outros. */
+/** "Hoje, 21 out" para o dia de hoje; "20 out" para os outros (com o ano, se não é o atual). */
 export function formatEntryDate(date: Date, today: Date = new Date()): string {
   const text = `${date.getDate()} ${MONTH_NAMES_SHORT[date.getMonth()]}`;
-  const sameDay =
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate();
-  return sameDay ? `Hoje, ${text}` : text;
+  if (sameDay(date, today)) return `Hoje, ${text}`;
+  return date.getFullYear() === today.getFullYear() ? text : `${text} ${date.getFullYear()}`;
+}
+
+/**
+ * Data gravada no abastecimento: hoje guarda o instante de agora (a ordem entre os do mesmo dia
+ * segue a hora); outro dia vale ao meio-dia. Sem escolha, é agora.
+ */
+export function entryDateFor(picked: Date | null, now: Date = new Date()): Date {
+  return picked === null || sameDay(picked, now) ? now : atNoon(picked);
 }
 
 /**
