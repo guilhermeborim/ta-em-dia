@@ -13,9 +13,14 @@ export function formatKm(text: string): string {
 
 const nbsp = /\u00a0/g;
 
-/** "R$ 229,10". */
-export function formatBRL(value: number): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+/** "R$ 229,10" (ou "R$ 1.090" com `fractionDigits` 0). */
+export function formatBRL(value: number, fractionDigits = 2): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  })
     .format(value)
     .replace(nbsp, ' ');
 }

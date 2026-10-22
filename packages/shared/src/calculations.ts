@@ -194,6 +194,62 @@ export function nextMaintenance(
   return null;
 }
 
+export interface MonthFuelSummary {
+  /** Gasto com combustível no mês de `today`. */
+  spent: number;
+  /** Gasto no mês anterior (base da variação). */
+  previousSpent: number;
+  count: number;
+  /** Km rodados no mês: do último abastecimento antes do mês (ou do primeiro do mês) até o último. */
+  distanceKm: number | null;
+  /** Gasto ÷ km rodados no mês. Null sem distância. */
+  costPerKm: number | null;
+}
+
+const sameMonth = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+
+/**
+ * Resumo do mês dos abastecimentos (datas no fuso do aparelho). Sem um
+ * abastecimento antes do mês, o primeiro do mês só marca o km de partida:
+ * seu valor não entra no custo por km, porque abasteceu para rodar antes dele.
+ */
+export function monthFuelSummary(
+  entries: FuelEntryInput[],
+  today: Date = new Date(),
+): MonthFuelSummary {
+  const previousMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  const inMonth = entries.filter((e) => sameMonth(e.date, today));
+  const sum = (list: FuelEntryInput[]) => list.reduce((total, e) => total + e.total, 0);
+  const spent = sum(inMonth);
+  const previousSpent = sum(entries.filter((e) => sameMonth(e.date, previousMonth)));
+
+  if (inMonth.length === 0) {
+    return { spent, previousSpent, count: 0, distanceKm: null, costPerKm: null };
+  }
+
+  const before = entries.filter((e) => e.date < monthStart);
+  const baseline = before.length
+    ? before.reduce((latest, e) => (e.date > latest.date ? e : latest))
+    : inMonth.reduce((lowest, e) => (e.km < lowest.km ? e : lowest));
+  const baselineInMonth = before.length === 0;
+
+  const distance = Math.max(...inMonth.map((e) => e.km)) - baseline.km;
+  if (distance <= 0) {
+    return { spent, previousSpent, count: inMonth.length, distanceKm: null, costPerKm: null };
+  }
+  const spentForCost = baselineInMonth ? spent - baseline.total : spent;
+  return {
+    spent,
+    previousSpent,
+    count: inMonth.length,
+    distanceKm: distance,
+    costPerKm: costPerKm(spentForCost, distance),
+  };
+}
+
 /** Projeção do gasto do mês: gasto até hoje ÷ dias passados × dias do mês. */
 export function monthProjection(spentSoFar: number, today: Date = new Date()): number {
   const day = today.getDate();

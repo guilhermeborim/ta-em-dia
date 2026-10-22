@@ -1,12 +1,9 @@
-import {
-  calculateMissingFuelAmount,
-  type FuelAmountField,
-  type FuelEntry,
-} from '@ta-em-dia/shared';
-import { parseKm } from '../../../core/format';
-import type { NewFuelEntry } from './fuelEntries.repository';
+import { calculateMissingFuelAmount, type FuelAmountField } from '@ta-em-dia/shared';
+import { MONTH_NAMES_SHORT, parseKm } from '../../../core/format';
+import { fuelTypeOptions, type FuelType, type NewFuelEntry } from '../../../core/fuel';
 
-export type FuelType = FuelEntry['fuelType'];
+export { fuelTypeOptions };
+export type { FuelType };
 
 export interface FuelForm {
   fuelType: FuelType;
@@ -21,13 +18,6 @@ export interface FuelForm {
 }
 
 export type FuelFormErrors = Partial<Record<'amounts' | 'km', string>>;
-
-export const fuelTypeOptions: { type: FuelType; label: string }[] = [
-  { type: 'gasoline', label: 'Gasolina' },
-  { type: 'ethanol', label: 'Etanol' },
-  { type: 'diesel', label: 'Diesel' },
-  { type: 'gnv', label: 'GNV' },
-];
 
 export const emptyFuelForm: FuelForm = {
   fuelType: 'gasoline',
@@ -104,11 +94,9 @@ export function deriveAmounts(form: FuelForm): {
   };
 }
 
-const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-
 /** "Hoje, 21 out" para o dia de hoje; "20 out" para os outros. */
 export function formatEntryDate(date: Date, today: Date = new Date()): string {
-  const text = `${date.getDate()} ${MONTHS[date.getMonth()]}`;
+  const text = `${date.getDate()} ${MONTH_NAMES_SHORT[date.getMonth()]}`;
   const sameDay =
     date.getFullYear() === today.getFullYear() &&
     date.getMonth() === today.getMonth() &&

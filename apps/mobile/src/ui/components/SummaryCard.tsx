@@ -11,13 +11,22 @@ interface SummaryCardProps {
   amount: string;
   /** Variação contra o mês anterior. Ex.: "12% vs set". Omita se não houver. */
   variation?: string;
+  /** Seta da variação: para baixo (gastou menos) ou para cima. Padrão: para baixo. */
+  variationTrend?: 'up' | 'down';
   /** Ex.: "Projeção do mês: R$ 1.090". */
   projection?: string;
   stats: { label: string; value: string }[];
 }
 
 /** Cartão em destaque do Início: gasto do mês, projeção e três números. */
-export function SummaryCard({ title, amount, variation, projection, stats }: SummaryCardProps) {
+export function SummaryCard({
+  title,
+  amount,
+  variation,
+  variationTrend = 'down',
+  projection,
+  stats,
+}: SummaryCardProps) {
   return (
     <LinearGradient
       colors={[...primaryGradient.colors]}
@@ -31,7 +40,11 @@ export function SummaryCard({ title, amount, variation, projection, stats }: Sum
         </Text>
         {variation ? (
           <View style={styles.variation}>
-            <Icon name="trend-down" size={14} color={colors.onAccent} />
+            <Icon
+              name={variationTrend === 'up' ? 'trend-up' : 'trend-down'}
+              size={14}
+              color={colors.onAccent}
+            />
             <Text variant="caption" color="onAccent">
               {variation}
             </Text>

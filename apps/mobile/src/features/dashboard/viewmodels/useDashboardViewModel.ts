@@ -1,30 +1,53 @@
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDb } from '../../../core/db';
+import { buildAverage } from '../../../core/fuel';
 import { loadHomeState, type HomeState } from '../models/home.repository';
+import { buildHomeSummary, buildLastEntry, buildSavedToast } from '../models/homeSummary';
 import { vehicleDetails } from '../models/vehicleDetails';
 
-const TOAST_MS = 2500;
+const TOAST_MS = 4000;
 
-/** ViewModel do Início: veículo, estado vazio e navegação. Lê só o SQLite local. */
+interface ToastState {
+  title: string;
+  message?: string;
+}
+
+/**
+ * ViewModel do Início: veículo, estado vazio ou painel do mês, e navegação. Lê só o SQLite local.
+ * Depois de salvar um abastecimento, o formulário volta para cá com `saved` (o id) para mostrar o aviso.
+ */
 export function useDashboardViewModel() {
   const db = useDb();
   const router = useRouter();
+  const { saved } = useLocalSearchParams<{ saved?: string }>();
   const [state, setState] = useState<HomeState | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Recarrega ao voltar para a aba (ex.: depois de cadastrar um veículo).
+  const showToast = useCallback((value: ToastState) => {
+    setToast(value);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setToast(null), TOAST_MS);
+  }, []);
+
+  // Recarrega ao voltar para a aba (ex.: depois de salvar um abastecimento).
   useFocusEffect(
     useCallback(() => {
       let active = true;
       loadHomeState(db).then((value) => {
-        if (active) setState(value);
+        if (!active) return;
+        setState(value);
+        if (saved) {
+          const savedToast = buildSavedToast(value.entries, saved);
+          if (savedToast) showToast(savedToast);
+          router.setParams({ saved: undefined });
+        }
       });
       return () => {
         active = false;
       };
-    }, [db]),
+    }, [db, router, saved, showToast]),
   );
 
   useEffect(
@@ -34,23 +57,27 @@ export function useDashboardViewModel() {
     [],
   );
 
-  const comingSoon = useCallback(() => {
-    setToast('Em breve');
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setToast(null), TOAST_MS);
-  }, []);
-
   const vehicle = state?.vehicle ?? null;
+  const entries = useMemo(() => state?.entries ?? [], [state]);
+  const hasFuelEntries = entries.length > 0;
+  const summary = useMemo(
+    () => (hasFuelEntries ? buildHomeSummary(entries) : null),
+    [entries, hasFuelEntries],
+  );
+  const average = useMemo(() => buildAverage(entries), [entries]);
+  const lastEntry = useMemo(() => buildLastEntry(entries), [entries]);
 
   return {
     loading: state === null,
     vehicle: vehicle && { name: vehicle.name, details: vehicleDetails(vehicle) },
-    // O cartão do mês entra no item "Início com dados"; até lá, com dados só some o vazio.
-    showEmptyFuel: vehicle !== null && state?.hasFuelEntries === false,
+    showEmptyFuel: vehicle !== null && !hasFuelEntries,
+    summary,
+    average,
+    lastEntry,
     toast,
     openFuel: () => router.push('/novo-abastecimento'),
     openMaintenance: () => router.navigate('/manutencao'),
     addVehicle: () => router.push('/primeiro-veiculo'),
-    saveData: comingSoon,
+    saveData: () => showToast({ title: 'Em breve' }),
   };
 }

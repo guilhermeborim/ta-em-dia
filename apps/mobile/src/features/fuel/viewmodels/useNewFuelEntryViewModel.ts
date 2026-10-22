@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatKm } from '../../../core/format';
 import { useDb } from '../../../core/db';
 import { loadFuelFormContext, type FuelFormContext } from '../models/fuelContext';
-import { addFuelEntry } from '../models/fuelEntries.repository';
+import { addFuelEntry } from '../../../core/fuel';
 import {
   buildFuelEntryInput,
   deriveAmounts,
@@ -67,8 +67,8 @@ export function useNewFuelEntryViewModel() {
     }
     setBusy(true);
     try {
-      await addFuelEntry(db, result.value);
-      router.dismissTo('/');
+      const entry = await addFuelEntry(db, result.value);
+      router.dismissTo({ pathname: '/', params: { saved: entry.id } });
     } finally {
       setBusy(false);
     }

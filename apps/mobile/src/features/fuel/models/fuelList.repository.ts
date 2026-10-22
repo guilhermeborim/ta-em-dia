@@ -1,7 +1,7 @@
 import type { FuelEntry, Vehicle } from '@ta-em-dia/shared';
 import type { Db } from '../../../core/db';
 import { findActiveVehicle } from './fuelContext';
-import { listFuelEntries } from './fuelEntries.repository';
+import { listFuelEntries } from '../../../core/fuel';
 
 export interface FuelListData {
   vehicle: Pick<Vehicle, 'id' | 'name'> | null;

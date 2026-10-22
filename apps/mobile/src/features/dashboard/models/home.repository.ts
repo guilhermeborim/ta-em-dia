@@ -1,10 +1,17 @@
-import type { Vehicle } from '@ta-em-dia/shared';
+import type { FuelEntry, Vehicle } from '@ta-em-dia/shared';
 import type { Db } from '../../../core/db';
+import { listFuelEntries } from '../../../core/fuel';
 
 export interface HomeState {
   /** Veículo mostrado no topo (por enquanto, o mais antigo). `null` se não há veículo. */
-  vehicle: Pick<Vehicle, 'id' | 'name' | 'brand' | 'model' | 'year' | 'initialKm'> | null;
-  hasFuelEntries: boolean;
+  vehicle:
+    | (Pick<Vehicle, 'id' | 'name' | 'brand' | 'model' | 'year' | 'initialKm'> & {
+        /** O maior entre o km inicial e o do último abastecimento. */
+        currentKm: number;
+      })
+    | null;
+  /** Abastecimentos do veículo, do mais recente ao mais antigo. */
+  entries: FuelEntry[];
 }
 
 interface VehicleRow {
@@ -16,7 +23,7 @@ interface VehicleRow {
   initial_km: number;
 }
 
-/** Lê do SQLite o que o Início precisa para escolher entre o estado vazio e o com dados. */
+/** Lê do SQLite o que o Início precisa: o veículo e seus abastecimentos. */
 export async function loadHomeState(db: Db): Promise<HomeState> {
   const row = await db.getFirstAsync<VehicleRow>(
     `SELECT id, name, brand, model, year, initial_km
@@ -25,12 +32,10 @@ export async function loadHomeState(db: Db): Promise<HomeState> {
       ORDER BY created_at, id
       LIMIT 1`,
   );
-  if (!row) return { vehicle: null, hasFuelEntries: false };
+  if (!row) return { vehicle: null, entries: [] };
 
-  const count = await db.getFirstAsync<{ total: number }>(
-    'SELECT COUNT(*) AS total FROM fuel_entries WHERE vehicle_id = ? AND deleted_at IS NULL',
-    row.id,
-  );
+  const entries = await listFuelEntries(db, row.id);
+  const lastKm = Math.max(0, ...entries.map((e) => e.km));
 
   return {
     vehicle: {
@@ -40,7 +45,8 @@ export async function loadHomeState(db: Db): Promise<HomeState> {
       model: row.model ?? undefined,
       year: row.year ?? undefined,
       initialKm: row.initial_km,
+      currentKm: Math.max(row.initial_km, lastKm),
     },
-    hasFuelEntries: (count?.total ?? 0) > 0,
+    entries,
   };
 }

@@ -1,5 +1,5 @@
 import { fuelEntrySchema, type FuelEntry } from '@ta-em-dia/shared';
-import { enqueue, newId, type Db } from '../../../core/db';
+import { enqueue, newId, type Db } from '../db';
 
 type FuelEntryRow = {
   id: string;

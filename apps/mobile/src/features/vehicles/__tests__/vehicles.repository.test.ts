@@ -1,11 +1,7 @@
 import { migrate } from '../../../core/db/migrations';
 import { createTestDb } from '../../../core/db/testing/testDb';
 import type { Db } from '../../../core/db';
-import {
-  addFuelEntry,
-  listFuelEntries,
-  deleteFuelEntry,
-} from '../../fuel/models/fuelEntries.repository';
+import { addFuelEntry, listFuelEntries, deleteFuelEntry } from '../../../core/fuel';
 import { createVehicle, deleteVehicle, listVehicles } from '../models/vehicles.repository';
 
 const VEHICLE_ID = '018bcfe5-6800-7000-8000-000000000001';

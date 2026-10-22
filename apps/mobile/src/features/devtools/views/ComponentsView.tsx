@@ -209,6 +209,13 @@ export function ComponentsView() {
               { label: 'Média', value: '11,8 km/l' },
             ]}
           />
+          <SummaryCard
+            title="Gasto em outubro"
+            amount="R$ 612,40"
+            variation="8% vs set"
+            variationTrend="up"
+            stats={[{ label: 'Abastecimentos', value: '3 no mês' }]}
+          />
         </Section>
 
         <Section title="Consumo">
