@@ -38,6 +38,7 @@ describe('buildVehicleDetail', () => {
   it('monta título, placa, números e dados', () => {
     expect(buildVehicleDetail(data(), TODAY)).toEqual({
       title: 'Golzinho',
+      icon: 'car',
       plate: 'BRA2E19',
       stats: [
         { label: 'Km atual', value: '48.910' },
@@ -70,6 +71,12 @@ describe('buildVehicleDetail', () => {
     expect(view.plate).toBeUndefined();
     expect(view.rows.map((r) => r.label)).toEqual(['Combustível', 'Km atualizado']);
     expect(view.rows[0].value).toBe('Combustão');
+  });
+
+  it('moto: ícone próprio e o tipo aparece como "Moto"', () => {
+    const view = buildVehicleDetail(data({ vehicle: { ...vehicle, type: 'motorcycle' } }), TODAY);
+    expect(view.icon).toBe('motorbike');
+    expect(view.rows.find((r) => r.value === 'Moto')?.label).toBe('Tipo');
   });
 
   it('sem km rodado, o custo/km fica "—"; sem leitura, avisa que só há o km inicial', () => {

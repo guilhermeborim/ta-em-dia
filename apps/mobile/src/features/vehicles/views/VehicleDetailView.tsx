@@ -40,7 +40,7 @@ export function VehicleDetailView() {
         <>
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.hero}>
-              <Icon name="car" size={72} color={colors.primary} />
+              <Icon name={view.icon} size={72} color={colors.primary} />
               {view.plate ? <LicensePlate value={view.plate} /> : null}
             </View>
 

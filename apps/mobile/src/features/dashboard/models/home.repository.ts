@@ -13,7 +13,7 @@ import { listPlans, loadVehicleKm } from '../../../core/maintenance';
 export interface HomeState {
   /** Veículo mostrado no topo (o primeiro de "Meus veículos"). `null` se não há veículo. */
   vehicle:
-    | (Pick<Vehicle, 'id' | 'name' | 'brand' | 'model' | 'year' | 'initialKm'> & {
+    | (Pick<Vehicle, 'id' | 'name' | 'type' | 'brand' | 'model' | 'year' | 'initialKm'> & {
         /** O maior entre o km inicial e o do último abastecimento, serviço ou leitura manual. */
         currentKm: number;
       })
@@ -31,6 +31,7 @@ export interface HomeState {
 interface VehicleRow {
   id: string;
   name: string;
+  type: Vehicle['type'];
   brand: string | null;
   model: string | null;
   year: number | null;
@@ -40,7 +41,7 @@ interface VehicleRow {
 /** Lê do SQLite o que o Início precisa: o veículo e seus abastecimentos. */
 export async function loadHomeState(db: Db): Promise<HomeState> {
   const row = await db.getFirstAsync<VehicleRow>(
-    `SELECT id, name, brand, model, year, initial_km
+    `SELECT id, name, type, brand, model, year, initial_km
        FROM vehicles
       WHERE deleted_at IS NULL AND archived = 0
       ORDER BY sort_order, created_at, id
@@ -63,6 +64,7 @@ export async function loadHomeState(db: Db): Promise<HomeState> {
     vehicle: {
       id: row.id,
       name: row.name,
+      type: row.type,
       brand: row.brand ?? undefined,
       model: row.model ?? undefined,
       year: row.year ?? undefined,

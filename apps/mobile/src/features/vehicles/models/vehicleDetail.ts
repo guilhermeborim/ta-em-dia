@@ -1,5 +1,6 @@
 import { costPerKm, type Vehicle } from '@ta-em-dia/shared';
 import { formatBRL, formatNumber, relativeDays } from '../../../core/format';
+import { vehicleIcon } from '../../../core/vehicle';
 import type { InfoRow } from '../../../ui';
 
 export interface VehicleDetailData {
@@ -15,6 +16,8 @@ export interface VehicleDetailData {
 
 export interface VehicleDetailView {
   title: string;
+  /** Ícone do tipo: carro ou moto. */
+  icon: 'car' | 'motorbike';
   /** Placa em maiúsculas; sem placa cadastrada, fica de fora. */
   plate?: string;
   stats: { label: string; value: string }[];
@@ -25,6 +28,7 @@ const typeLabel: Record<Vehicle['type'], string> = {
   flex: 'Flex',
   combustion: 'Combustão',
   electric: 'Elétrico',
+  motorcycle: 'Moto',
 };
 
 /**
@@ -43,7 +47,10 @@ export function buildVehicleDetail(
   const rows: InfoRow[] = [];
   if (model) rows.push({ label: 'Marca e modelo', value: model });
   if (vehicle.year) rows.push({ label: 'Ano', value: String(vehicle.year) });
-  rows.push({ label: 'Combustível', value: typeLabel[vehicle.type] });
+  rows.push({
+    label: vehicle.type === 'motorcycle' ? 'Tipo' : 'Combustível',
+    value: typeLabel[vehicle.type],
+  });
   rows.push({
     label: 'Km atualizado',
     value: data.lastReadingAt ? relativeDays(data.lastReadingAt, today) : 'Só o km inicial',
@@ -51,6 +58,7 @@ export function buildVehicleDetail(
 
   return {
     title: vehicle.name,
+    icon: vehicleIcon(vehicle.type),
     plate: vehicle.plate?.toUpperCase(),
     stats: [
       { label: 'Km atual', value: formatNumber(data.currentKm, 0) },

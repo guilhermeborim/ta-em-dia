@@ -5,7 +5,7 @@ import {
   type Vehicle,
 } from '@ta-em-dia/shared';
 import { statusOfDocument } from '../../../core/documents';
-import { vehicleDetails } from '../../../core/vehicle';
+import { vehicleDetails, vehicleIcon } from '../../../core/vehicle';
 
 /** Veículo com o que "Meus veículos" precisa para montar o cartão. */
 export interface VehicleListEntry {
@@ -23,6 +23,8 @@ export type VehicleStatusTone = 'ok' | 'warning' | 'danger';
 export interface VehicleCardView {
   id: string;
   name: string;
+  /** Ícone do tipo: carro ou moto. */
+  icon: 'car' | 'motorbike';
   /** Ex.: "VW Gol 1.0 · 2019 · 48.910 km". */
   details: string;
   /** Sem lembretes com intervalo, o cartão fica sem selo. */
@@ -70,6 +72,7 @@ export function buildVehicleCards(
   return entries.map((entry, index) => ({
     id: entry.vehicle.id,
     name: entry.vehicle.name,
+    icon: vehicleIcon(entry.vehicle.type),
     details: vehicleDetails({ ...entry.vehicle, currentKm: entry.currentKm }),
     status: vehicleStatus(entry, today),
     canMoveUp: index > 0,

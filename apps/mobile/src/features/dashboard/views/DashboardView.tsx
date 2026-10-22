@@ -31,7 +31,11 @@ export function DashboardView() {
         {vm.vehicle ? (
           <>
             <View style={styles.top}>
-              <VehicleSelector name={vm.vehicle.name} details={vm.vehicle.details} />
+              <VehicleSelector
+                name={vm.vehicle.name}
+                icon={vm.vehicle.icon}
+                details={vm.vehicle.details}
+              />
               <SyncPill state="local" label="No aparelho" />
             </View>
 

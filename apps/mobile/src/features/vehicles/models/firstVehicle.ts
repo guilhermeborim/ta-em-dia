@@ -25,10 +25,10 @@ export const emptyFirstVehicleForm: FirstVehicleForm = {
   km: '',
 };
 
-/** Carro vira `flex` e moto `combustion` até o schema ganhar um tipo próprio de moto. */
+/** Carro vira `flex` e moto `motorcycle`. */
 const typeByKind: Record<VehicleKind, NewVehicle['type']> = {
   car: 'flex',
-  motorcycle: 'combustion',
+  motorcycle: 'motorcycle',
 };
 
 const onlyDigits = (text: string) => text.replace(/\D/g, '');
