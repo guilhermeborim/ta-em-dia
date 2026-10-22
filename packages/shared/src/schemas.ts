@@ -3,7 +3,7 @@ import { parseDueDate } from './documents';
 
 /** Schemas compartilhados: validam formulários no app e DTOs na API. */
 
-export const vehicleTypeSchema = z.enum(['combustion', 'flex', 'electric']);
+export const vehicleTypeSchema = z.enum(['combustion', 'flex', 'electric', 'motorcycle']);
 export const fuelTypeSchema = z.enum(['gasoline', 'ethanol', 'diesel', 'gnv']);
 
 export const vehicleSchema = z.object({
