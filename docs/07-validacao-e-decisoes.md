@@ -2,7 +2,7 @@
 
 Tudo o que foi implementado sem poder rodar no aparelho (nenhum PR foi testado em emulador nem comparado com o Figma) e tudo o que ainda precisa de uma decisão do dono do projeto. Marque `[x]` à medida que validar e apague as decisões já tomadas (registre o resultado no doc de referência, como `03-arquitetura.md`).
 
-Cobre os PRs #27 a #36 (Histórico até API: usuário anônimo). O que veio antes (Boas-vindas até o alerta de manutenção) também não foi validado no aparelho por quem escreveu este documento; veja a seção 2.11.
+Cobre os PRs #27 a #37 (Histórico até App: usuário anônimo). O que veio antes (Boas-vindas até o alerta de manutenção) também não foi validado no aparelho por quem escreveu este documento; veja a seção 2.12.
 
 ## Como manter este arquivo
 
@@ -17,7 +17,7 @@ Regra do projeto (`CLAUDE.md`): ao terminar cada feature, no mesmo PR, quem impl
 - Node 24 (`.nvmrc`), `pnpm install`, `pnpm --filter @ta-em-dia/shared build` depois de mudar o `shared`.
 - **Development build no Android** (`npx expo run:android` ou `eas build --profile development`). As notificações locais usam `expo-notifications`, que não existe no Expo Go.
 - **iOS**: sem build, `scheduler.ios.ts` e `permission.ios.ts` não agendam nada. Nenhum aviso (manutenção ou documentos) chega no iPhone ainda.
-- Teste **duas vezes**: com o app instalado do zero e **atualizando** uma versão antiga com dados (as migrations 5, 6 e 7 só adicionam, mas precisam rodar sobre dados reais; ver 2.12).
+- Teste **duas vezes**: com o app instalado do zero e **atualizando** uma versão antiga com dados (as migrations 5, 6 e 7 só adicionam, mas precisam rodar sobre dados reais; ver 2.13).
 - Tela grande de fonte do sistema (Configurações do Android, "Tamanho da fonte") ligada em pelo menos uma passada: nada pode cortar nem sobrepor.
 - Para ver os avisos chegarem sem esperar dias: o aviso sai às 9h. No Android, ajuste a data e a hora do aparelho para perto das 9h do dia do aviso e abra o app (ele reagenda ao abrir e ao voltar para a frente).
 
@@ -137,7 +137,20 @@ Testado só contra um Postgres local (Docker) e no CI sem banco; nunca no Render
 - [ ] `GET /health` e `GET /v1/config` seguem abertos (sem token).
 - [ ] Primeira chamada com o serviço dormindo (plano grátis) demora cerca de 1 minuto: o app precisa de um timeout generoso (PR do app).
 
-### 2.10 Transversal
+### 2.10 App: usuário anônimo (PR #37)
+
+Precisa da API de staging no ar (PR #36 aplicado) e de um build novo do app apontando para ela (`EXPO_PUBLIC_API_URL`).
+
+- [ ] Primeira abertura: boas-vindas → "Continuar sem login" → o app abre normalmente, sem esperar a API. Em Mais → Status do app, a linha "Usuário anônimo na API" passa a "criado, acesso válido" (toque em "Testar de novo" depois de alguns segundos).
+- [ ] No Neon: um `users` com `isAnonymous = true`, um `devices` com a plataforma certa e um `refresh_tokens`.
+- [ ] Reabrir o app (e voltar do segundo plano) com acesso ainda válido não cria nada novo no banco.
+- [ ] Modo avião na primeira abertura: o app funciona normal e a Status mostra "ainda não criado". Desligue o modo avião com o app aberto: em até 5 minutos (ou ao sair e voltar ao app) vira "criado".
+- [ ] Com o serviço do Render dormindo, a primeira chamada demora cerca de 1 minuto e o app não trava nem mostra erro.
+- [ ] Passados 15 minutos, ao voltar ao app a Status mostra "criado, acesso válido" de novo (o acesso foi renovado; o `users` continua um só).
+- [ ] "Reiniciar App" (Status) apaga a sessão e, ao refazer o login, cria um usuário novo.
+- [ ] Nenhum token, segredo ou id de aparelho aparece em `adb logcat`.
+
+### 2.11 Transversal
 
 - [ ] Todo formulário obrigatório mostra `*` vermelho e a mensagem de erro abaixo do campo (Veículo, Atualizar km, Prazo).
 - [ ] Alvos de toque de 44 pt (botões redondos do topo, chips, linhas).
@@ -147,11 +160,11 @@ Testado só contra um Postgres local (Docker) e no CI sem banco; nunca no Render
 - [ ] Nenhuma placa em log (`adb logcat`) nem em mensagem de erro.
 - [ ] Catálogo de componentes (Mais → Catálogo, só fora de produção): `TimelineItem`, `StatTile`, `LicensePlate`, `TopBar`, `VehicleCard`, `DocumentItem`, gráficos, `AccountCard`, `ListGroup`, `FeatureItem` renderizam.
 
-### 2.11 O que veio antes (não revisado aqui)
+### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
 
-### 2.12 Migrations e dados existentes
+### 2.13 Migrations e dados existentes
 
 Com um aparelho que já tem dados da versão anterior ao PR #28:
 
@@ -258,8 +271,16 @@ Sem development build para iOS, nenhum aviso agenda. Quando houver, apague `sche
 
 ### 3.19 Renovar o token sem `/auth/refresh`
 
-A API devolve um refresh token (guardado só como hash, 90 dias), mas ainda não há rota para trocá-lo. Enquanto isso, o app renova o acesso chamando `POST /v1/auth/anonymous` de novo (idempotente: mesmo usuário, tokens novos), e cada chamada guarda mais um refresh token que ninguém usa. **Decidir:** criar `POST /v1/auth/refresh` junto do sync (com rotação do token), ou deixar o app sempre chamar `/auth/anonymous` e parar de devolver o refresh token até o login social existir. Recomendação: `/auth/refresh` no PR do sync, que é quando o token passa a ser necessário.
+A API devolve um refresh token (guardado só como hash, 90 dias), mas ainda não há rota para trocá-lo. Enquanto isso, o app renova o acesso chamando `POST /v1/auth/anonymous` de novo (idempotente: mesmo usuário, tokens novos), e cada chamada guarda mais um refresh token que ninguém usa. Hoje o app só renova ao abrir ou voltar a ele (o acesso dura 15 min); o motor de sync precisará renovar na hora de enviar. **Decidir:** criar `POST /v1/auth/refresh` junto do sync (com rotação do token), ou deixar o app sempre chamar `/auth/anonymous` e parar de devolver o refresh token até o login social existir. Recomendação: `/auth/refresh` no PR do sync, que é quando o token passa a ser necessário.
 
 ### 3.20 `GET /v1/config` continua público
 
 Devolve sempre o plano `free`. Com o guard global agora existindo, ele ficou marcado `@Public()`. Quando o app mandar o token, a rota deve passar a ler o plano do usuário. Nada a decidir agora; só não esquecer no PR do app ou do sync.
+
+### 3.21 Tentar de novo sem saber se a internet voltou
+
+O app não detecta a volta da conexão (isso pede `expo-network` ou `@react-native-community/netinfo`, nativos, com novo development build). Em vez disso tenta ao abrir, ao voltar para a frente e a cada 15 s, 30 s, 1, 2 e 5 min enquanto está na frente. Quem liga a internet com o app aberto pode esperar até 5 minutos. **Decidir:** manter assim (recomendado: o app é offline-first e nada depende disso agora) ou adicionar o módulo de rede quando o sync precisar reagir ao sinal.
+
+### 3.22 Reinstalar o app no iPhone mantém o usuário anônimo
+
+O Keychain do iOS pode sobreviver à desinstalação: o app reinstalado reaproveita o `installation_id` e o segredo e volta ao mesmo usuário na API (no Android, o SecureStore some junto com o app e nasce um usuário novo). Quando o sync existir, isso devolve os dados no iPhone, mas deixa o usuário antigo órfão no Android. **Decidir** se isso é o desejado ou se o app deve apagar as credenciais na primeira abertura depois de reinstalar (o que perde o backup anônimo). Recomendação: manter.
