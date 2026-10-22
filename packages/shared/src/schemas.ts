@@ -16,6 +16,8 @@ export const vehicleSchema = z.object({
   initialKm: z.number().int().nonnegative(),
   /** Posição em "Meus veículos" (0 é o primeiro, o veículo ativo). */
   sortOrder: z.number().int().nonnegative().optional(),
+  /** Arquivado: some das listas e dos avisos, mas guarda o histórico. */
+  archived: z.boolean().optional(),
 });
 
 export const fuelEntrySchema = z.object({
