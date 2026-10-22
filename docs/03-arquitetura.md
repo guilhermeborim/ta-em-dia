@@ -202,6 +202,8 @@ Todo usuário tem conta na API desde o primeiro uso: quem toca "Continuar sem lo
 2. `POST /v1/auth/anonymous` com os dois → a API cria `users(is_anonymous=true)` + `auth_identities(provider='anonymous')` e devolve access token (15 min) e refresh token (90 dias).
 3. O app funciona 100% offline mesmo se essa chamada falhar; ela é refeita quando houver internet.
 
+**No app:** `useAnonymousSession` (em `core/auth`, ligado em `src/app/_layout.tsx` depois do "Continuar sem login") chama `ensureAnonymousSession` ao abrir o app e ao voltar para a frente. Se já há sessão com acesso válido (a mais de 2 minutos de expirar), não chama a API. Os tokens ficam em um único item do SecureStore (`api_session`: tokens da API e quando o acesso expira); o id e o segredo do aparelho, em `installation_id` e `installation_secret`. Sem internet, timeout (60 s, porque o serviço grátis dorme) ou erro 5xx, o `createSessionKeeper` tenta de novo com espera crescente (15 s, 30 s, 1, 2 e 5 min, e fica em 5) enquanto o app está na frente. Se a API recusar o aparelho (4xx, como `INVALID_CREDENTIALS`), não repete. Nada da chamada vai para log. "Reiniciar App" (desenvolvimento) apaga também a sessão. A tela Status mostra se o usuário anônimo foi criado. As telas continuam lendo só o SQLite: nada espera por essa chamada.
+
 **Entrar com Google ou Apple**
 
 1. O app obtém o `id_token` nativo (Google Sign-In e `expo-apple-authentication`).

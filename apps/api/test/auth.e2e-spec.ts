@@ -1,6 +1,7 @@
 import { Controller, Get, INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { authTokensSchema } from '@ta-em-dia/shared';
 import { AppModule } from '../src/app.module';
 import { CurrentUserId } from '../src/common/auth/current-user.decorator';
 import { AuthRepository } from '../src/modules/auth/auth.repository';
@@ -70,6 +71,8 @@ describe('POST /v1/auth/anonymous (e2e)', () => {
       expiresIn: 900,
       user: { isAnonymous: true, plan: 'free' },
     });
+    // Contrato com o app: ele valida a resposta com o mesmo schema.
+    expect(authTokensSchema.safeParse(res.body).success).toBe(true);
     expect(typeof res.body.accessToken).toBe('string');
     expect(typeof res.body.refreshToken).toBe('string');
     expect(identities.get(body.installationId)?.secretHash).toBe(sha256(body.secret));

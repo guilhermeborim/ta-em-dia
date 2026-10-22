@@ -1,4 +1,5 @@
 import { ensureInstallationCredentials, type SecretStore } from '../../../core/auth';
+import { saveSession, toSession } from '../../../core/auth/session';
 import { migrate } from '../../../core/db';
 import { createTestDb } from '../../../core/db/testing/testDb';
 import { isLoginDone, markLoginDone } from '../../login/models/login.repository';
@@ -25,6 +26,18 @@ describe('resetApp', () => {
     await markOnboardingDone(db);
     await markLoginDone(db, 'anonymous');
     await ensureInstallationCredentials(store, { id: () => 'id', secret: () => 's' });
+    await saveSession(
+      store,
+      toSession(
+        {
+          accessToken: 'a',
+          expiresIn: 900,
+          refreshToken: 'r',
+          user: { id: 'u', isAnonymous: true, plan: 'free' },
+        },
+        new Date(),
+      ),
+    );
     const vehicle = await createVehicle(db, { name: 'Gol', type: 'flex', initialKm: 100 });
     await addFuelEntry(db, {
       vehicleId: vehicle.id,

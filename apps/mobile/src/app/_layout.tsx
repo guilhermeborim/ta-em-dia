@@ -2,6 +2,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { useAnonymousSession } from '../core/auth';
 import { DatabaseProvider } from '../core/db';
 import { useReminderLifecycle } from '../core/reminders';
 import { LoginProvider, useLogin } from '../features/login/LoginProvider';
@@ -24,6 +25,9 @@ function AppReady() {
 
   // Avisos de manutenção: reagenda ao abrir e ao voltar ao app; tocar num aviso abre o item.
   useReminderLifecycle(ready && done === true && loginDone === true);
+
+  // Usuário anônimo na API: só tenta depois do "Continuar sem login"; o app funciona sem ele.
+  useAnonymousSession(ready && done === true && loginDone === true);
 
   // Se a fonte falhar, o app abre com a fonte do sistema em vez de travar na splash.
   if (!ready) return null;
