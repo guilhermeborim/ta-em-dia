@@ -21,6 +21,7 @@ Veja também o `CLAUDE.md` da raiz. O `AGENTS.md` acima veio do template do Expo
 - Botão "Entrar com Apple" só no iOS (`Platform.OS === 'ios'`).
 - Textos de interface em português (BR); valores em R$ com `Intl.NumberFormat('pt-BR')`.
 - Campo obrigatório sempre leva `*` vermelho depois do rótulo (`required` no `TextField`) e mostra a mensagem de erro abaixo da caixa (`error`). Sem `*`, o campo é opcional. A validação vive no Model.
+- Abas: Início, Abastecer, Manutenção, Relatórios e Mais, com o `TabBar` de `src/ui` (layout em `src/app/(tabs)/_layout.tsx`). Status e Componentes (desenvolvimento) ficam sob Mais e só aparecem fora de produção.
 - Só tema claro (sem tema escuro). Suporte à fonte grande do sistema. Alvos de toque ≥ 44 pt.
 - Cores, tipografia, raios e sombras vêm de `src/ui` (tokens do Figma). Não escreva cor ou tamanho de fonte solto nas telas.
 - Dependência nativa nova: `npx expo install <pacote>` (versão compatível com o SDK) e avise que exige development build.
