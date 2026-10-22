@@ -56,6 +56,8 @@ export function FirstVehicleView() {
 
           <TextField
             label="Marca"
+            required
+            error={vm.errors.brand}
             value={vm.form.brand}
             onChangeText={vm.setBrand}
             placeholder="Ex.: Volkswagen"
@@ -64,6 +66,8 @@ export function FirstVehicleView() {
           />
           <TextField
             label="Modelo"
+            required
+            error={vm.errors.model}
             value={vm.form.model}
             onChangeText={vm.setModel}
             placeholder="Ex.: Gol 1.0 MPI"
@@ -74,17 +78,14 @@ export function FirstVehicleView() {
             <View style={styles.flex}>
               <TextField
                 label="Ano"
+                required
+                error={vm.errors.year}
                 value={vm.form.year}
                 onChangeText={vm.setYear}
                 placeholder="2019"
                 keyboardType="number-pad"
                 maxLength={4}
               />
-              {vm.errors.year ? (
-                <Text variant="caption" color="danger">
-                  {vm.errors.year}
-                </Text>
-              ) : null}
             </View>
             <View style={styles.flex}>
               <TextField
@@ -98,17 +99,14 @@ export function FirstVehicleView() {
           </View>
           <TextField
             label="Km atual (olha no painel)"
+            required
+            error={vm.errors.km}
             suffix="km"
             value={vm.form.km}
             onChangeText={vm.setKm}
             placeholder="0"
             keyboardType="number-pad"
           />
-          {vm.errors.km ? (
-            <Text variant="caption" color="danger">
-              {vm.errors.km}
-            </Text>
-          ) : null}
 
           <View style={styles.spacer} />
 

@@ -7,21 +7,38 @@ interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   label: string;
   /** Texto fixo à direita (ex.: unidade). */
   suffix?: string;
+  /** Campo obrigatório: mostra um * vermelho depois do rótulo. */
+  required?: boolean;
+  /** Mensagem de erro abaixo da caixa; a borda fica vermelha. */
+  error?: string;
 }
 
 /** Campo de texto: rótulo em cima, caixa de 52 pt. A borda fica roxa em foco. */
-export function TextField({ label, suffix, onFocus, onBlur, ...input }: TextFieldProps) {
+export function TextField({
+  label,
+  suffix,
+  required,
+  error,
+  onFocus,
+  onBlur,
+  ...input
+}: TextFieldProps) {
   const [focused, setFocused] = useState(false);
 
   return (
     <View style={styles.wrapper}>
       <Text variant="small" color="text2">
         {label}
+        {required ? (
+          <Text variant="small" color="danger">
+            {' *'}
+          </Text>
+        ) : null}
       </Text>
-      <View style={[styles.box, focused && styles.boxFocused]}>
+      <View style={[styles.box, focused && styles.boxFocused, !!error && styles.boxError]}>
         <TextInput
           {...input}
-          accessibilityLabel={label}
+          accessibilityLabel={required ? `${label}, obrigatório` : label}
           placeholderTextColor={colors.text3}
           onFocus={(e) => {
             setFocused(true);
@@ -39,6 +56,11 @@ export function TextField({ label, suffix, onFocus, onBlur, ...input }: TextFiel
           </Text>
         ) : null}
       </View>
+      {error ? (
+        <Text variant="caption" color="danger">
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -57,6 +79,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   boxFocused: { borderColor: colors.primary },
+  boxError: { borderColor: colors.danger },
   input: {
     flex: 1,
     padding: 0,
