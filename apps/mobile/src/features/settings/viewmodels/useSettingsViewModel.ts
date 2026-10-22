@@ -1,0 +1,65 @@
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { useDb } from '../../../core/db';
+import { requestNotificationPermission } from '../../../core/notifications';
+import { refreshReminders } from '../../../core/reminders';
+import {
+  loadSettings,
+  saveToggle,
+  type AppSettings,
+  type ToggleSetting,
+} from '../../../core/settings';
+import { useToast } from '../../../core/toast/useToast';
+import { formatNotifyDays } from '../models/settingsView';
+
+/** ViewModel de Configurações (tela 20): avisos por tipo, antecedência padrão, unidades e exportar. */
+export function useSettingsViewModel() {
+  const db = useDb();
+  const router = useRouter();
+  const { toast, show } = useToast();
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+
+  // Recarrega ao voltar (ex.: depois de mudar a antecedência).
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      loadSettings(db).then((value) => {
+        if (active) setSettings(value);
+      });
+      return () => {
+        active = false;
+      };
+    }, [db]),
+  );
+
+  const toggle = useCallback(
+    async (key: ToggleSetting, value: boolean) => {
+      setSettings((prev) => (prev ? { ...prev, [key]: value } : prev));
+      await saveToggle(db, key, value);
+      // Ligar um aviso sem a permissão do sistema não adiantaria: pede agora (só se ainda não foi dada).
+      if (value && (await requestNotificationPermission()) === 'denied') {
+        show({
+          title: 'Notificações desativadas',
+          message: 'Ative nos ajustes do aparelho para receber os avisos.',
+        });
+      }
+      await refreshReminders(db);
+    },
+    [db, show],
+  );
+
+  return {
+    loading: settings === null,
+    toast,
+    notifyMaintenance: settings?.notifyMaintenance ?? false,
+    notifyDocuments: settings?.notifyDocuments ?? false,
+    notifyOdometer: settings?.notifyOdometer ?? false,
+    documentNotifyDays: settings ? formatNotifyDays(settings.documentNotifyDays) : '',
+    setNotifyMaintenance: (value: boolean) => void toggle('notifyMaintenance', value),
+    setNotifyDocuments: (value: boolean) => void toggle('notifyDocuments', value),
+    setNotifyOdometer: (value: boolean) => void toggle('notifyOdometer', value),
+    openNotifyDays: () => router.push('/configuracoes/antecedencia'),
+    exportData: () => show({ title: 'Em breve' }),
+    back: () => router.back(),
+  };
+}

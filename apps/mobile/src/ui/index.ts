@@ -35,6 +35,7 @@ export {
   FuelItem,
   MenuItem,
   RecordItem,
+  SettingItem,
   SuggestionItem,
   TimelineItem,
   type TimelineKind,

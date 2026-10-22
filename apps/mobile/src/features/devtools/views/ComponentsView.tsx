@@ -32,6 +32,7 @@ import {
   RecordItem,
   OwnBadge,
   PremiumBadge,
+  SettingItem,
   SocialButton,
   spacing,
   StackedBarChart,
@@ -507,6 +508,21 @@ export function ComponentsView() {
               valueTone="danger"
             />
             <MenuItem icon="crown" label="Premium" right={<PremiumBadge />} />
+          </ListGroup>
+        </Section>
+
+        <Section title="Configurações">
+          <ListGroup>
+            <SwitchRow
+              flat
+              label="Manutenções"
+              hint="Óleo, filtros, pneus, revisão"
+              value={fullTank}
+              onValueChange={setFullTank}
+            />
+            <SettingItem title="Antecedência" value="30 e 7 dias" onPress={() => undefined} />
+            <SettingItem title="Distância" value="km" chevron={false} />
+            <SettingItem title="Exportar dados" hint="Em breve" onPress={() => undefined} />
           </ListGroup>
         </Section>
 

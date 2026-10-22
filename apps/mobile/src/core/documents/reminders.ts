@@ -10,6 +10,7 @@ import {
   type ReminderNotification,
   type ReminderScheduler,
 } from '../notifications';
+import { loadSettings } from '../settings';
 import { findActiveVehicle } from '../vehicle';
 import { listDocuments } from './documents.repository';
 
@@ -30,7 +31,8 @@ function body(kind: DocumentKind, vehicleName: string, daysBefore: number): stri
  * Reagenda os avisos de vencimento (notificações locais) do veículo ativo e da CNH: um por dia
  * de antecedência de cada prazo, às 9h. Troca todos os avisos de documentos antigos pelos novos.
  * Chame depois de mudar um prazo, e ao abrir o app ou voltar a ele. Sem permissão não agenda
- * nada (e não pede). Nunca lança erro.
+ * nada (e não pede). Com os avisos de documentos desligados em Configurações, só cancela os
+ * antigos. Nunca lança erro.
  */
 export async function refreshDocumentReminders(
   db: Db,
@@ -41,7 +43,9 @@ export async function refreshDocumentReminders(
 
   try {
     const vehicle = await findActiveVehicle(db);
-    const documents = await listDocuments(db, vehicle?.id);
+    // Desligado em Configurações: nada agendado (e o que havia é cancelado).
+    const { notifyDocuments } = await loadSettings(db);
+    const documents = notifyDocuments ? await listDocuments(db, vehicle?.id) : [];
 
     const items: ReminderNotification[] = documentReminders(documents, now).map((reminder) => ({
       id: `${DOCUMENT_REMINDER_PREFIX}${reminder.documentId}:${reminder.daysBefore}`,

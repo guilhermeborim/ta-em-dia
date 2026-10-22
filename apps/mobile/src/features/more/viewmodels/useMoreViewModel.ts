@@ -30,7 +30,7 @@ export function useMoreViewModel() {
     }, [db]),
   );
 
-  // Conta, configurações e ajuda ainda não existem: avisam, como o "Salve seus dados" do Início.
+  // Conta e ajuda ainda não existem: avisam, como o "Salve seus dados" do Início.
   const comingSoon = useCallback(() => show({ title: 'Em breve' }), [show]);
 
   return {
@@ -43,7 +43,7 @@ export function useMoreViewModel() {
     /** "1 vencido" ao lado de Documentos e prazos; `null` quando está tudo em dia. */
     documentsBadge: documents,
     openAccount: comingSoon,
-    openSettings: comingSoon,
+    openSettings: () => router.push('/configuracoes'),
     openHelp: comingSoon,
     openVehicles: () => router.push('/veiculos'),
     openDocuments: () => router.push('/documentos'),

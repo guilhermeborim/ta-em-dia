@@ -2,7 +2,7 @@
 
 Tudo o que foi implementado sem poder rodar no aparelho (nenhum PR foi testado em emulador nem comparado com o Figma) e tudo o que ainda precisa de uma decisão do dono do projeto. Marque `[x]` à medida que validar e apague as decisões já tomadas (registre o resultado no doc de referência, como `03-arquitetura.md`).
 
-Cobre os PRs #27 a #34 (Histórico até Mais e Premium em breve). O que veio antes (Boas-vindas até o alerta de manutenção) também não foi validado no aparelho por quem escreveu este documento; veja a seção 2.9.
+Cobre os PRs #27 a #35 (Histórico até Configurações). O que veio antes (Boas-vindas até o alerta de manutenção) também não foi validado no aparelho por quem escreveu este documento; veja a seção 2.10.
 
 ## Como manter este arquivo
 
@@ -17,7 +17,7 @@ Regra do projeto (`CLAUDE.md`): ao terminar cada feature, no mesmo PR, quem impl
 - Node 24 (`.nvmrc`), `pnpm install`, `pnpm --filter @ta-em-dia/shared build` depois de mudar o `shared`.
 - **Development build no Android** (`npx expo run:android` ou `eas build --profile development`). As notificações locais usam `expo-notifications`, que não existe no Expo Go.
 - **iOS**: sem build, `scheduler.ios.ts` e `permission.ios.ts` não agendam nada. Nenhum aviso (manutenção ou documentos) chega no iPhone ainda.
-- Teste **duas vezes**: com o app instalado do zero e **atualizando** uma versão antiga com dados (as migrations 5, 6 e 7 só adicionam, mas precisam rodar sobre dados reais; ver 2.10).
+- Teste **duas vezes**: com o app instalado do zero e **atualizando** uma versão antiga com dados (as migrations 5, 6 e 7 só adicionam, mas precisam rodar sobre dados reais; ver 2.11).
 - Tela grande de fonte do sistema (Configurações do Android, "Tamanho da fonte") ligada em pelo menos uma passada: nada pode cortar nem sobrepor.
 - Para ver os avisos chegarem sem esperar dias: o aviso sai às 9h. No Android, ajuste a data e a hora do aparelho para perto das 9h do dia do aviso e abra o app (ele reagenda ao abrir e ao voltar para a frente).
 
@@ -106,12 +106,27 @@ Aba Relatórios.
 
 - [ ] Cartão da conta "Sem login" com selo "Salvo no aparelho"; tocar mostra o aviso "Em breve".
 - [ ] Grupos de itens iguais ao Figma; número de veículos ao lado de Meus veículos; selo PREMIUM em Premium.
-- [ ] Conta, Configurações e Ajuda e contato mostram "Em breve" (o aviso aparece **acima** do botão flutuante).
+- [ ] Conta e Ajuda e contato mostram "Em breve" (o aviso aparece **acima** do botão flutuante).
 - [ ] Botão flutuante "Abastecer" abre o formulário e não cobre o último item da lista.
 - [ ] Premium abre em modal: título, 5 recursos, "Avise-me quando lançar". Depois de tocar, o botão some e aparece "Anotado! Avisamos você quando o Premium sair." e isso continua ao reabrir o app.
 - [ ] Em produção (`APP_ENV=production`) os atalhos "Status do app" e "Catálogo de componentes" não aparecem.
 
-### 2.8 Transversal
+### 2.8 Configurações (tela 20, PR #35)
+
+- [ ] Tela igual ao frame 20 (sem o bloco Aparência): grupos Notificações e Unidades e dados, interruptores, "30 e 7 dias" e "km"/"litros" à direita.
+- [ ] Ligar um interruptor sem a permissão de notificações do sistema mostra "Notificações desativadas"; com a permissão, não mostra nada.
+- [ ] **Manutenções** desligado: nenhum aviso de manutenção chega (os já agendados somem). Ligar de novo traz de volta.
+- [ ] **Documentos** desligado: idem para os vencimentos.
+- [ ] **Lembrar de atualizar o km** ligado: chega "Faz 15 dias sem atualizar o km do <veículo>" às 9h, 15 dias depois da última atualização (leitura, abastecimento ou serviço); tocar abre "Atualizar km" do veículo. Sem atualizar, repete a cada 15 dias ("Faz 30 dias..."). Para ver sem esperar, mude a data do aparelho.
+- [ ] Atualizar o km (ou abastecer) empurra o próximo lembrete.
+- [ ] **Antecedência** abre em modal, salva e a linha mostra o novo valor ao voltar. Prazo novo já vem com esses dias marcados; os prazos que já existem não mudam.
+- [ ] Sem nenhum dia marcado, "Salvar" mostra "Marque ao menos um dia".
+- [ ] Exportar dados mostra "Em breve" (o aviso aparece sem cobrir o conteúdo).
+- [ ] Distância e Volume não têm seta nem abrem nada.
+- [ ] No iOS nada é agendado até haver development build (como nos outros avisos).
+- [ ] Fonte grande do sistema: nenhuma linha corta o valor à direita.
+
+### 2.9 Transversal
 
 - [ ] Todo formulário obrigatório mostra `*` vermelho e a mensagem de erro abaixo do campo (Veículo, Atualizar km, Prazo).
 - [ ] Alvos de toque de 44 pt (botões redondos do topo, chips, linhas).
@@ -121,11 +136,11 @@ Aba Relatórios.
 - [ ] Nenhuma placa em log (`adb logcat`) nem em mensagem de erro.
 - [ ] Catálogo de componentes (Mais → Catálogo, só fora de produção): `TimelineItem`, `StatTile`, `LicensePlate`, `TopBar`, `VehicleCard`, `DocumentItem`, gráficos, `AccountCard`, `ListGroup`, `FeatureItem` renderizam.
 
-### 2.9 O que veio antes (não revisado aqui)
+### 2.10 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
 
-### 2.10 Migrations e dados existentes
+### 2.11 Migrations e dados existentes
 
 Com um aparelho que já tem dados da versão anterior ao PR #28:
 
@@ -186,21 +201,22 @@ Deixa o app sem veículo ativo; as telas pedem "Cadastre seu veículo" até rest
 - Sem a categoria "Documentos" do Figma: documentos guardam só datas, sem valor. Atualizar o Figma ou guardar um valor opcional (dado novo; passa por `05-privacidade-lgpd.md`).
 - Custo por km = só abastecimentos ÷ km rodados. Incluir manutenção?
 
-### 3.10 Configurações (próximo item)
+### 3.10 Configurações (PR #35)
 
-- **Aparência (Automático/Claro/Escuro)** está no Figma, mas o app é só tema claro (`apps/mobile/CLAUDE.md`). Decidir se o Figma será atualizado ou se o tema escuro entra no roadmap.
-- **Unidades** (km/mi, litros/galões): só km e litros existem; trocar de unidade mexe em quase todas as telas. Decidir se entra no MVP.
-- **"Lembrar de atualizar o km a cada 15 dias"**: é um aviso novo (periódico). Confirmar o comportamento: a cada 15 dias contados da última atualização, até a pessoa atualizar?
-- **Antecedência padrão** dos prazos: vale só para prazos novos ou também para os existentes?
+- **Aparência (Automático/Claro/Escuro)** está no Figma, mas o app é só tema claro (`apps/mobile/CLAUDE.md`) e o bloco foi omitido. Decidir se o Figma será atualizado ou se o tema escuro entra no roadmap.
+- **Unidades** (km/mi, litros/galões): só km e litros existem; Distância e Volume mostram o valor e **não** têm seta nem abrem nada (o Figma tem seta). Trocar de unidade mexe em quase todas as telas. **Decidir** se entra no MVP; senão, tirar a seta do Figma. Recomendação: Fase 2.
+- **"Lembrar de atualizar o km"**: assumi que avisa 15 dias depois da última atualização do km (leitura manual, abastecimento ou serviço; sem nenhuma, a data do cadastro do veículo) e **repete a cada 15 dias** até a pessoa atualizar. Só o veículo ativo. Alternativa: avisar uma vez só. Recomendação: manter a repetição, que só dura até atualizar.
+- **Antecedência padrão** dos prazos: vale só para prazos **novos**; os existentes mantêm os próprios dias (a pessoa já os escolheu no prazo). Exige ao menos um dia marcado. Alternativa: aplicar também aos existentes. Recomendação: manter.
+- **Pedido de permissão**: ligar um interruptor pede a permissão do sistema se ela ainda não foi dada (no Android 13+ só aparece uma vez). Se negada, o app avisa e segue sem agendar.
 - Exportar dados fica "Em breve" (item da Fase B, LGPD).
 
 ### 3.11 Telas sem frame no Figma
 
-Pedir ao designer, ou aprovar o que foi feito seguindo os formulários do app: **Atualizar km**, **Editar veículo** (com Arquivar e Excluir), **Adicionar/editar prazo** (com antecedências), **Antecedência** (Configurações) e os textos de confirmação de exclusão.
+Pedir ao designer, ou aprovar o que foi feito seguindo os formulários do app: **Atualizar km**, **Editar veículo** (com Arquivar e Excluir), **Adicionar/editar prazo** (com antecedências), **Antecedência** (Configurações, modal) e os textos de confirmação de exclusão.
 
 ### 3.12 Textos para revisar
 
-Escritos por mim, sem revisão de redação: alerta "Excluir veículo?" e "Excluir prazo?", avisos de arquivar/restaurar, "Anotado! Avisamos você...", mensagens de erro ("O km não pode ser menor que o atual (N km)", "Placa inválida (ex.: ABC1D23)"), estados vazios, mensagens do banner de prazos.
+Escritos por mim, sem revisão de redação: alerta "Excluir veículo?" e "Excluir prazo?", avisos de arquivar/restaurar, "Anotado! Avisamos você...", mensagens de erro ("O km não pode ser menor que o atual (N km)", "Placa inválida (ex.: ABC1D23)"), estados vazios, mensagens do banner de prazos, e em Configurações "Notificações desativadas / Ative nos ajustes do aparelho para receber os avisos.", "Marque ao menos um dia" e o texto "Às 9h do dia marcado. Vale para os prazos novos; os que já existem mantêm os próprios dias.".
 
 ### 3.13 Moto
 

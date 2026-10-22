@@ -53,6 +53,8 @@ function AppReady() {
         <Stack.Screen name="historico" />
         <Stack.Screen name="premium" options={{ presentation: 'modal' }} />
         <Stack.Screen name="veiculos" />
+        <Stack.Screen name="configuracoes" />
+        <Stack.Screen name="configuracoes/antecedencia" options={{ presentation: 'modal' }} />
         <Stack.Screen name="documentos" />
         <Stack.Screen name="documento/novo" options={{ presentation: 'modal' }} />
         <Stack.Screen name="documento/[id]" options={{ presentation: 'modal' }} />

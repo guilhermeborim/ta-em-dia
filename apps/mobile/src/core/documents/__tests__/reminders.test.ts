@@ -2,6 +2,7 @@ import { migrate } from '../../db/migrations';
 import { createTestDb } from '../../db/testing/testDb';
 import type { Db } from '../../db';
 import type { ReminderNotification, ReminderScheduler } from '../../notifications';
+import { saveToggle } from '../../settings';
 import { addDocument } from '../documents.repository';
 import { countDocuments } from '../summary';
 import { DOCUMENT_REMINDER_PREFIX, refreshDocumentReminders } from '../reminders';
@@ -43,6 +44,17 @@ async function addVehicle(name = 'Gol') {
 }
 
 describe('refreshDocumentReminders', () => {
+  it('desligado em Configurações: não agenda nada e cancela os avisos antigos', async () => {
+    await addVehicle();
+    await addDocument(db, { vehicleId: VEHICLE_ID, kind: 'ipva', dueDate: '2026-12-20' });
+    await saveToggle(db, 'notifyDocuments', false);
+    await refresh();
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].prefix).toBe(DOCUMENT_REMINDER_PREFIX);
+    expect(last()).toEqual([]);
+  });
+
   it('agenda um aviso por dia de antecedência, às 9h, com o texto do tipo', async () => {
     await addVehicle();
     const ipva = await addDocument(db, {

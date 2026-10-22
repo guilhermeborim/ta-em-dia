@@ -286,6 +286,57 @@ export function MenuItem({ icon, label, value, valueTone, right, onPress }: Menu
   );
 }
 
+interface SettingItemProps {
+  /** Ex.: "Antecedência". */
+  title: string;
+  /** Linha menor abaixo do título (ex.: "Em breve"). */
+  hint?: string;
+  /** Valor atual à direita (ex.: "30 e 7 dias"). */
+  value?: string;
+  /** Seta à direita, para mostrar que abre outra tela. Padrão: sim. */
+  chevron?: boolean;
+  onPress?: () => void;
+}
+
+/** Linha de Configurações: título, dica opcional, valor atual e seta. Sem ícone (ver `MenuItem`). */
+export function SettingItem({ title, hint, value, chevron = true, onPress }: SettingItemProps) {
+  const content = (
+    <>
+      <View style={styles.main}>
+        <Text variant="bodyStrong">{title}</Text>
+        {hint ? (
+          <Text variant="small" color="text2">
+            {hint}
+          </Text>
+        ) : null}
+      </View>
+      {value ? <Text color="text2">{value}</Text> : null}
+      {chevron ? <Icon name="chevron-right" size={18} color={colors.text3} /> : null}
+    </>
+  );
+  if (!onPress) {
+    return (
+      <View
+        accessible
+        accessibilityLabel={value ? `${title}, ${value}` : title}
+        style={[styles.row, styles.setting]}
+      >
+        {content}
+      </View>
+    );
+  }
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={value ? `${title}, ${value}` : title}
+      onPress={onPress}
+      style={[styles.row, styles.setting]}
+    >
+      {content}
+    </Pressable>
+  );
+}
+
 interface SuggestionItemProps {
   /** Ex.: "Correia dentada". */
   title: string;
@@ -327,6 +378,7 @@ const styles = StyleSheet.create({
   feature: { gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   document: { gap: 12, paddingLeft: 16, paddingRight: 14, paddingVertical: 14 },
   menu: { gap: 14, paddingHorizontal: 16, paddingVertical: 14 },
+  setting: { gap: 12, paddingLeft: 16, paddingRight: 14, paddingVertical: 12, minHeight: 44 },
   main: { flex: 1, gap: 2 },
   right: { alignItems: 'flex-end', gap: 2 },
   timeline: { flexDirection: 'row', alignItems: 'stretch', gap: 12 },

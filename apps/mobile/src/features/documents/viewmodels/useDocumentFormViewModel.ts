@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useDb } from '../../../core/db';
 import { refreshReminders } from '../../../core/reminders';
+import { loadSettings } from '../../../core/settings';
 import { addDocument, deleteDocument, findDocument, updateDocument } from '../../../core/documents';
 import {
   buildDocumentInput,
@@ -52,10 +53,15 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
         }
         return;
       }
-      const loaded = await loadDocuments(db);
+      const [loaded, settings] = await Promise.all([loadDocuments(db), loadSettings(db)]);
       if (!active) return;
       setData(loaded);
-      setForm((prev) => ({ ...prev, kind: availableKinds(loaded)[0] ?? null }));
+      // Prazo novo já vem com a antecedência padrão de Configurações.
+      setForm((prev) => ({
+        ...prev,
+        kind: availableKinds(loaded)[0] ?? null,
+        notifyDays: settings.documentNotifyDays,
+      }));
     })();
     return () => {
       active = false;
