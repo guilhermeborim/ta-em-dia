@@ -72,7 +72,7 @@ São 22 telas, agrupadas por área.
 | 18  | Documentos e prazos    | IPVA, licenciamento, seguro (por veículo) e CNH (por pessoa), com data e status (em dia / vence em X dias / vencido) | Adicionar data, editar lembrete         |
 | 19  | Conta                  | Modo anônimo: chamada "Salve seus dados" com Google (e Apple, no iPhone). Logado: nome, e-mail, último sync          | Vincular conta, sair, excluir conta     |
 | 20  | Configurações          | Tema, notificações por tipo, antecedência dos alertas, unidades, exportar dados (futuro)                             | Alterar                                 |
-| 21  | Premium (em breve)     | Lista de recursos Premium com selo, sem preço                                                                        | Avise-me                                |
+| 21  | Premium (em breve)     | Lista de recursos Premium com selo, sem preço                                                                        | Tenho interesse                         |
 | 22  | Excluir conta          | Aviso claro do que será apagado, confirmação                                                                         | Confirmar exclusão                      |
 
 ## Fluxos principais

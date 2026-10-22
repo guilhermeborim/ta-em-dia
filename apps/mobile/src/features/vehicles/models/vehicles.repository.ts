@@ -196,23 +196,40 @@ export async function updateVehicle(
   return updated;
 }
 
+/** Resultado de arquivar ou restaurar. */
+export type ArchiveResult = 'ok' | 'not_found' | 'last_active';
+
+/** Aviso quando o único veículo ativo não pode ser arquivado. */
+export const LAST_ACTIVE_MESSAGE = 'Você precisa de outro veículo ativo para arquivar este.';
+
 /**
  * Arquiva ou restaura. Arquivar tira o veículo das listas e dos avisos; restaurar o põe no fim
- * de "Meus veículos". `false` se o veículo não existe.
+ * de "Meus veículos". Arquivar o único veículo ativo é bloqueado (`last_active`): o app nunca
+ * fica sem veículo ativo por causa disso.
  */
 export async function setVehicleArchived(
   db: Db,
   id: string,
   archived: boolean,
   now: Date = new Date(),
-): Promise<boolean> {
+): Promise<ArchiveResult> {
   const at = now.toISOString();
-  let found = false;
+  let result: ArchiveResult = 'not_found';
 
   await db.withTransactionAsync(async () => {
     const current = await findVehicle(db, id);
     if (!current) return;
-    found = true;
+    if (archived && !current.archived) {
+      const others = await db.getFirstAsync<{ total: number }>(
+        'SELECT COUNT(*) AS total FROM vehicles WHERE deleted_at IS NULL AND archived = 0 AND id <> ?',
+        id,
+      );
+      if ((others?.total ?? 0) === 0) {
+        result = 'last_active';
+        return;
+      }
+    }
+    result = 'ok';
     const last = await db.getFirstAsync<{ next: number }>(
       'SELECT COALESCE(MAX(sort_order) + 1, 0) AS next FROM vehicles WHERE deleted_at IS NULL',
     );
@@ -227,7 +244,7 @@ export async function setVehicleArchived(
     await enqueue(db, 'vehicles', id, 'upsert', { ...current, archived, sortOrder }, at);
   });
 
-  return found;
+  return result;
 }
 
 /** Tabelas que dependem do veículo e saem junto com ele. */

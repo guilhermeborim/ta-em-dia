@@ -27,7 +27,7 @@ import { loadDocuments } from '../models/documents.repository';
 export function useDocumentFormViewModel(mode: 'add' | 'edit') {
   const db = useDb();
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, vehicleId } = useLocalSearchParams<{ id?: string; vehicleId?: string }>();
   const [data, setData] = useState<DocumentsData | null>(null);
   const [title, setTitle] = useState('');
   // `undefined` = carregando; `null` = não existe (ou foi excluído).
@@ -53,7 +53,10 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
         }
         return;
       }
-      const [loaded, settings] = await Promise.all([loadDocuments(db), loadSettings(db)]);
+      const [loaded, settings] = await Promise.all([
+        loadDocuments(db, vehicleId),
+        loadSettings(db),
+      ]);
       if (!active) return;
       setData(loaded);
       // Prazo novo já vem com a antecedência padrão de Configurações.
@@ -66,7 +69,7 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
     return () => {
       active = false;
     };
-  }, [db, id, mode]);
+  }, [db, id, mode, vehicleId]);
 
   const close = useCallback(() => router.back(), [router]);
 
