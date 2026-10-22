@@ -96,6 +96,57 @@ export function RecordItem({ title, details, cost, flat, onPress }: RecordItemPr
   );
 }
 
+const timelineKinds = {
+  fuel: { icon: 'fuel', background: colors.primarySoft, color: colors.primary },
+  maintenance: { icon: 'wrench', background: colors.warningSoft, color: colors.warning },
+  document: { icon: 'file', background: colors.successSoft, color: colors.success },
+} as const;
+
+export type TimelineKind = keyof typeof timelineKinds;
+
+interface TimelineItemProps {
+  kind: TimelineKind;
+  /** Ex.: "Abastecimento". */
+  title: string;
+  /** Ex.: "18 out · 38,2 L · 13,1 km/l". */
+  details: string;
+  /** Ex.: "R$ 229,10". Omita se não houve valor informado. */
+  value?: string;
+  /** Último da linha do tempo: sem o traço que liga ao próximo. */
+  last?: boolean;
+  onPress?: () => void;
+}
+
+/** Item da linha do tempo (Histórico): ícone redondo por tipo, traço e cartão com o valor. */
+export function TimelineItem({ kind, title, details, value, last, onPress }: TimelineItemProps) {
+  const { icon, background, color } = timelineKinds[kind];
+  return (
+    <View style={styles.timeline}>
+      <View style={styles.rail}>
+        <View style={[styles.dot, { backgroundColor: background }]}>
+          <Icon name={icon} size={18} color={color} />
+        </View>
+        {last ? null : <View style={styles.line} />}
+      </View>
+      <Pressable
+        accessibilityRole={onPress ? 'button' : 'text'}
+        accessibilityLabel={value ? `${title}, ${details}, ${value}` : `${title}, ${details}`}
+        disabled={!onPress}
+        onPress={onPress}
+        style={[styles.timelineCard, last && styles.timelineLast]}
+      >
+        <View style={styles.main}>
+          <Text variant="bodyStrong">{title}</Text>
+          <Text variant="small" color="text2">
+            {details}
+          </Text>
+        </View>
+        {value ? <Text variant="bodyStrong">{value}</Text> : null}
+      </Pressable>
+    </View>
+  );
+}
+
 interface MenuItemProps {
   icon: IconName;
   label: string;
@@ -174,4 +225,26 @@ const styles = StyleSheet.create({
   menu: { gap: 14, paddingHorizontal: 16, paddingVertical: 14 },
   main: { flex: 1, gap: 2 },
   right: { alignItems: 'flex-end', gap: 2 },
+  timeline: { flexDirection: 'row', alignItems: 'stretch', gap: 12 },
+  rail: { alignItems: 'center', gap: 4, width: 36 },
+  dot: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  line: { flex: 1, minHeight: 28, width: 2, backgroundColor: colors.border },
+  timelineCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+  },
+  timelineLast: { marginBottom: 0 },
 });
