@@ -16,6 +16,7 @@ import {
   Logo,
   MenuItem,
   NoIntervalCard,
+  NotificationPreview,
   NumberField,
   OwnBadge,
   PremiumBadge,
@@ -200,6 +201,18 @@ export function ComponentsView() {
           <ConsumptionCard periodAverage="11,8" periodCalc="3 trechos" exactAverage="12,1" />
           <ConsumptionCard periodAverage="11,8" periodCalc="3 trechos" />
           <ConsumptionCard />
+        </Section>
+
+        <Section title="Notificação">
+          <NotificationPreview
+            title="Troca de óleo do Golzinho em ~500 km"
+            text="Agende antes de esquecer"
+          />
+          <NotificationPreview
+            dimmed
+            title="IPVA do Golzinho vence em 10 dias"
+            text="Evite multa e juros"
+          />
         </Section>
 
         <Section title="Alertas de manutenção">

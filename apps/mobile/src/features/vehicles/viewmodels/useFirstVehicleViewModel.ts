@@ -27,8 +27,7 @@ export function useFirstVehicleViewModel() {
     [],
   );
 
-  // Próximo passo do fluxo ainda não existe (permissão de notificações): vai para o app.
-  const next = useCallback(() => router.replace('/'), [router]);
+  const next = useCallback(() => router.replace('/permissao-notificacoes'), [router]);
 
   const save = useCallback(async () => {
     const result = buildVehicleInput(form);
