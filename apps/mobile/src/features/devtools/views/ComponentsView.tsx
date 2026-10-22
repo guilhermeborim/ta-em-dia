@@ -23,6 +23,7 @@ import {
   NotificationPreview,
   NumberField,
   ProgressRing,
+  RecordItem,
   OwnBadge,
   PremiumBadge,
   SocialButton,
@@ -348,6 +349,11 @@ export function ComponentsView() {
             details="30,0 L · Gasolina · cheio"
             total="R$ 182,70"
             kmPerLiter="12,2 km/l"
+          />
+          <RecordItem
+            title="Troca de óleo"
+            details="12 jan 2026 · 40.320 km · Auto Center do Zé"
+            cost="R$ 289,00"
           />
           <SuggestionItem
             title="Correia dentada"

@@ -1,6 +1,6 @@
 import type { Db } from './types';
 
-export type OutboxTable = 'vehicles' | 'fuel_entries' | 'maintenance_plans';
+export type OutboxTable = 'vehicles' | 'fuel_entries' | 'maintenance_plans' | 'maintenance_records';
 
 /** Registra uma mudança local para o sync enviar depois. Chame dentro da mesma transação da gravação. */
 export async function enqueue(

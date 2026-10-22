@@ -108,6 +108,10 @@ export function PlanDetailView() {
 
           <View style={styles.footer}>
             <Button
+              label={view.ring ? 'Marcar como feita' : 'Registrar de novo'}
+              onPress={vm.markDone}
+            />
+            <Button
               label={view.ring ? 'Editar intervalo' : 'Definir intervalo (opcional)'}
               variant="outline"
               onPress={vm.edit}
