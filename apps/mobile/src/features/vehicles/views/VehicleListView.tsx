@@ -45,6 +45,7 @@ export function VehicleListView() {
                   details={card.details}
                   accent={accents[index % accents.length]}
                   status={card.status}
+                  onPress={() => vm.openVehicle(card.id)}
                   onLongPress={vm.canReorder ? () => vm.openMoveMenu(card.id) : undefined}
                   onMoveUp={card.canMoveUp ? () => vm.moveUp(card.id) : undefined}
                   onMoveDown={card.canMoveDown ? () => vm.moveDown(card.id) : undefined}

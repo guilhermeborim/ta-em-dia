@@ -60,6 +60,7 @@ export function useVehicleListViewModel() {
     cards,
     /** Com um veículo só, não há o que reordenar. */
     canReorder: cards.length > 1,
+    openVehicle: (id: string) => router.push({ pathname: '/veiculo/[id]', params: { id } }),
     openMoveMenu,
     moveUp: (id: string) => move(id, -1),
     moveDown: (id: string) => move(id, 1),

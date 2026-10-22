@@ -13,6 +13,7 @@ import {
   FloatingButton,
   FuelItem,
   Icon,
+  LicensePlate,
   IconAvatar,
   InfoBanner,
   InfoCard,
@@ -28,6 +29,7 @@ import {
   PremiumBadge,
   SocialButton,
   spacing,
+  StatTile,
   StatusPill,
   SummaryCard,
   SyncPill,
@@ -389,6 +391,17 @@ export function ComponentsView() {
               value="R$ 160,22"
               last
             />
+          </View>
+        </Section>
+
+        <Section title="Números e placa">
+          <View style={styles.row}>
+            <StatTile label="Km atual" value="48.910" />
+            <StatTile label="Média/dia" value="42 km" />
+            <StatTile label="Custo/km" value="R$ 0,47" />
+          </View>
+          <View style={styles.row}>
+            <LicensePlate value="BRA2E19" />
           </View>
         </Section>
 

@@ -1,18 +1,25 @@
-import type { FuelEntry, MaintenancePlan, Vehicle } from '@ta-em-dia/shared';
+import {
+  dailyAverageKm,
+  type FuelEntry,
+  type MaintenancePlan,
+  type Vehicle,
+} from '@ta-em-dia/shared';
 import type { Db } from '../../../core/db';
 import { listFuelEntries } from '../../../core/fuel';
-import { listPlans } from '../../../core/maintenance';
+import { listPlans, loadVehicleKm } from '../../../core/maintenance';
 
 export interface HomeState {
   /** Veículo mostrado no topo (o primeiro de "Meus veículos"). `null` se não há veículo. */
   vehicle:
     | (Pick<Vehicle, 'id' | 'name' | 'brand' | 'model' | 'year' | 'initialKm'> & {
-        /** O maior entre o km inicial e o do último abastecimento ou serviço de manutenção. */
+        /** O maior entre o km inicial e o do último abastecimento, serviço ou leitura manual. */
         currentKm: number;
       })
     | null;
   /** Abastecimentos do veículo, do mais recente ao mais antigo. */
   entries: FuelEntry[];
+  /** Média de km por dia (abastecimentos e leituras manuais; 30 km/dia sem histórico). */
+  dailyKm: number;
   /** Planos de manutenção do veículo (ativos e desativados). */
   plans: MaintenancePlan[];
 }
@@ -35,14 +42,10 @@ export async function loadHomeState(db: Db): Promise<HomeState> {
       ORDER BY sort_order, created_at, id
       LIMIT 1`,
   );
-  if (!row) return { vehicle: null, entries: [], plans: [] };
+  if (!row) return { vehicle: null, entries: [], dailyKm: dailyAverageKm([]), plans: [] };
 
   const entries = await listFuelEntries(db, row.id);
-  const recordKm = await db.getFirstAsync<{ km: number | null }>(
-    'SELECT MAX(km) AS km FROM maintenance_records WHERE vehicle_id = ? AND deleted_at IS NULL',
-    row.id,
-  );
-  const lastKm = Math.max(0, recordKm?.km ?? 0, ...entries.map((e) => e.km));
+  const { currentKm, dailyKm } = await loadVehicleKm(db, row.id, row.initial_km);
 
   return {
     vehicle: {
@@ -52,9 +55,10 @@ export async function loadHomeState(db: Db): Promise<HomeState> {
       model: row.model ?? undefined,
       year: row.year ?? undefined,
       initialKm: row.initial_km,
-      currentKm: Math.max(row.initial_km, lastKm),
+      currentKm,
     },
     entries,
+    dailyKm,
     plans: await listPlans(db, row.id),
   };
 }

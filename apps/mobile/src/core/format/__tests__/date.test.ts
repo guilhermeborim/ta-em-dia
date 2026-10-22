@@ -1,4 +1,4 @@
-import { formatDateInput, parseDateInput, toDateInput } from '../date';
+import { formatDateInput, parseDateInput, relativeDays, toDateInput } from '../date';
 
 const TODAY = new Date(2026, 9, 21, 15);
 
@@ -39,5 +39,24 @@ describe('parseDateInput', () => {
   it('29 de fevereiro só em ano bissexto', () => {
     expect(parseDateInput('29/02/2024', TODAY).error).toBeUndefined();
     expect(parseDateInput('29/02/2025', TODAY).error).toBe('Data inválida');
+  });
+});
+
+describe('relativeDays', () => {
+  it('conta os dias do calendário, não as 24 horas', () => {
+    expect(relativeDays(new Date(2026, 9, 21, 8), TODAY)).toBe('hoje');
+    expect(relativeDays(new Date(2026, 9, 20, 23), TODAY)).toBe('ontem');
+    expect(relativeDays(new Date(2026, 9, 18), TODAY)).toBe('há 3 dias');
+  });
+
+  it('passa para meses e anos', () => {
+    expect(relativeDays(new Date(2026, 8, 20), TODAY)).toBe('há 1 mês');
+    expect(relativeDays(new Date(2026, 5, 1), TODAY)).toBe('há 4 meses');
+    expect(relativeDays(new Date(2025, 9, 21), TODAY)).toBe('há 1 ano');
+    expect(relativeDays(new Date(2023, 9, 21), TODAY)).toBe('há 3 anos');
+  });
+
+  it('data futura vira hoje', () => {
+    expect(relativeDays(new Date(2026, 9, 25), TODAY)).toBe('hoje');
   });
 });
