@@ -3,6 +3,8 @@
  * A data é "aaaa-mm-dd" (sem hora), para o dia não mudar com o fuso.
  */
 
+import { REMINDER_HOUR } from './maintenance';
+
 export const DOCUMENT_KINDS = ['ipva', 'licensing', 'insurance', 'cnh'] as const;
 export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
 
@@ -48,6 +50,48 @@ export interface DocumentStatus {
   tone: DocumentTone;
   /** Dias até vencer: 0 é hoje, negativo se já venceu. */
   daysLeft: number;
+}
+
+/** Opções de antecedência que a pessoa pode marcar, em dias. */
+export const DOCUMENT_NOTIFY_OPTIONS = [30, 15, 7, 3, 1];
+
+export interface DocumentReminderInput {
+  id: string;
+  kind: DocumentKind;
+  dueDate: string;
+  notifyDays: number[];
+}
+
+export interface DocumentReminder {
+  documentId: string;
+  kind: DocumentKind;
+  /** Quantos dias antes do vencimento este aviso chega. */
+  daysBefore: number;
+  fireAt: Date;
+}
+
+/**
+ * Avisos a agendar: um por dia de antecedência de cada prazo, às `REMINDER_HOUR` horas (fuso do
+ * aparelho). Só os que ainda estão no futuro; o que já passou não é repetido e prazo vencido não
+ * avisa mais. Do mais próximo ao mais distante.
+ */
+export function documentReminders(
+  documents: DocumentReminderInput[],
+  now: Date = new Date(),
+  hour: number = REMINDER_HOUR,
+): DocumentReminder[] {
+  const reminders: DocumentReminder[] = [];
+  for (const document of documents) {
+    const due = parseDueDate(document.dueDate);
+    if (!due) continue;
+    for (const daysBefore of new Set(document.notifyDays)) {
+      const fireAt = new Date(due.getFullYear(), due.getMonth(), due.getDate() - daysBefore, hour);
+      if (fireAt > now) {
+        reminders.push({ documentId: document.id, kind: document.kind, daysBefore, fireAt });
+      }
+    }
+  }
+  return reminders.sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime());
 }
 
 /**
