@@ -12,12 +12,18 @@ export const anonymousAuthSchema = z.object({
 
 export type AnonymousAuthRequest = z.infer<typeof anonymousAuthSchema>;
 
-export interface AuthTokens {
+export const authTokensSchema = z.object({
   /** JWT de curta duração (`Authorization: Bearer`). */
-  accessToken: string;
+  accessToken: z.string().min(1),
   /** Segundos até o `accessToken` expirar. */
-  expiresIn: number;
+  expiresIn: z.number().int().positive(),
   /** Token opaco de longa duração; a API guarda só o hash. */
-  refreshToken: string;
-  user: { id: string; isAnonymous: boolean; plan: 'free' | 'premium' };
-}
+  refreshToken: z.string().min(1),
+  user: z.object({
+    id: z.string().min(1),
+    isAnonymous: z.boolean(),
+    plan: z.enum(['free', 'premium']),
+  }),
+});
+
+export type AuthTokens = z.infer<typeof authTokensSchema>;

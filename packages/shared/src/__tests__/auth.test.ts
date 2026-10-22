@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anonymousAuthSchema } from '../auth';
+import { anonymousAuthSchema, authTokensSchema } from '../auth';
 
 const valid = {
   installationId: '018bcfe5-6800-7000-8000-000000000001',
@@ -20,5 +20,25 @@ describe('anonymousAuthSchema', () => {
 
   it('recusa campos que faltam', () => {
     expect(anonymousAuthSchema.safeParse({}).success).toBe(false);
+  });
+});
+
+describe('authTokensSchema', () => {
+  const tokens = {
+    accessToken: 'a.b.c',
+    expiresIn: 900,
+    refreshToken: 'r',
+    user: { id: '018bcfe5-6800-7000-8000-000000000001', isAnonymous: true, plan: 'free' },
+  };
+
+  it('aceita a resposta da API', () => {
+    expect(authTokensSchema.parse(tokens)).toEqual(tokens);
+  });
+
+  it('recusa resposta incompleta ou com tipos errados', () => {
+    expect(authTokensSchema.safeParse({ ...tokens, accessToken: '' }).success).toBe(false);
+    expect(authTokensSchema.safeParse({ ...tokens, expiresIn: '900' }).success).toBe(false);
+    expect(authTokensSchema.safeParse({ ...tokens, user: { id: 'x' } }).success).toBe(false);
+    expect(authTokensSchema.safeParse({}).success).toBe(false);
   });
 });
