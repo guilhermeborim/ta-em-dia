@@ -11,15 +11,22 @@ export interface FuelFormContext {
   suggestedKm: number | null;
 }
 
-/** Lê do SQLite o que o formulário sugere: veículo, último combustível e km. */
-export async function loadFuelFormContext(db: Db): Promise<FuelFormContext> {
-  const vehicle = await db.getFirstAsync<{ id: string; name: string; initial_km: number }>(
+/** Veículo ativo mais antigo (o do Início, por enquanto), ou `null` se não há veículo. */
+export async function findActiveVehicle(
+  db: Db,
+): Promise<{ id: string; name: string; initial_km: number } | null> {
+  return db.getFirstAsync<{ id: string; name: string; initial_km: number }>(
     `SELECT id, name, initial_km
        FROM vehicles
       WHERE deleted_at IS NULL AND archived = 0
       ORDER BY created_at, id
       LIMIT 1`,
   );
+}
+
+/** Lê do SQLite o que o formulário sugere: veículo, último combustível e km. */
+export async function loadFuelFormContext(db: Db): Promise<FuelFormContext> {
+  const vehicle = await findActiveVehicle(db);
   if (!vehicle) return { vehicle: null, lastFuelType: null, suggestedKm: null };
 
   const last = await db.getFirstAsync<{ fuel_type: FuelType }>(

@@ -294,6 +294,13 @@ export function ComponentsView() {
             kmPerLiter="11,8 km/l"
           />
           <FuelItem title="Ipiranga" details="28 set · 40 L · Etanol" total="R$ 188,00" />
+          <FuelItem
+            flat
+            title="09 out · Shell"
+            details="30,0 L · Gasolina · cheio"
+            total="R$ 182,70"
+            kmPerLiter="12,2 km/l"
+          />
           <MenuItem icon="car" label="Meus veículos" />
           <MenuItem icon="bell" label="Lembretes" value="Ativos" />
         </Section>

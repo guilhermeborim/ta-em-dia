@@ -1,1 +1,1 @@
-export { formatKm, parseKm } from './number';
+export { formatBRL, formatKm, formatNumber, parseKm } from './number';
