@@ -194,6 +194,58 @@ export function nextMaintenance(
   return null;
 }
 
+export interface FuelPeriodSummary {
+  /** Gasto com combustível no período. */
+  spent: number;
+  /** Litros colocados no período. */
+  liters: number;
+  count: number;
+  /** Km rodados no período: do último abastecimento antes dele (ou do primeiro dentro dele) até o último. */
+  distanceKm: number | null;
+  /** Gasto ÷ km rodados. Null sem distância. */
+  costPerKm: number | null;
+}
+
+/**
+ * Resumo dos abastecimentos de um período `[start, end)` (datas no fuso do aparelho). Sem um
+ * abastecimento antes do período, o primeiro dele só marca o km de partida: seu valor não entra
+ * no custo por km, porque abasteceu para rodar antes dele.
+ */
+export function fuelPeriodSummary(
+  entries: FuelEntryInput[],
+  start: Date,
+  end: Date,
+): FuelPeriodSummary {
+  const inPeriod = entries.filter((e) => e.date >= start && e.date < end);
+  const sum = (list: FuelEntryInput[], field: 'total' | 'liters') =>
+    list.reduce((total, e) => total + e[field], 0);
+  const spent = sum(inPeriod, 'total');
+  const liters = sum(inPeriod, 'liters');
+
+  if (inPeriod.length === 0) {
+    return { spent, liters, count: 0, distanceKm: null, costPerKm: null };
+  }
+
+  const before = entries.filter((e) => e.date < start);
+  const baseline = before.length
+    ? before.reduce((latest, e) => (e.date > latest.date ? e : latest))
+    : inPeriod.reduce((lowest, e) => (e.km < lowest.km ? e : lowest));
+  const baselineInPeriod = before.length === 0;
+
+  const distance = Math.max(...inPeriod.map((e) => e.km)) - baseline.km;
+  if (distance <= 0) {
+    return { spent, liters, count: inPeriod.length, distanceKm: null, costPerKm: null };
+  }
+  const spentForCost = baselineInPeriod ? spent - baseline.total : spent;
+  return {
+    spent,
+    liters,
+    count: inPeriod.length,
+    distanceKm: distance,
+    costPerKm: costPerKm(spentForCost, distance),
+  };
+}
+
 export interface MonthFuelSummary {
   /** Gasto com combustível no mês de `today`. */
   spent: number;
@@ -206,47 +258,22 @@ export interface MonthFuelSummary {
   costPerKm: number | null;
 }
 
-const sameMonth = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
-
-/**
- * Resumo do mês dos abastecimentos (datas no fuso do aparelho). Sem um
- * abastecimento antes do mês, o primeiro do mês só marca o km de partida:
- * seu valor não entra no custo por km, porque abasteceu para rodar antes dele.
- */
+/** Resumo do mês dos abastecimentos (`fuelPeriodSummary` do mês de `today`, mais o mês anterior). */
 export function monthFuelSummary(
   entries: FuelEntryInput[],
   today: Date = new Date(),
 ): MonthFuelSummary {
-  const previousMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const previousStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const start = new Date(today.getFullYear(), today.getMonth(), 1);
+  const end = new Date(today.getFullYear(), today.getMonth() + 1, 1);
 
-  const inMonth = entries.filter((e) => sameMonth(e.date, today));
-  const sum = (list: FuelEntryInput[]) => list.reduce((total, e) => total + e.total, 0);
-  const spent = sum(inMonth);
-  const previousSpent = sum(entries.filter((e) => sameMonth(e.date, previousMonth)));
-
-  if (inMonth.length === 0) {
-    return { spent, previousSpent, count: 0, distanceKm: null, costPerKm: null };
-  }
-
-  const before = entries.filter((e) => e.date < monthStart);
-  const baseline = before.length
-    ? before.reduce((latest, e) => (e.date > latest.date ? e : latest))
-    : inMonth.reduce((lowest, e) => (e.km < lowest.km ? e : lowest));
-  const baselineInMonth = before.length === 0;
-
-  const distance = Math.max(...inMonth.map((e) => e.km)) - baseline.km;
-  if (distance <= 0) {
-    return { spent, previousSpent, count: inMonth.length, distanceKm: null, costPerKm: null };
-  }
-  const spentForCost = baselineInMonth ? spent - baseline.total : spent;
+  const month = fuelPeriodSummary(entries, start, end);
   return {
-    spent,
-    previousSpent,
-    count: inMonth.length,
-    distanceKm: distance,
-    costPerKm: costPerKm(spentForCost, distance),
+    spent: month.spent,
+    previousSpent: fuelPeriodSummary(entries, previousStart, start).spent,
+    count: month.count,
+    distanceKm: month.distanceKm,
+    costPerKm: month.costPerKm,
   };
 }
 
