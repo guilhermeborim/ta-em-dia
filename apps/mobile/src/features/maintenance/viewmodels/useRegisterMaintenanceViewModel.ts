@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDb } from '../../../core/db';
+import { refreshMaintenanceReminders } from '../../../core/maintenance';
 import { formatDateInput, formatKm, sanitizeDecimal, toDateInput } from '../../../core/format';
 import {
   buildRegisterInput,
@@ -74,6 +75,7 @@ export function useRegisterMaintenanceViewModel() {
     setBusy(true);
     try {
       await registerMaintenance(db, result.value);
+      void refreshMaintenanceReminders(db);
       router.back();
     } finally {
       setBusy(false);

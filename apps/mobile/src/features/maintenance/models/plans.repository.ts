@@ -7,12 +7,17 @@ import {
   type MaintenanceRecord,
 } from '@ta-em-dia/shared';
 import { enqueue, newId, type Db } from '../../../core/db';
-import { listFuelEntries } from '../../../core/fuel';
-import { listPlans, PLAN_COLUMNS, toPlan, type PlanRow } from '../../../core/maintenance';
+import {
+  listPlans,
+  loadVehicleKm,
+  PLAN_COLUMNS,
+  toPlan,
+  type PlanRow,
+} from '../../../core/maintenance';
 import { findActiveVehicle } from '../../../core/vehicle';
 
-export { listPlans };
-import { latestRecord, listRecords, maxRecordKm } from './records.repository';
+export { listPlans, loadVehicleKm };
+import { latestRecord, listRecords } from './records.repository';
 
 /** O plano de um tipo no veículo (ativo ou não), ou `null`. */
 export async function findPlanByType(
@@ -119,19 +124,6 @@ export interface MaintenanceData {
   plans: MaintenancePlan[];
   /** Serviços feitos, do mais recente ao mais antigo. */
   records: MaintenanceRecord[];
-}
-
-/** Km atual e média diária do veículo, pelo km inicial e pelos abastecimentos. */
-export async function loadVehicleKm(
-  db: Db,
-  vehicleId: string,
-  initialKm: number,
-): Promise<{ currentKm: number; dailyKm: number }> {
-  const entries = await listFuelEntries(db, vehicleId);
-  return {
-    currentKm: Math.max(initialKm, ...entries.map((e) => e.km), await maxRecordKm(db, vehicleId)),
-    dailyKm: dailyAverageKm(entries.map((e) => ({ km: e.km, readAt: e.date }))),
-  };
 }
 
 /** Lê do SQLite o que a aba Manutenção precisa: veículo, km atual, média diária e planos. */

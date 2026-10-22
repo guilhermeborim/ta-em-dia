@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useDb } from '../../../core/db';
+import { refreshMaintenanceReminders } from '../../../core/maintenance';
 import {
   buildIntervalInput,
   intervalFormFrom,
@@ -56,6 +57,7 @@ export function usePlanIntervalViewModel() {
       setBusy(true);
       try {
         await updatePlanInterval(db, id, interval);
+        void refreshMaintenanceReminders(db);
         router.back();
       } finally {
         setBusy(false);

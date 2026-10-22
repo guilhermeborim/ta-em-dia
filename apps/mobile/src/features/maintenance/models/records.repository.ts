@@ -1,6 +1,8 @@
 import { isCustomMaintenanceType, type MaintenanceRecord } from '@ta-em-dia/shared';
 import type { Db } from '../../../core/db';
 
+export { maxRecordKm } from '../../../core/maintenance';
+
 type RecordRow = {
   id: string;
   vehicle_id: string;
@@ -57,15 +59,6 @@ export async function latestRecord(
     type,
   );
   return row ? toRecord(row) : null;
-}
-
-/** Maior km entre os serviços do veículo (conta como leitura do hodômetro), ou 0. */
-export async function maxRecordKm(db: Db, vehicleId: string): Promise<number> {
-  const row = await db.getFirstAsync<{ km: number | null }>(
-    'SELECT MAX(km) AS km FROM maintenance_records WHERE vehicle_id = ? AND deleted_at IS NULL',
-    vehicleId,
-  );
-  return row?.km ?? 0;
 }
 
 /**
