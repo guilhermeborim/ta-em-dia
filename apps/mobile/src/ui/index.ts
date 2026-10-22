@@ -23,6 +23,7 @@ export { IconAvatar } from './components/IconAvatar';
 export { InfoBanner } from './components/InfoBanner';
 export { InfoCard, type InfoRow } from './components/InfoCard';
 export {
+  DocumentItem,
   FuelItem,
   MenuItem,
   RecordItem,

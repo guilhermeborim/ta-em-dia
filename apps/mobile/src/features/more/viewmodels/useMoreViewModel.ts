@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { appEnv } from '../../../core/env/appEnv';
 
-/** ViewModel da aba Mais: Meus veículos, Histórico e, fora de produção, os atalhos de desenvolvimento. */
+/** ViewModel da aba Mais: Meus veículos, Documentos, Histórico e, fora de produção, os atalhos de desenvolvimento. */
 export function useMoreViewModel() {
   const router = useRouter();
   const isDev = appEnv !== 'production';
@@ -9,6 +9,7 @@ export function useMoreViewModel() {
   return {
     showDevTools: isDev,
     openVehicles: () => router.push('/veiculos'),
+    openDocuments: () => router.push('/documentos'),
     openHistory: () => router.push('/historico'),
     openStatus: () => router.push('/status'),
     openComponents: () => router.push('/componentes'),

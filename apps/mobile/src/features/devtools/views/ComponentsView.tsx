@@ -9,6 +9,7 @@ import {
   Chip,
   colors,
   ConsumptionCard,
+  DocumentItem,
   EmptyState,
   FloatingButton,
   FuelItem,
@@ -365,6 +366,27 @@ export function ComponentsView() {
             title="Correia dentada"
             subtitle="A cada 60.000 km"
             actionLabel="Ativar"
+          />
+          <DocumentItem
+            icon="file"
+            title="IPVA"
+            subtitle="Venceu em 15/10/2026"
+            tone="danger"
+            status="Vencido"
+          />
+          <DocumentItem
+            icon="shield"
+            title="Seguro"
+            subtitle="Renova em 13/11/2026"
+            tone="warning"
+            status="23 dias"
+          />
+          <DocumentItem
+            icon="shield"
+            title="Licenciamento"
+            subtitle="Vence em 30/09/2027"
+            tone="ok"
+            status="Em dia"
           />
           <MenuItem icon="car" label="Meus veículos" />
           <MenuItem icon="bell" label="Lembretes" value="Ativos" />

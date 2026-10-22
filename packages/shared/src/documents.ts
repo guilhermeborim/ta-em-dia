@@ -1,0 +1,68 @@
+/**
+ * Documentos e prazos: só a data de vencimento (sem número, sem foto; ver docs/05-privacidade-lgpd.md).
+ * A data é "aaaa-mm-dd" (sem hora), para o dia não mudar com o fuso.
+ */
+
+export const DOCUMENT_KINDS = ['ipva', 'licensing', 'insurance', 'cnh'] as const;
+export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
+
+export const DOCUMENT_LABELS: Record<DocumentKind, string> = {
+  ipva: 'IPVA',
+  licensing: 'Licenciamento',
+  insurance: 'Seguro',
+  cnh: 'CNH',
+};
+
+/** CNH é da pessoa; os outros são do veículo. */
+export function isVehicleDocument(kind: DocumentKind): boolean {
+  return kind !== 'cnh';
+}
+
+/** Dias de antecedência dos avisos, quando a pessoa não escolhe. */
+export const DEFAULT_DOCUMENT_NOTIFY_DAYS = [30, 7];
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const DUE_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** "aaaa-mm-dd" do dia da data, no fuso do aparelho. */
+export function toDueDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/** Lê "aaaa-mm-dd" como o dia no fuso do aparelho (meio-dia), ou `null` se não é uma data real. */
+export function parseDueDate(text: string): Date | null {
+  const match = DUE_DATE.exec(text);
+  if (!match) return null;
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const date = new Date(year, month - 1, day, 12);
+  const real =
+    date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+  return real ? date : null;
+}
+
+export type DocumentTone = 'ok' | 'soon' | 'overdue';
+
+export interface DocumentStatus {
+  tone: DocumentTone;
+  /** Dias até vencer: 0 é hoje, negativo se já venceu. */
+  daysLeft: number;
+}
+
+/**
+ * Situação do prazo: vencido (já passou), "perto" (faltam até `soonDays` dias, por padrão o maior
+ * aviso, 30) ou em dia. O dia do vencimento ainda conta como perto, não como vencido.
+ */
+export function documentStatus(
+  dueDate: string,
+  today: Date = new Date(),
+  soonDays: number = Math.max(...DEFAULT_DOCUMENT_NOTIFY_DAYS),
+): DocumentStatus {
+  const due = parseDueDate(dueDate);
+  if (!due) throw new Error(`Data de vencimento inválida: ${dueDate}`);
+  const start = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  const daysLeft = Math.round((start(due) - start(today)) / DAY_MS);
+  const tone: DocumentTone = daysLeft < 0 ? 'overdue' : daysLeft <= soonDays ? 'soon' : 'ok';
+  return { tone, daysLeft };
+}

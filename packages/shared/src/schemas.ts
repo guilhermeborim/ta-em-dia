@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { parseDueDate } from './documents';
 
 /** Schemas compartilhados: validam formulários no app e DTOs na API. */
 
@@ -62,6 +63,20 @@ export const maintenanceRecordSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
+export const documentKindSchema = z.enum(['ipva', 'licensing', 'insurance', 'cnh']);
+
+export const documentSchema = z.object({
+  id: z.uuid(),
+  /** Nulo para CNH, que é da pessoa. */
+  vehicleId: z.uuid().optional(),
+  kind: documentKindSchema,
+  /** "aaaa-mm-dd". */
+  dueDate: z.string().refine((value) => parseDueDate(value) !== null, 'Data inválida'),
+  /** Dias de antecedência dos avisos. */
+  notifyDays: z.array(z.number().int().positive()),
+  note: z.string().max(500).optional(),
+});
+
 export const odometerSourceSchema = z.enum(['manual', 'fuel', 'maintenance']);
 
 export const odometerReadingSchema = z.object({
@@ -76,4 +91,5 @@ export type Vehicle = z.infer<typeof vehicleSchema>;
 export type FuelEntry = z.infer<typeof fuelEntrySchema>;
 export type MaintenancePlan = z.infer<typeof maintenancePlanSchema>;
 export type MaintenanceRecord = z.infer<typeof maintenanceRecordSchema>;
+export type DocumentRecord = z.infer<typeof documentSchema>;
 export type OdometerReadingRecord = z.infer<typeof odometerReadingSchema>;

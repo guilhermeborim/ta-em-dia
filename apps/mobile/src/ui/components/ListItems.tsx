@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { colors, radius } from '../theme/tokens';
+import { StatusPill, type StatusTone } from './Badges';
 import { Chip } from './Chip';
 import { Icon, type IconName } from './Icon';
 import { IconAvatar } from './IconAvatar';
@@ -147,6 +148,66 @@ export function TimelineItem({ kind, title, details, value, last, onPress }: Tim
   );
 }
 
+const documentTones = {
+  ok: { background: colors.successSoft, color: colors.success },
+  warning: { background: colors.warningSoft, color: colors.warning },
+  danger: { background: colors.dangerSoft, color: colors.danger },
+  none: { background: colors.surface2, color: colors.text2 },
+} as const;
+
+interface DocumentItemProps {
+  icon: IconName;
+  /** Ex.: "IPVA". */
+  title: string;
+  /** Ex.: "Vence em 20/11/2026". */
+  subtitle: string;
+  tone: StatusTone;
+  /** Ex.: "Em dia", "23 dias", "Vencido". */
+  status: string;
+  /** Sem cantos arredondados: para itens empilhados dentro de um grupo arredondado. */
+  flat?: boolean;
+  onPress?: () => void;
+}
+
+/** Item de documento e prazo: ícone na cor da situação, data, selo de status e seta. */
+export function DocumentItem({
+  icon,
+  title,
+  subtitle,
+  tone,
+  status,
+  flat,
+  onPress,
+}: DocumentItemProps) {
+  const color = documentTones[tone];
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${title}, ${subtitle}, ${status}`}
+      onPress={onPress}
+      style={[styles.row, styles.document, flat && styles.flat]}
+    >
+      <IconAvatar
+        icon={icon}
+        size={40}
+        iconSize={20}
+        background={color.background}
+        color={color.color}
+      />
+      <View style={styles.main}>
+        <Text variant="bodyStrong" numberOfLines={1}>
+          {title}
+        </Text>
+        <Text variant="small" color="text2" numberOfLines={1}>
+          {subtitle}
+        </Text>
+      </View>
+      <StatusPill tone={tone} label={status} />
+      <Icon name="chevron-right" size={18} color={colors.text3} />
+    </Pressable>
+  );
+}
+
 interface MenuItemProps {
   icon: IconName;
   label: string;
@@ -222,6 +283,7 @@ const styles = StyleSheet.create({
   fuel: { gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderRadius: radius.button },
   flat: { borderRadius: 0 },
   suggestion: { gap: 12, paddingLeft: 16, paddingRight: 12, paddingVertical: 12 },
+  document: { gap: 12, paddingLeft: 16, paddingRight: 14, paddingVertical: 14 },
   menu: { gap: 14, paddingHorizontal: 16, paddingVertical: 14 },
   main: { flex: 1, gap: 2 },
   right: { alignItems: 'flex-end', gap: 2 },
