@@ -25,6 +25,7 @@ enum VehicleType {
   combustion
   flex
   electric
+  motorcycle
 }
 
 enum FuelType {
