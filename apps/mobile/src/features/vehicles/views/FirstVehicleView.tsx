@@ -10,9 +10,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Chip, colors, size, spacing, Text, TextField } from '../../../ui';
 import { useFirstVehicleViewModel } from '../viewmodels/useFirstVehicleViewModel';
 
-/** Tela 5: cadastro do primeiro veículo (pode pular). */
-export function FirstVehicleView() {
-  const vm = useFirstVehicleViewModel();
+/** Tela 5: cadastro do primeiro veículo (pode pular). Em `add`, é o "Adicionar veículo" de Meus veículos. */
+export function FirstVehicleView({ mode = 'first' }: { mode?: 'first' | 'add' }) {
+  const vm = useFirstVehicleViewModel(mode);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -31,17 +31,17 @@ export function FirstVehicleView() {
             </Text>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Pular"
+              accessibilityLabel={vm.skipLabel}
               onPress={vm.skip}
               style={styles.skip}
             >
               <Text variant="button" color="primary">
-                Pular
+                {vm.skipLabel}
               </Text>
             </Pressable>
           </View>
 
-          <Text variant="h1">Qual é o seu carro?</Text>
+          <Text variant="h1">{mode === 'add' ? 'Novo veículo' : 'Qual é o seu carro?'}</Text>
 
           <View style={styles.chips}>
             {vm.kinds.map((item) => (
@@ -129,6 +129,7 @@ const styles = StyleSheet.create({
   },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   skip: {
+    marginLeft: 'auto',
     minHeight: size.touchTarget,
     minWidth: size.touchTarget,
     alignItems: 'center',

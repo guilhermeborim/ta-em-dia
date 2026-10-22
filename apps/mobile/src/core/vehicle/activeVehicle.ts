@@ -6,13 +6,13 @@ export interface ActiveVehicleRow {
   initial_km: number;
 }
 
-/** Veículo ativo mais antigo (o do Início, por enquanto), ou `null` se não há veículo. */
+/** Veículo ativo: o primeiro de "Meus veículos" (o do Início), ou `null` se não há veículo. */
 export async function findActiveVehicle(db: Db): Promise<ActiveVehicleRow | null> {
   return db.getFirstAsync<ActiveVehicleRow>(
     `SELECT id, name, initial_km
        FROM vehicles
       WHERE deleted_at IS NULL AND archived = 0
-      ORDER BY created_at, id
+      ORDER BY sort_order, created_at, id
       LIMIT 1`,
   );
 }
