@@ -12,6 +12,7 @@ Responda e escreva textos de interface em português (BR). Código, nomes e comm
 - `docs/02-telas-e-fluxos.md`: telas e fluxos que o designer recebe.
 - `docs/03-arquitetura.md`: decisões de arquitetura. Mudou uma decisão, atualize o doc no mesmo PR.
 - `docs/06-backlog.md`: ordem das features e links do Figma. Use `/proxima-feature` para pegar o próximo item.
+- `docs/07-validacao-e-decisoes.md`: o que ainda precisa ser testado no aparelho e o que está esperando decisão do dono do projeto. Não decida sozinho o que está listado em "Decisões em aberto".
 - `docs/05-privacidade-lgpd.md`: dados pessoais e LGPD. Não colete dado novo (CNH, foto de documento, localização) sem decidir ali.
 
 ## Comandos
@@ -43,4 +44,5 @@ Node 24 (`.nvmrc`). O NestJS 12 é só ESM e o Jest da API roda com `--experimen
 - Branch a partir da `main`: `feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `ci/`. PR pequeno, CI verde, squash merge.
 - Commits no padrão Conventional Commits com escopo: `mobile`, `api`, `shared`, `sync`, `ci`, `docs`, `deps` (o commitlint rejeita outros). Ex.: `feat(mobile): formulário de abastecimento`.
 - Antes de abrir PR, rode `pnpm turbo run lint typecheck test build`.
+- Ao terminar uma feature, registre em `docs/07-validacao-e-decisoes.md`, no mesmo PR, tudo que ficou sem validação no aparelho (checklist `[ ]` na seção 2, com o PR) e toda escolha que cabe ao dono do projeto (seção 3, com as opções e a sua recomendação): texto escrito por você, tela sem frame no Figma, desvio do Figma, comportamento assumido, dependência nativa evitada. Se não houver nada, não acrescente nada. Atualize o item se uma decisão já foi tomada.
 - Deploy da API e releases do app são por workflow do GitHub (ver `docs/03-arquitetura.md`); não faça deploy manual.
