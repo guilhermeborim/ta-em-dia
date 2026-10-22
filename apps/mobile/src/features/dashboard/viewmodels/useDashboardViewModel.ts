@@ -1,18 +1,12 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useDb } from '../../../core/db';
 import { buildAverage } from '../../../core/fuel';
+import { useToast } from '../../../core/toast/useToast';
 import { loadHomeState, type HomeState } from '../models/home.repository';
 import { buildHomeAlerts, type HomeAlertCard } from '../models/homeAlerts';
 import { buildHomeSummary, buildLastEntry, buildSavedToast } from '../models/homeSummary';
 import { vehicleDetails } from '../models/vehicleDetails';
-
-const TOAST_MS = 4000;
-
-interface ToastState {
-  title: string;
-  message?: string;
-}
 
 /**
  * ViewModel do Início: veículo, estado vazio ou painel do mês, e navegação. Lê só o SQLite local.
@@ -23,14 +17,7 @@ export function useDashboardViewModel() {
   const router = useRouter();
   const { saved } = useLocalSearchParams<{ saved?: string }>();
   const [state, setState] = useState<HomeState | null>(null);
-  const [toast, setToast] = useState<ToastState | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showToast = useCallback((value: ToastState) => {
-    setToast(value);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setToast(null), TOAST_MS);
-  }, []);
+  const { toast, show: showToast } = useToast();
 
   // Recarrega ao voltar para a aba (ex.: depois de salvar um abastecimento).
   useFocusEffect(
@@ -49,13 +36,6 @@ export function useDashboardViewModel() {
         active = false;
       };
     }, [db, router, saved, showToast]),
-  );
-
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current);
-    },
-    [],
   );
 
   const vehicle = state?.vehicle ?? null;

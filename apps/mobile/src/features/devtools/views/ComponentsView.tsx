@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  AccountCard,
   ActionCard,
   AlertCard,
   BrandSymbol,
@@ -11,10 +12,12 @@ import {
   ConsumptionCard,
   DocumentItem,
   EmptyState,
+  FeatureItem,
   FloatingButton,
   FuelItem,
   Icon,
   LicensePlate,
+  ListGroup,
   IconAvatar,
   InfoBanner,
   InfoCard,
@@ -491,6 +494,37 @@ export function ComponentsView() {
             status={{ tone: 'ok', label: 'Tudo em dia' }}
           />
           <DashedAddCard label="Adicionar veículo" />
+        </Section>
+
+        <Section title="Conta e menu">
+          <AccountCard name="Sem login" sync="local" />
+          <ListGroup>
+            <MenuItem icon="car" label="Meus veículos" value="2" />
+            <MenuItem
+              icon="file"
+              label="Documentos e prazos"
+              value="1 vencido"
+              valueTone="danger"
+            />
+            <MenuItem icon="crown" label="Premium" right={<PremiumBadge />} />
+          </ListGroup>
+        </Section>
+
+        <Section title="Recursos (Premium em breve)">
+          <ListGroup>
+            <FeatureItem
+              flat
+              icon="camera"
+              title="Leitura da bomba pela câmera"
+              subtitle="Foto do visor e pronto"
+            />
+            <FeatureItem
+              flat
+              icon="car"
+              title="Veículos ilimitados"
+              subtitle="Carro, moto e da família"
+            />
+          </ListGroup>
         </Section>
 
         <Section title="Botão flutuante">
