@@ -23,6 +23,10 @@ export const colors = {
   text2: '#5B5970',
   text3: '#8D8BA3',
 
+  // Gráficos (Figma: chart-fuel, chart-maint)
+  chartFuel: '#4B3BF5',
+  chartMaint: '#FF7A45',
+
   // Estados
   success: '#17A35B',
   successSoft: '#E3F7EC',
@@ -72,6 +76,12 @@ export const fontFamily = {
 
 export const typography = {
   display: { fontFamily: fontFamily.display, fontSize: 40, lineHeight: 44, letterSpacing: -1 },
+  displayMedium: {
+    fontFamily: fontFamily.display,
+    fontSize: 32,
+    lineHeight: 36,
+    letterSpacing: -1,
+  },
   h1: { fontFamily: fontFamily.extraBold, fontSize: 26, lineHeight: 32, letterSpacing: -0.3 },
   h2: { fontFamily: fontFamily.bold, fontSize: 20, lineHeight: 26, letterSpacing: -0.2 },
   h3: { fontFamily: fontFamily.bold, fontSize: 16, lineHeight: 22, letterSpacing: 0 },

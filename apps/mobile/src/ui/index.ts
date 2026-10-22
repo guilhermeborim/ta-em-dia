@@ -14,6 +14,12 @@ export { ActionCard } from './components/ActionCard';
 export { AlertCard, NoIntervalCard } from './components/AlertCard';
 export { OwnBadge, PremiumBadge, StatusPill, SyncPill, type StatusTone } from './components/Badges';
 export { Button, type ButtonVariant } from './components/Button';
+export {
+  LineChart,
+  StackedBarChart,
+  type ChartCategory,
+  type StackedBar,
+} from './components/Charts';
 export { Chip } from './components/Chip';
 export { ConsumptionCard } from './components/ConsumptionCard';
 export { EmptyState } from './components/EmptyState';

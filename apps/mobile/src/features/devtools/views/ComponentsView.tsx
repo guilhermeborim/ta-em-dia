@@ -18,6 +18,7 @@ import {
   IconAvatar,
   InfoBanner,
   InfoCard,
+  LineChart,
   iconNames,
   Logo,
   MenuItem,
@@ -30,6 +31,7 @@ import {
   PremiumBadge,
   SocialButton,
   spacing,
+  StackedBarChart,
   StatTile,
   StatusPill,
   SummaryCard,
@@ -425,6 +427,45 @@ export function ComponentsView() {
           <View style={styles.row}>
             <LicensePlate value="BRA2E19" />
           </View>
+        </Section>
+
+        <Section title="Gráficos">
+          <StackedBarChart
+            height={120}
+            bars={[
+              { key: 'mai', label: 'mai', parts: [{ category: 'fuel', value: 260 }] },
+              {
+                key: 'jun',
+                label: 'jun',
+                parts: [
+                  { category: 'fuel', value: 304 },
+                  { category: 'maint', value: 60 },
+                ],
+              },
+              {
+                key: 'out',
+                label: 'out',
+                current: true,
+                parts: [
+                  { category: 'fuel', value: 305 },
+                  { category: 'maint', value: 144 },
+                ],
+              },
+            ]}
+            legend={[
+              { category: 'fuel', label: 'Combustível' },
+              { category: 'maint', label: 'Manutenção' },
+            ]}
+          />
+          <LineChart
+            points={[
+              { x: 0, value: 12.2 },
+              { x: 0.3, value: 11.4 },
+              { x: 0.6, value: 12.9 },
+              { x: 1, value: 13.1 },
+            ]}
+            labels={['mai', 'jun', 'jul', 'ago']}
+          />
         </Section>
 
         <Section title="Barra de topo">
