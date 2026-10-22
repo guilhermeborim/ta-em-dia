@@ -1,11 +1,15 @@
+import * as Updates from 'expo-updates';
 import { useCallback, useEffect, useState } from 'react';
+import { useDb } from '../../../core/db';
 import { apiUrl, appEnv } from '../../../core/env/appEnv';
+import { resetApp } from '../models/resetApp.service';
 import { ApiStatus, fetchApiStatus } from '../models/status.service';
 
 type State = { loading: true } | ({ loading: false } & ApiStatus);
 
 /** ViewModel da tela de diagnóstico: ambiente do app e estado da API. */
 export function useStatusViewModel() {
+  const db = useDb();
   const [state, setState] = useState<State>({ loading: true });
 
   const refresh = useCallback(async () => {
@@ -16,6 +20,11 @@ export function useStatusViewModel() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  const reset = useCallback(async () => {
+    await resetApp(db);
+    await Updates.reloadAsync();
+  }, [db]);
 
   let apiLabel = 'Consultando...';
   if (!state.loading) {
@@ -31,5 +40,8 @@ export function useStatusViewModel() {
     versionLabel: !state.loading && state.version ? `Versão da API: ${state.version}` : null,
     loading: state.loading,
     refresh,
+    // Ferramenta de desenvolvimento: nunca aparece em produção.
+    canReset: appEnv !== 'production',
+    reset,
   };
 }

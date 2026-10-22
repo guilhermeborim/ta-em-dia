@@ -15,6 +15,7 @@ export function StatusView() {
         {vm.apiEnvLabel && <Text style={styles.line}>{vm.apiEnvLabel}</Text>}
         {vm.versionLabel && <Text style={styles.line}>{vm.versionLabel}</Text>}
         <Button title="Testar de novo" onPress={vm.refresh} disabled={vm.loading} />
+        {vm.canReset && <Button title="Reiniciar App" color="#E5484D" onPress={vm.reset} />}
       </View>
     </SafeAreaView>
   );
