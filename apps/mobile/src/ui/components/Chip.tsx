@@ -12,10 +12,12 @@ interface ChipProps {
   own?: boolean;
   /** Ícone antes do rótulo (ex.: data e veículo no formulário). */
   icon?: IconName;
+  /** Contorno e texto roxos (ação, ex.: "Ativar"). */
+  tone?: 'primary';
 }
 
 /** Chip de escolha (combustível, tipo de manutenção). Selecionado fica escuro. */
-export function Chip({ label, selected = false, onPress, own = false, icon }: ChipProps) {
+export function Chip({ label, selected = false, onPress, own = false, icon, tone }: ChipProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -24,12 +26,15 @@ export function Chip({ label, selected = false, onPress, own = false, icon }: Ch
       onPress={onPress}
       style={[
         styles.base,
-        selected ? styles.selected : styles.normal,
+        selected ? styles.selected : tone === 'primary' ? styles.primary : styles.normal,
         own ? styles.own : icon ? styles.withIcon : styles.plain,
       ]}
     >
       {icon ? <Icon name={icon} size={16} color={selected ? colors.bg : colors.text} /> : null}
-      <Text variant="small" color={selected ? 'bg' : icon ? 'text' : 'text2'}>
+      <Text
+        variant="small"
+        color={selected ? 'bg' : tone === 'primary' ? 'primary' : icon ? 'text' : 'text2'}
+      >
         {label}
       </Text>
       {own ? <OwnBadge /> : null}
@@ -40,6 +45,7 @@ export function Chip({ label, selected = false, onPress, own = false, icon }: Ch
 const styles = StyleSheet.create({
   base: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.pill, gap: 8 },
   normal: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border },
+  primary: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.primary },
   selected: { backgroundColor: colors.text, borderWidth: 1.5, borderColor: colors.text },
   plain: { paddingHorizontal: 14, paddingVertical: 8 },
   withIcon: { paddingLeft: 12, paddingRight: 14, paddingVertical: 8, gap: 6 },

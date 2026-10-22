@@ -1,5 +1,6 @@
 import type { Vehicle } from '@ta-em-dia/shared';
 import type { Db } from '../../../core/db';
+import { findActiveVehicle } from '../../../core/vehicle';
 import type { FuelType } from '../../../core/fuel';
 
 export interface FuelFormContext {
@@ -9,19 +10,6 @@ export interface FuelFormContext {
   lastFuelType: FuelType | null;
   /** Km sugerido: o maior entre o último abastecimento e o km inicial do veículo. */
   suggestedKm: number | null;
-}
-
-/** Veículo ativo mais antigo (o do Início, por enquanto), ou `null` se não há veículo. */
-export async function findActiveVehicle(
-  db: Db,
-): Promise<{ id: string; name: string; initial_km: number } | null> {
-  return db.getFirstAsync<{ id: string; name: string; initial_km: number }>(
-    `SELECT id, name, initial_km
-       FROM vehicles
-      WHERE deleted_at IS NULL AND archived = 0
-      ORDER BY created_at, id
-      LIMIT 1`,
-  );
 }
 
 /** Lê do SQLite o que o formulário sugere: veículo, último combustível e km. */

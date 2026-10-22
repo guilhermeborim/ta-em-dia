@@ -7,6 +7,7 @@ import {
   markOnboardingDone,
 } from '../../onboarding/models/onboarding.repository';
 import { addFuelEntry } from '../../../core/fuel';
+import { activatePlan } from '../../maintenance/models/plans.repository';
 import { createVehicle, listVehicles } from '../../vehicles/models/vehicles.repository';
 import { resetApp } from '../models/resetApp.service';
 
@@ -35,6 +36,13 @@ describe('resetApp', () => {
       fullTank: true,
     });
 
+    await activatePlan(db, {
+      vehicleId: vehicle.id,
+      type: 'oil',
+      intervalKm: 10000,
+      currentKm: 200,
+    });
+
     await resetApp(db, store);
 
     expect(await isOnboardingDone(db)).toBe(false);
@@ -42,7 +50,7 @@ describe('resetApp', () => {
     expect(data.size).toBe(0);
     expect(await listVehicles(db)).toEqual([]);
     const left = await db.getFirstAsync<{ total: number }>(
-      `SELECT (SELECT COUNT(*) FROM fuel_entries) + (SELECT COUNT(*) FROM outbox) AS total`,
+      `SELECT (SELECT COUNT(*) FROM fuel_entries) + (SELECT COUNT(*) FROM maintenance_plans) + (SELECT COUNT(*) FROM outbox) AS total`,
     );
     expect(left?.total).toBe(0);
   });

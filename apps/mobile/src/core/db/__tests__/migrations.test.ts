@@ -12,6 +12,7 @@ describe('migrate', () => {
     expect(tables.map((t) => t.name)).toEqual([
       'app_settings',
       'fuel_entries',
+      'maintenance_plans',
       'outbox',
       'sync_state',
       'vehicles',

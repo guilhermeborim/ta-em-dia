@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { colors, radius } from '../theme/tokens';
+import { Chip } from './Chip';
 import { Icon, type IconName } from './Icon';
 import { IconAvatar } from './IconAvatar';
 import { Text } from './Text';
@@ -91,10 +92,44 @@ export function MenuItem({ icon, label, value, onPress }: MenuItemProps) {
   );
 }
 
+interface SuggestionItemProps {
+  /** Ex.: "Correia dentada". */
+  title: string;
+  /** Ex.: "A cada 60.000 km". */
+  subtitle: string;
+  actionLabel: string;
+  onAction?: () => void;
+}
+
+/** Item sugerido do plano de manutenção: nome, intervalo e a ação "Ativar". */
+export function SuggestionItem({ title, subtitle, actionLabel, onAction }: SuggestionItemProps) {
+  return (
+    <View style={[styles.row, styles.suggestion]}>
+      <IconAvatar
+        icon="wrench"
+        size={36}
+        iconSize={18}
+        background={colors.surface2}
+        color={colors.text2}
+      />
+      <View style={styles.main}>
+        <Text variant="bodyStrong" numberOfLines={1}>
+          {title}
+        </Text>
+        <Text variant="small" color="text2" numberOfLines={1}>
+          {subtitle}
+        </Text>
+      </View>
+      <Chip label={actionLabel} tone="primary" onPress={onAction} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface },
   fuel: { gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderRadius: radius.button },
   flat: { borderRadius: 0 },
+  suggestion: { gap: 12, paddingLeft: 16, paddingRight: 12, paddingVertical: 12 },
   menu: { gap: 14, paddingHorizontal: 16, paddingVertical: 14 },
   main: { flex: 1, gap: 2 },
   right: { alignItems: 'flex-end', gap: 2 },
