@@ -32,6 +32,7 @@ export function useVehicleDetailViewModel() {
     notFound: data === null,
     view,
     back: () => router.back(),
+    edit: () => router.push({ pathname: '/veiculo/[id]/editar', params: { id } }),
     updateKm: () => router.push({ pathname: '/veiculo/[id]/atualizar-km', params: { id } }),
   };
 }

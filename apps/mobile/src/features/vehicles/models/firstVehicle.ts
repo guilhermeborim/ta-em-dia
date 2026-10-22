@@ -33,6 +33,19 @@ const typeByKind: Record<VehicleKind, NewVehicle['type']> = {
 
 const onlyDigits = (text: string) => text.replace(/\D/g, '');
 
+/** Lê o ano digitado: obrigatório, 4 dígitos, de 1950 até o ano que vem. */
+export function parseYear(
+  text: string,
+  currentYear: number = new Date().getFullYear(),
+): { year: number; error?: undefined } | { year?: undefined; error: string } {
+  const digits = onlyDigits(text);
+  if (digits === '') return { error: 'Informe o ano' };
+  const year = Number(digits);
+  if (digits.length !== 4 || year < 1950 || year > currentYear + 1)
+    return { error: 'Ano inválido' };
+  return { year };
+}
+
 /** Valida o formulário: tudo é obrigatório, menos o apelido (sem ele, usa o modelo). */
 export function buildVehicleInput(
   form: FirstVehicleForm,
@@ -48,14 +61,13 @@ export function buildVehicleInput(
   const km = parseKm(form.km);
   if (km === null) errors.km = 'Informe o km atual';
 
-  const yearText = onlyDigits(form.year);
-  const year = yearText === '' ? null : Number(yearText);
-  if (year === null) errors.year = 'Informe o ano';
-  else if (yearText.length !== 4 || year < 1950 || year > currentYear + 1) {
-    errors.year = 'Ano inválido';
-  }
+  const parsedYear = parseYear(form.year, currentYear);
+  if (parsedYear.error) errors.year = parsedYear.error;
 
-  if (Object.keys(errors).length > 0 || km === null || year === null) return { errors };
+  if (Object.keys(errors).length > 0 || km === null || parsedYear.year === undefined) {
+    return { errors };
+  }
+  const year = parsedYear.year;
 
   const name = form.nickname.trim() || model;
 

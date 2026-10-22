@@ -4,13 +4,14 @@ import { Alert } from 'react-native';
 import { useDb } from '../../../core/db';
 import { buildVehicleCards, moveId, type VehicleListEntry } from '../models/vehicleList';
 import { loadVehicleList } from '../models/vehicleList.repository';
-import { reorderVehicles } from '../models/vehicles.repository';
+import { listArchivedVehicles, reorderVehicles } from '../models/vehicles.repository';
 
 /** ViewModel de Meus veículos (tela 16): cartões, adicionar e reordenar. Lê só o SQLite local. */
 export function useVehicleListViewModel() {
   const db = useDb();
   const router = useRouter();
   const [entries, setEntries] = useState<VehicleListEntry[] | null>(null);
+  const [archived, setArchived] = useState<{ id: string; name: string }[]>([]);
 
   const load = useCallback(() => loadVehicleList(db).then(setEntries), [db]);
 
@@ -18,8 +19,10 @@ export function useVehicleListViewModel() {
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      loadVehicleList(db).then((value) => {
-        if (active) setEntries(value);
+      Promise.all([loadVehicleList(db), listArchivedVehicles(db)]).then(([value, old]) => {
+        if (!active) return;
+        setEntries(value);
+        setArchived(old.map((vehicle) => ({ id: vehicle.id, name: vehicle.name })));
       });
       return () => {
         active = false;
@@ -56,7 +59,9 @@ export function useVehicleListViewModel() {
 
   return {
     loading: entries === null,
-    isEmpty: entries !== null && entries.length === 0,
+    isEmpty: entries !== null && entries.length === 0 && archived.length === 0,
+    /** Veículos arquivados: ficam numa seção própria, onde dá para abrir e restaurar. */
+    archived,
     cards,
     /** Com um veículo só, não há o que reordenar. */
     canReorder: cards.length > 1,
