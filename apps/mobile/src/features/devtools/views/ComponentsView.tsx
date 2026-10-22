@@ -30,6 +30,8 @@ import {
   TabBar,
   Text,
   TextField,
+  SegmentedControl,
+  SuggestionItem,
   SwitchRow,
   Toast,
   typography,
@@ -59,6 +61,7 @@ export function ComponentsView() {
   const [tab, setTab] = useState('home');
   const [chip, setChip] = useState('Todos');
   const [fullTank, setFullTank] = useState(false);
+  const [segment, setSegment] = useState('next');
   const [text, setText] = useState('');
   const [number, setNumber] = useState('');
 
@@ -167,7 +170,19 @@ export function ComponentsView() {
             <Chip label="Meu tipo" own />
             <Chip label="Hoje, 21 out" icon="calendar" />
             <Chip label="Golzinho" icon="car" />
+            <Chip label="Ativar" tone="primary" />
           </View>
+        </Section>
+
+        <Section title="Controle segmentado">
+          <SegmentedControl
+            options={[
+              { value: 'next', label: 'Próximas' },
+              { value: 'done', label: 'Feitas' },
+            ]}
+            value={segment}
+            onChange={setSegment}
+          />
         </Section>
 
         <Section title="Avatar de ícone">
@@ -307,6 +322,11 @@ export function ComponentsView() {
             details="30,0 L · Gasolina · cheio"
             total="R$ 182,70"
             kmPerLiter="12,2 km/l"
+          />
+          <SuggestionItem
+            title="Correia dentada"
+            subtitle="A cada 60.000 km"
+            actionLabel="Ativar"
           />
           <MenuItem icon="car" label="Meus veículos" />
           <MenuItem icon="bell" label="Lembretes" value="Ativos" />

@@ -5,7 +5,7 @@ import type { Db } from './types';
  * Regra: nunca editar uma migration já publicada; crie a próxima. Só adicione
  * (colunas, tabelas, índices) para o app novo e o antigo conviverem.
  *
- * Tabelas sincronizáveis (vehicles, fuel_entries): id UUID v7 gerado no app,
+ * Tabelas sincronizáveis (vehicles, fuel_entries, maintenance_plans): id UUID v7 gerado no app,
  * datas em ISO 8601 UTC, exclusão lógica (deleted_at) e version (número do
  * servidor, nulo até sincronizar). Espelham apps/api/prisma/schema.prisma.
  */
@@ -70,6 +70,28 @@ export const MIGRATIONS: string[] = [
     key    TEXT PRIMARY KEY NOT NULL,
     value  TEXT NOT NULL
   );
+  `,
+  `
+  -- Plano de manutenção por veículo (sincronizável). Espelha MaintenancePlan no Prisma.
+  -- type: código da lista pronta ou o nome digitado em "Outro".
+  CREATE TABLE maintenance_plans (
+    id                  TEXT PRIMARY KEY NOT NULL,
+    user_id             TEXT,
+    vehicle_id          TEXT NOT NULL REFERENCES vehicles(id),
+    type                TEXT NOT NULL,
+    interval_km         INTEGER,
+    interval_months     INTEGER,
+    last_done_km        INTEGER NOT NULL,
+    last_done_at        TEXT NOT NULL,
+    enabled             INTEGER NOT NULL DEFAULT 1,
+    notify_before_km    INTEGER,
+    notify_before_days  INTEGER,
+    created_at          TEXT NOT NULL,
+    updated_at          TEXT NOT NULL,
+    deleted_at          TEXT,
+    version             INTEGER
+  );
+  CREATE INDEX idx_maintenance_plans_vehicle ON maintenance_plans (vehicle_id);
   `,
 ];
 
