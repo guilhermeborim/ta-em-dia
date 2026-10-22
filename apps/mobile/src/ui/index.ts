@@ -26,6 +26,7 @@ export { NotificationPreview } from './components/NotificationPreview';
 export { NumberField } from './components/NumberField';
 export { SocialButton } from './components/SocialButton';
 export { SummaryCard } from './components/SummaryCard';
+export { SwitchRow } from './components/SwitchRow';
 export { TabBar, type TabBarItem } from './components/TabBar';
 export { Text, type TextColor, type TextVariant } from './components/Text';
 export { TextField } from './components/TextField';

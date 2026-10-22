@@ -6,12 +6,14 @@ interface NumberFieldProps extends Omit<TextInputProps, 'style' | 'keyboardType'
   label: string;
   /** Prefixo da unidade (ex.: "R$"). */
   prefix?: string;
+  /** Mensagem de erro abaixo da caixa; a borda fica vermelha. */
+  error?: string;
 }
 
 /** Campo de número grande (ex.: total pago): borda roxa de 2 pt e número em destaque. */
-export function NumberField({ label, prefix, ...input }: NumberFieldProps) {
+export function NumberField({ label, prefix, error, ...input }: NumberFieldProps) {
   return (
-    <View style={styles.box}>
+    <View style={[styles.box, !!error && styles.boxError]}>
       <Text variant="small" color="text2">
         {label}
       </Text>
@@ -29,6 +31,11 @@ export function NumberField({ label, prefix, ...input }: NumberFieldProps) {
           style={styles.input}
         />
       </View>
+      {error ? (
+        <Text variant="caption" color="danger">
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -43,6 +50,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: colors.surface,
   },
+  boxError: { borderColor: colors.danger },
   row: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
   input: {
     flex: 1,
