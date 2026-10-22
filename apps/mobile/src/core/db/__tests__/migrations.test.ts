@@ -13,6 +13,7 @@ describe('migrate', () => {
       'app_settings',
       'fuel_entries',
       'maintenance_plans',
+      'maintenance_records',
       'outbox',
       'sync_state',
       'vehicles',

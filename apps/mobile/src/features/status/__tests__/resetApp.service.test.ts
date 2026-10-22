@@ -8,6 +8,7 @@ import {
 } from '../../onboarding/models/onboarding.repository';
 import { addFuelEntry } from '../../../core/fuel';
 import { activatePlan } from '../../maintenance/models/plans.repository';
+import { registerMaintenance } from '../../maintenance/models/register.repository';
 import { createVehicle, listVehicles } from '../../vehicles/models/vehicles.repository';
 import { resetApp } from '../models/resetApp.service';
 
@@ -43,6 +44,13 @@ describe('resetApp', () => {
       currentKm: 200,
     });
 
+    await registerMaintenance(db, {
+      vehicleId: vehicle.id,
+      type: 'oil',
+      date: new Date(2026, 9, 20, 12),
+      km: 300,
+    });
+
     await resetApp(db, store);
 
     expect(await isOnboardingDone(db)).toBe(false);
@@ -50,7 +58,7 @@ describe('resetApp', () => {
     expect(data.size).toBe(0);
     expect(await listVehicles(db)).toEqual([]);
     const left = await db.getFirstAsync<{ total: number }>(
-      `SELECT (SELECT COUNT(*) FROM fuel_entries) + (SELECT COUNT(*) FROM maintenance_plans) + (SELECT COUNT(*) FROM outbox) AS total`,
+      `SELECT (SELECT COUNT(*) FROM fuel_entries) + (SELECT COUNT(*) FROM maintenance_plans) + (SELECT COUNT(*) FROM maintenance_records) + (SELECT COUNT(*) FROM outbox) AS total`,
     );
     expect(left?.total).toBe(0);
   });

@@ -2,7 +2,11 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { MAINTENANCE_CATALOG } from '@ta-em-dia/shared';
 import { useDb } from '../../../core/db';
-import { buildMaintenanceList, type MaintenanceTab } from '../models/maintenanceList';
+import {
+  buildMaintenanceList,
+  buildRecordItems,
+  type MaintenanceTab,
+} from '../models/maintenanceList';
 import { activatePlan, loadMaintenance, type MaintenanceData } from '../models/plans.repository';
 
 /** ViewModel da aba Manutenção: Próximas e Feitas, sugestões e ativar lembrete. Lê só o SQLite local. */
@@ -29,6 +33,7 @@ export function useMaintenanceViewModel() {
   );
 
   const list = useMemo(() => (data ? buildMaintenanceList(data) : null), [data]);
+  const records = useMemo(() => buildRecordItems(data?.records ?? []), [data]);
 
   const activate = useCallback(
     async (code: string) => {
@@ -63,11 +68,13 @@ export function useMaintenanceViewModel() {
     alerts: list?.alerts ?? [],
     noInterval: list?.noInterval ?? [],
     suggestions: list?.suggestions ?? [],
+    records,
     setTab,
     activate,
     openPlan: (id: string) => router.push({ pathname: '/plano-manutencao/[id]', params: { id } }),
     defineInterval: (id: string) =>
       router.push({ pathname: '/plano-manutencao/[id]/editar', params: { id } }),
+    register: () => router.push('/registrar-manutencao'),
     openNewFuelEntry: () => router.push('/novo-abastecimento'),
     addVehicle: () => router.push('/primeiro-veiculo'),
   };

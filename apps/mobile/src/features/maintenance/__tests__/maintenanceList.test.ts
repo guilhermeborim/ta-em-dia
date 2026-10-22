@@ -1,5 +1,5 @@
 import type { MaintenancePlan } from '@ta-em-dia/shared';
-import { buildMaintenanceList, intervalText } from '../models/maintenanceList';
+import { buildMaintenanceList, buildRecordItems, intervalText } from '../models/maintenanceList';
 import type { MaintenanceData } from '../models/plans.repository';
 
 const VEHICLE_ID = '018bcfe5-6800-7000-8000-000000000001';
@@ -21,6 +21,7 @@ const data = (plans: MaintenancePlan[], currentKm = 48600): MaintenanceData => (
   currentKm,
   dailyKm: 42,
   plans,
+  records: [],
 });
 
 describe('intervalText', () => {
@@ -127,5 +128,29 @@ describe('buildMaintenanceList', () => {
     expect(view.alerts).toEqual([]);
     expect(view.noInterval).toEqual([]);
     expect(view.suggestions.length).toBeGreaterThan(0);
+  });
+});
+
+describe('buildRecordItems', () => {
+  it('formata título, detalhes e custo (sem custo, fica sem valor)', () => {
+    const record = (patch = {}) => ({
+      id: `018bcfe5-6800-7000-8000-${String(++n).padStart(12, '0')}`,
+      vehicleId: VEHICLE_ID,
+      type: 'oil',
+      date: new Date(2026, 0, 12, 12),
+      km: 40320,
+      ...patch,
+    });
+    const [full, bare] = buildRecordItems([
+      record({ cost: 289, shop: 'Auto Center do Zé' }),
+      record({ type: 'Troca de bateria' }),
+    ]);
+    expect(full).toMatchObject({
+      title: 'Troca de óleo',
+      details: '12 jan 2026 · 40.320 km · Auto Center do Zé',
+      cost: 'R$ 289,00',
+    });
+    expect(bare).toMatchObject({ title: 'Troca de bateria', details: '12 jan 2026 · 40.320 km' });
+    expect(bare.cost).toBeUndefined();
   });
 });

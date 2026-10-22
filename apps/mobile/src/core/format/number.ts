@@ -38,3 +38,19 @@ export function formatNumber(
     .format(value)
     .replace(nbsp, ' ');
 }
+
+/** Texto do campo: só dígitos e uma vírgula, com no máximo `maxDecimals` casas. */
+export function sanitizeDecimal(text: string, maxDecimals: number): string {
+  const [int = '', ...rest] = text
+    .replace(/\./g, ',')
+    .replace(/[^\d,]/g, '')
+    .split(',');
+  if (rest.length === 0) return int;
+  return `${int},${rest.join('').slice(0, maxDecimals)}`;
+}
+
+/** Aceita "5,99" ou "5.99" (teclado numérico); devolve `null` se vazio ou inválido. */
+export function parseDecimal(text: string): number | null {
+  const value = Number(text.trim().replace(',', '.'));
+  return text.trim() === '' || !Number.isFinite(value) ? null : value;
+}

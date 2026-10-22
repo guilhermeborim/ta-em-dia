@@ -6,7 +6,7 @@ export interface HomeState {
   /** Veículo mostrado no topo (por enquanto, o mais antigo). `null` se não há veículo. */
   vehicle:
     | (Pick<Vehicle, 'id' | 'name' | 'brand' | 'model' | 'year' | 'initialKm'> & {
-        /** O maior entre o km inicial e o do último abastecimento. */
+        /** O maior entre o km inicial e o do último abastecimento ou serviço de manutenção. */
         currentKm: number;
       })
     | null;
@@ -35,7 +35,11 @@ export async function loadHomeState(db: Db): Promise<HomeState> {
   if (!row) return { vehicle: null, entries: [] };
 
   const entries = await listFuelEntries(db, row.id);
-  const lastKm = Math.max(0, ...entries.map((e) => e.km));
+  const recordKm = await db.getFirstAsync<{ km: number | null }>(
+    'SELECT MAX(km) AS km FROM maintenance_records WHERE vehicle_id = ? AND deleted_at IS NULL',
+    row.id,
+  );
+  const lastKm = Math.max(0, recordKm?.km ?? 0, ...entries.map((e) => e.km));
 
   return {
     vehicle: {

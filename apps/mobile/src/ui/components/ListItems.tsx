@@ -55,6 +55,47 @@ export function FuelItem({ title, details, total, kmPerLiter, flat, onPress }: F
   );
 }
 
+interface RecordItemProps {
+  /** Ex.: "Troca de óleo". */
+  title: string;
+  /** Ex.: "12 jan 2026 · 40.320 km · Auto Center do Zé". */
+  details: string;
+  /** Ex.: "R$ 289,00". Omita se não houve custo informado. */
+  cost?: string;
+  /** Sem cantos arredondados: para itens empilhados dentro de um grupo arredondado. */
+  flat?: boolean;
+  onPress?: () => void;
+}
+
+/** Item da lista de serviços de manutenção feitos. */
+export function RecordItem({ title, details, cost, flat, onPress }: RecordItemProps) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={cost ? `${title}, ${cost}` : title}
+      onPress={onPress}
+      style={[styles.row, styles.fuel, flat && styles.flat]}
+    >
+      <IconAvatar
+        icon="wrench"
+        size={40}
+        iconSize={20}
+        background={colors.warningSoft}
+        color={colors.warning}
+      />
+      <View style={styles.main}>
+        <Text variant="bodyStrong" numberOfLines={1}>
+          {title}
+        </Text>
+        <Text variant="small" color="text2" numberOfLines={1}>
+          {details}
+        </Text>
+      </View>
+      {cost ? <Text variant="bodyStrong">{cost}</Text> : null}
+    </Pressable>
+  );
+}
+
 interface MenuItemProps {
   icon: IconName;
   label: string;

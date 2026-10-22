@@ -3,9 +3,10 @@ import {
   maintenanceStatus,
   MAINTENANCE_CATALOG,
   type MaintenancePlan,
+  type MaintenanceRecord,
   type MaintenanceStatus,
 } from '@ta-em-dia/shared';
-import { formatNumber, MONTH_NAMES_SHORT } from '../../../core/format';
+import { formatBRL, formatNumber, MONTH_NAMES_SHORT } from '../../../core/format';
 import type { MaintenanceData } from './plans.repository';
 
 export type MaintenanceTab = 'next' | 'done';
@@ -149,4 +150,29 @@ export function buildMaintenanceList(
       subtitle: intervalText(item.intervalKm, item.intervalMonths),
     })),
   };
+}
+
+export interface RecordItemView {
+  id: string;
+  title: string;
+  /** Ex.: "12 jan 2026 · 40.320 km · Auto Center do Zé". */
+  details: string;
+  /** Ex.: "R$ 289,00". Sem custo informado, fica sem valor. */
+  cost?: string;
+}
+
+/** Aba "Feitas": os serviços registrados, do mais recente ao mais antigo. */
+export function buildRecordItems(records: MaintenanceRecord[]): RecordItemView[] {
+  return records.map((record) => ({
+    id: record.id,
+    title: maintenanceLabel(record.type),
+    details: [
+      `${record.date.getDate()} ${MONTH_NAMES_SHORT[record.date.getMonth()]} ${record.date.getFullYear()}`,
+      `${km(record.km)} km`,
+      record.shop,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    cost: record.cost === undefined ? undefined : formatBRL(record.cost),
+  }));
 }

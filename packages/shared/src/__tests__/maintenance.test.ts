@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { MAINTENANCE_CATALOG, maintenanceLabel, maintenanceStatus } from '../maintenance';
+import {
+  isCustomMaintenanceType,
+  MAINTENANCE_CATALOG,
+  maintenanceLabel,
+  maintenanceStatus,
+  resolveMaintenanceType,
+} from '../maintenance';
 
 const plan = (patch = {}) => ({
   intervalKm: 10000,
@@ -20,6 +26,36 @@ describe('maintenanceLabel', () => {
     const codes = MAINTENANCE_CATALOG.map((i) => i.code);
     expect(new Set(codes).size).toBe(codes.length);
     expect(MAINTENANCE_CATALOG.every((i) => i.intervalKm || i.intervalMonths)).toBe(true);
+  });
+});
+
+describe('resolveMaintenanceType', () => {
+  it('nome de item pronto vira o código (ignora maiúsculas e acentos)', () => {
+    expect(resolveMaintenanceType('troca de oleo')).toBe('oil');
+    expect(resolveMaintenanceType('  ALINHAMENTO ')).toBe('alignment');
+    expect(resolveMaintenanceType('revisão')).toBe('service');
+    expect(resolveMaintenanceType('Óleo')).toBe('oil');
+  });
+
+  it('reaproveita a grafia de um atalho "Seu" que já existe', () => {
+    expect(resolveMaintenanceType('troca de BATERIA', ['Troca de bateria'])).toBe(
+      'Troca de bateria',
+    );
+  });
+
+  it('nome novo fica como foi digitado, sem espaços sobrando', () => {
+    expect(resolveMaintenanceType('  Troca   de bateria ')).toBe('Troca de bateria');
+  });
+
+  it('vazio não é um tipo', () => {
+    expect(resolveMaintenanceType('   ')).toBeNull();
+  });
+});
+
+describe('isCustomMaintenanceType', () => {
+  it('código do catálogo não é "Seu"; nome digitado é', () => {
+    expect(isCustomMaintenanceType('oil')).toBe(false);
+    expect(isCustomMaintenanceType('Troca de bateria')).toBe(true);
   });
 });
 

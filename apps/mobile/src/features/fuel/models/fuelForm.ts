@@ -1,5 +1,7 @@
 import { calculateMissingFuelAmount, type FuelAmountField } from '@ta-em-dia/shared';
-import { MONTH_NAMES_SHORT, parseKm } from '../../../core/format';
+import { MONTH_NAMES_SHORT, parseDecimal, parseKm, sanitizeDecimal } from '../../../core/format';
+
+export { parseDecimal, sanitizeDecimal };
 import { fuelTypeOptions, type FuelType, type NewFuelEntry } from '../../../core/fuel';
 
 export { fuelTypeOptions };
@@ -35,22 +37,6 @@ const decimals: Record<FuelAmountField, { min: number; max: number }> = {
   liters: { min: 2, max: 2 },
   total: { min: 2, max: 2 },
 };
-
-/** Texto do campo: só dígitos e uma vírgula, com no máximo `maxDecimals` casas. */
-export function sanitizeDecimal(text: string, maxDecimals: number): string {
-  const [int = '', ...rest] = text
-    .replace(/\./g, ',')
-    .replace(/[^\d,]/g, '')
-    .split(',');
-  if (rest.length === 0) return int;
-  return `${int},${rest.join('').slice(0, maxDecimals)}`;
-}
-
-/** Aceita "5,99" ou "5.99" (teclado numérico); devolve `null` se vazio ou inválido. */
-export function parseDecimal(text: string): number | null {
-  const value = Number(text.trim().replace(',', '.'));
-  return text.trim() === '' || !Number.isFinite(value) ? null : value;
-}
 
 export function formatDecimal(value: number, field: FuelAmountField): string {
   const { min, max } = decimals[field];

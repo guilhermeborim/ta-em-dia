@@ -53,6 +53,17 @@ describe('loadHomeState', () => {
     expect(state.entries).toHaveLength(1);
     // O km atual passa a ser o do último abastecimento.
     expect(state.vehicle?.currentKm).toBe(200);
+
+    // Um serviço de manutenção com km maior também conta.
+    await db.runAsync(
+      `INSERT INTO maintenance_records (id, vehicle_id, type, date, km, created_at, updated_at)
+       VALUES ('r1', ?, 'oil', ?, 350, ?, ?)`,
+      VEHICLE_ID,
+      NOW.toISOString(),
+      NOW.toISOString(),
+      NOW.toISOString(),
+    );
+    expect((await loadHomeState(db)).vehicle?.currentKm).toBe(350);
   });
 
   it('ignora veículo excluído', async () => {

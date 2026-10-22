@@ -22,7 +22,7 @@ export { Icon, iconNames, type IconName } from './components/Icon';
 export { IconAvatar } from './components/IconAvatar';
 export { InfoBanner } from './components/InfoBanner';
 export { InfoCard, type InfoRow } from './components/InfoCard';
-export { FuelItem, MenuItem, SuggestionItem } from './components/ListItems';
+export { FuelItem, MenuItem, RecordItem, SuggestionItem } from './components/ListItems';
 export { BrandSymbol, Logo } from './components/Logo';
 export { NotificationPreview } from './components/NotificationPreview';
 export { NumberField } from './components/NumberField';

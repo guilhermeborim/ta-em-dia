@@ -46,6 +46,7 @@ export function usePlanDetailViewModel() {
     busy,
     back: () => router.back(),
     edit: () => router.push({ pathname: '/plano-manutencao/[id]/editar', params: { id } }),
+    markDone: () => router.push({ pathname: '/registrar-manutencao', params: { planId: id } }),
     disable,
   };
 }

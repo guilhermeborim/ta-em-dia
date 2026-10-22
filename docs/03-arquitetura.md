@@ -136,6 +136,8 @@ As mesmas tabelas existem no PostgreSQL (`apps/api/prisma/schema.prisma`) e no S
 
 Os atalhos de tipos criados pelo usuário em "Outro" vêm dos nomes distintos já usados nos planos e registros dele; não há tabela própria.
 
+**Registrar manutenção:** na mesma transação, o serviço é gravado e (1) se o veículo tem plano do mesmo tipo, o ciclo reinicia (última vez = o serviço, exceto se a data for anterior à última vez já guardada); (2) se o tipo é um nome criado em "Outro" e não há plano, cria-se um plano só de histórico (sem intervalo), que vira o atalho "Seu"; (3) tipo da lista pronta sem plano só grava o serviço. Ao ativar um lembrete depois, o ciclo começa do último serviço registrado desse tipo. O nome digitado em "Outro" vira o código do catálogo se for o nome de um item pronto. O km do serviço conta como leitura do hodômetro (km atual). A foto da nota fica de fora do MVP: depende de armazenamento de arquivos e do limite de anexos (`attachments.max`, ver `docs/01-roadmap.md` e `docs/05-privacidade-lgpd.md`).
+
 **Valores derivados não são gravados:** km/l, custo por km, média diária e próxima manutenção são calculados por funções de `@ta-em-dia/shared`.
 
 - **km/l:** duas médias. A do período (principal) é km rodados entre o primeiro e o último abastecimento ÷ litros colocados depois do primeiro, e funciona com abastecimento parcial. A exata só existe entre dois tanques cheios seguidos (somando os parciais do meio). O km/l do trecho de cada abastecimento (`segmentKmPerLiter`) usa a mesma conta: só existe em abastecimento de tanque cheio com um tanque cheio antes; parcial não mostra km/l.
