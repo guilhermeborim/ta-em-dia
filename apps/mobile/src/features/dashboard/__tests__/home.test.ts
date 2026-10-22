@@ -1,7 +1,7 @@
 import { migrate } from '../../../core/db/migrations';
 import { createTestDb } from '../../../core/db/testing/testDb';
 import type { Db } from '../../../core/db';
-import { addFuelEntry } from '../../fuel/models/fuelEntries.repository';
+import { addFuelEntry } from '../../../core/fuel';
 import { createVehicle, deleteVehicle } from '../../vehicles/models/vehicles.repository';
 import { loadHomeState } from '../models/home.repository';
 import { vehicleDetails } from '../models/vehicleDetails';
@@ -18,7 +18,7 @@ beforeEach(async () => {
 
 describe('loadHomeState', () => {
   it('sem veículo: nada para mostrar', async () => {
-    expect(await loadHomeState(db)).toEqual({ vehicle: null, hasFuelEntries: false });
+    expect(await loadHomeState(db)).toEqual({ vehicle: null, entries: [] });
   });
 
   it('com veículo e sem abastecimento: estado vazio', async () => {
@@ -28,8 +28,13 @@ describe('loadHomeState', () => {
       { id: VEHICLE_ID, now: NOW },
     );
     const state = await loadHomeState(db);
-    expect(state.vehicle).toMatchObject({ id: VEHICLE_ID, name: 'Golzinho', initialKm: 48320 });
-    expect(state.hasFuelEntries).toBe(false);
+    expect(state.vehicle).toMatchObject({
+      id: VEHICLE_ID,
+      name: 'Golzinho',
+      initialKm: 48320,
+      currentKm: 48320,
+    });
+    expect(state.entries).toEqual([]);
   });
 
   it('com abastecimento: deixa de ser vazio', async () => {
@@ -44,7 +49,10 @@ describe('loadHomeState', () => {
       total: 240,
       fullTank: true,
     });
-    expect((await loadHomeState(db)).hasFuelEntries).toBe(true);
+    const state = await loadHomeState(db);
+    expect(state.entries).toHaveLength(1);
+    // O km atual passa a ser o do último abastecimento.
+    expect(state.vehicle?.currentKm).toBe(200);
   });
 
   it('ignora veículo excluído', async () => {
@@ -64,11 +72,12 @@ describe('vehicleDetails', () => {
         model: 'Gol 1.0',
         year: 2019,
         initialKm: 48320,
+        currentKm: 48910,
       }),
-    ).toBe('VW Gol 1.0 · 2019 · 48.320 km');
+    ).toBe('VW Gol 1.0 · 2019 · 48.910 km');
   });
 
   it('pula o que não existe', () => {
-    expect(vehicleDetails({ id: 'x', name: 'G', initialKm: 0 })).toBe('0 km');
+    expect(vehicleDetails({ id: 'x', name: 'G', initialKm: 0, currentKm: 0 })).toBe('0 km');
   });
 });

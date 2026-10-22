@@ -1,8 +1,8 @@
 import type { FuelEntry } from '@ta-em-dia/shared';
 import { migrate } from '../../../core/db/migrations';
 import { createTestDb } from '../../../core/db/testing/testDb';
-import { addFuelEntry } from '../models/fuelEntries.repository';
-import { buildAverage, buildFilterChips, buildSections } from '../models/fuelList';
+import { addFuelEntry, buildAverage } from '../../../core/fuel';
+import { buildFilterChips, buildSections } from '../models/fuelList';
 import { loadFuelList } from '../models/fuelList.repository';
 
 const VEHICLE_ID = '018bcfe5-6800-7000-8000-000000000001';

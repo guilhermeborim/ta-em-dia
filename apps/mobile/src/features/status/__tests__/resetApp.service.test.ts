@@ -6,7 +6,7 @@ import {
   isOnboardingDone,
   markOnboardingDone,
 } from '../../onboarding/models/onboarding.repository';
-import { addFuelEntry } from '../../fuel/models/fuelEntries.repository';
+import { addFuelEntry } from '../../../core/fuel';
 import { createVehicle, listVehicles } from '../../vehicles/models/vehicles.repository';
 import { resetApp } from '../models/resetApp.service';
 

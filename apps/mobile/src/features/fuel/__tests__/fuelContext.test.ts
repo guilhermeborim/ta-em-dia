@@ -2,7 +2,7 @@ import { migrate } from '../../../core/db/migrations';
 import { createTestDb } from '../../../core/db/testing/testDb';
 import type { Db } from '../../../core/db';
 import { loadFuelFormContext } from '../models/fuelContext';
-import { addFuelEntry, listFuelEntries } from '../models/fuelEntries.repository';
+import { addFuelEntry, listFuelEntries } from '../../../core/fuel';
 
 const VEHICLE_ID = '018bcfe5-6800-7000-8000-000000000001';
 const NOW = '2026-10-21T12:00:00.000Z';

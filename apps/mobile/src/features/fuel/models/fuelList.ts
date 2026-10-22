@@ -1,11 +1,11 @@
+import { segmentKmPerLiter, type FuelEntry } from '@ta-em-dia/shared';
+import { formatBRL, MONTH_NAMES } from '../../../core/format';
 import {
-  exactKmPerLiter,
-  periodConsumption,
-  segmentKmPerLiter,
-  type FuelEntry,
-} from '@ta-em-dia/shared';
-import { formatBRL, formatNumber } from '../../../core/format';
-import { fuelTypeOptions, type FuelType } from './fuelForm';
+  fuelTypeOptions,
+  toFuelListItem,
+  type FuelListItem,
+  type FuelType,
+} from '../../../core/fuel';
 
 /** Filtro da lista: tudo, um combustível ou só tanque cheio. */
 export type FuelFilter = 'all' | 'full' | FuelType;
@@ -15,62 +15,12 @@ export interface FuelFilterChip {
   label: string;
 }
 
-export interface FuelListItem {
-  id: string;
-  title: string;
-  details: string;
-  total: string;
-  /** Só quando o trecho pode ser calculado. */
-  kmPerLiter?: string;
-}
-
 export interface FuelListSection {
   key: string;
   title: string;
   summary: string;
   items: FuelListItem[];
 }
-
-export interface FuelAverage {
-  /** Sem ela (menos de dois abastecimentos), o cartão pede mais um abastecimento. */
-  periodAverage?: string;
-  periodCalc?: string;
-  exactAverage?: string;
-}
-
-const MONTHS = [
-  'Janeiro',
-  'Fevereiro',
-  'Março',
-  'Abril',
-  'Maio',
-  'Junho',
-  'Julho',
-  'Agosto',
-  'Setembro',
-  'Outubro',
-  'Novembro',
-  'Dezembro',
-];
-const MONTHS_SHORT = [
-  'jan',
-  'fev',
-  'mar',
-  'abr',
-  'mai',
-  'jun',
-  'jul',
-  'ago',
-  'set',
-  'out',
-  'nov',
-  'dez',
-];
-
-const fuelLabel = Object.fromEntries(fuelTypeOptions.map((o) => [o.type, o.label])) as Record<
-  FuelType,
-  string
->;
 
 /** "Tudo", os combustíveis que existem na lista e "Só tanque cheio". */
 export function buildFilterChips(entries: FuelEntry[]): FuelFilterChip[] {
@@ -88,35 +38,6 @@ function matches(entry: FuelEntry, filter: FuelFilter): boolean {
   if (filter === 'all') return true;
   if (filter === 'full') return entry.fullTank;
   return entry.fuelType === filter;
-}
-
-/**
- * Médias do veículo. Sempre sobre todos os abastecimentos: filtrar por
- * combustível quebraria a distância entre os tanques.
- */
-export function buildAverage(entries: FuelEntry[]): FuelAverage {
-  const period = periodConsumption(entries);
-  if (!period) return {};
-  const exact = exactKmPerLiter(entries);
-  return {
-    periodAverage: formatNumber(period.kmPerLiter, 1),
-    periodCalc: `${formatNumber(period.distanceKm, 0)} km ÷ ${formatNumber(period.liters, 1)} L`,
-    exactAverage: exact === null ? undefined : formatNumber(exact, 1),
-  };
-}
-
-function toItem(entry: FuelEntry, kmPerLiter: number | null): FuelListItem {
-  const day = String(entry.date.getDate()).padStart(2, '0');
-  const date = `${day} ${MONTHS_SHORT[entry.date.getMonth()]}`;
-  return {
-    id: entry.id,
-    title: entry.stationName ? `${date} · ${entry.stationName}` : date,
-    details: `${formatNumber(entry.liters, 1, 2)} L · ${fuelLabel[entry.fuelType]} · ${
-      entry.fullTank ? 'cheio' : 'parcial'
-    }`,
-    total: formatBRL(entry.total),
-    kmPerLiter: kmPerLiter === null ? undefined : `${formatNumber(kmPerLiter, 1)} km/l`,
-  };
 }
 
 /**
@@ -139,11 +60,12 @@ export function buildSections(
 
     let section = sections.find((s) => s.key === key);
     if (!section) {
-      const title = year === today.getFullYear() ? MONTHS[month] : `${MONTHS[month]} de ${year}`;
+      const title =
+        year === today.getFullYear() ? MONTH_NAMES[month] : `${MONTH_NAMES[month]} de ${year}`;
       section = { key, title, summary: '', items: [], spent: 0 };
       sections.push(section);
     }
-    section.items.push(toItem(entry, segments[index]));
+    section.items.push(toFuelListItem(entry, segments[index]));
     section.spent += entry.total;
   });
 

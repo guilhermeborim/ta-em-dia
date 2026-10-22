@@ -1,7 +1,8 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { useDb } from '../../../core/db';
-import { buildAverage, buildFilterChips, buildSections, type FuelFilter } from '../models/fuelList';
+import { buildAverage } from '../../../core/fuel';
+import { buildFilterChips, buildSections, type FuelFilter } from '../models/fuelList';
 import { loadFuelList, type FuelListData } from '../models/fuelList.repository';
 
 /** ViewModel da aba Abastecer: lista por mês, filtros e médias. Lê só o SQLite local. */

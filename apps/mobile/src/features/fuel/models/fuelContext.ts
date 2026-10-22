@@ -1,6 +1,6 @@
 import type { Vehicle } from '@ta-em-dia/shared';
 import type { Db } from '../../../core/db';
-import type { FuelType } from './fuelForm';
+import type { FuelType } from '../../../core/fuel';
 
 export interface FuelFormContext {
   /** Veículo do abastecimento (por enquanto, o mais antigo). `null` se não há veículo. */
