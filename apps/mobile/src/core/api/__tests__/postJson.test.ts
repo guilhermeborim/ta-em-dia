@@ -26,6 +26,11 @@ describe('postJson', () => {
     expect(init.headers).toEqual({ 'content-type': 'application/json' });
   });
 
+  it('429 (rate limit da API): inalcançável, para tentar depois e não desistir', async () => {
+    const fetchFn = jest.fn(async () => response(429, { code: 'RATE_LIMITED' }));
+    expect(await post(fetchFn as unknown as typeof fetch)).toEqual({ kind: 'unreachable' });
+  });
+
   it('4xx: recusado, com o código estável da API', async () => {
     const fetchFn = jest.fn(async () =>
       response(401, { code: 'INVALID_CREDENTIALS', message: 'x' }),

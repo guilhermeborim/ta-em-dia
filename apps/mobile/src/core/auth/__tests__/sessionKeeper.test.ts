@@ -1,5 +1,19 @@
 import type { SessionOutcome } from '../anonymousSession';
-import { createSessionKeeper, retryDelay } from '../sessionKeeper';
+import { createSessionKeeper, retryDelay, shouldRetryOnNetwork } from '../sessionKeeper';
+
+describe('shouldRetryOnNetwork', () => {
+  it('tenta quando há conexão e a internet não está dada como fora', () => {
+    expect(shouldRetryOnNetwork({ isConnected: true, isInternetReachable: true })).toBe(true);
+    // O sistema ainda não sabe se a internet chega (`undefined`): vale tentar.
+    expect(shouldRetryOnNetwork({ isConnected: true })).toBe(true);
+  });
+
+  it('não tenta sem conexão nem com internet fora', () => {
+    expect(shouldRetryOnNetwork({ isConnected: false })).toBe(false);
+    expect(shouldRetryOnNetwork({ isConnected: true, isInternetReachable: false })).toBe(false);
+    expect(shouldRetryOnNetwork({})).toBe(false);
+  });
+});
 
 describe('retryDelay', () => {
   it('cresce e para em 5 minutos', () => {

@@ -65,15 +65,74 @@ describe('ensureAnonymousSession', () => {
     expect(fetchFn).not.toHaveBeenCalled();
   });
 
-  it('acesso expirado (ou perto de): chama a API de novo e troca os tokens', async () => {
-    const fresh = { ...tokens, accessToken: 'novo.jwt.token' };
+  it('acesso expirado (ou perto de): troca o refresh token e guarda o par novo', async () => {
+    const fresh = { ...tokens, accessToken: 'novo.jwt.token', refreshToken: 'refresh-novo' };
     const fetchFn = jest.fn(async () => json(200, fresh));
     const { store, deps } = setup(fetchFn);
     // Expira em 1 minuto: dentro da folga de 2 minutos.
     await saveSession(store, { tokens, expiresAt: NOW.getTime() + 60_000 });
 
     expect(await ensureAnonymousSession(deps)).toBe('ready');
-    expect((await loadSession(store))?.tokens.accessToken).toBe('novo.jwt.token');
+
+    const [url, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/v1/auth/refresh');
+    expect(JSON.parse(init.body as string)).toEqual({ refreshToken: 'refresh-token' });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    const saved = await loadSession(store);
+    expect(saved?.tokens.accessToken).toBe('novo.jwt.token');
+    expect(saved?.tokens.refreshToken).toBe('refresh-novo');
+  });
+
+  it('refresh recusado (vencido, reusado ou API antiga sem a rota): entra de novo pelo segredo', async () => {
+    for (const status of [401, 404, 400]) {
+      const fresh = { ...tokens, accessToken: 'login.jwt.token' };
+      const fetchFn = jest.fn(async (url: string) =>
+        url.endsWith('/refresh')
+          ? json(status, { code: 'INVALID_REFRESH_TOKEN' })
+          : json(200, fresh),
+      );
+      const { store, deps } = setup(fetchFn);
+      await saveSession(store, { tokens, expiresAt: NOW.getTime() - 1000 });
+
+      expect(await ensureAnonymousSession(deps)).toBe('ready');
+      expect(fetchFn.mock.calls.map(([url]) => url)).toEqual([
+        'https://api.test/v1/auth/refresh',
+        'https://api.test/v1/auth/anonymous',
+      ]);
+      expect((await loadSession(store))?.tokens.accessToken).toBe('login.jwt.token');
+    }
+  });
+
+  it('refresh sem rede, 5xx ou 429: tentar de novo, sem cair para o login e sem perder a sessão', async () => {
+    for (const fetchFn of [
+      jest.fn(async () => {
+        throw new TypeError('Network request failed');
+      }),
+      jest.fn(async () => json(503, {})),
+      jest.fn(async () => json(429, { code: 'RATE_LIMITED' })),
+    ]) {
+      const { store, deps } = setup(fetchFn);
+      const expired = { tokens, expiresAt: NOW.getTime() - 1000 };
+      await saveSession(store, expired);
+
+      expect(await ensureAnonymousSession(deps)).toBe('retry');
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+      expect(await loadSession(store)).toEqual(expired);
+    }
+  });
+
+  it('refresh com resposta fora do contrato: tentar de novo', async () => {
+    const fetchFn = jest.fn(async () => json(200, { accessToken: 'x' }));
+    const { store, deps } = setup(fetchFn);
+    await saveSession(store, { tokens, expiresAt: NOW.getTime() - 1000 });
+    expect(await ensureAnonymousSession(deps)).toBe('retry');
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('login anônimo com 429: tentar de novo (não é recusa)', async () => {
+    const fetchFn = jest.fn(async () => json(429, { code: 'RATE_LIMITED' }));
+    const { deps } = setup(fetchFn);
+    expect(await ensureAnonymousSession(deps)).toBe('retry');
   });
 
   it('sem internet, timeout ou erro 5xx: tentar de novo, sem guardar nada', async () => {
