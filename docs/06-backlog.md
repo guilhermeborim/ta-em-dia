@@ -48,7 +48,7 @@ Escolhas tomadas em `docs/07-validacao-e-decisoes.md`. Cada item é um PR e pode
 - [x] **Moto**: tipo `motorcycle` no `shared`, no SQLite (migration só adiciona) e no Prisma, com ícone próprio.
 - [ ] **Prazos por ano**: guardar cada prazo de documento por ano (IPVA 2026, IPVA 2027...), com histórico.
 - [ ] **Seletor de data**: chip "Hoje" e calendário nativo (`@react-native-community/datetimepicker`) nos formulários de abastecimento, manutenção e prazo.
-- [ ] **Reordenar arrastando**: arrastar de verdade em Meus veículos (`react-native-gesture-handler` e `react-native-reanimated`).
+- [x] **Reordenar arrastando**: arrastar de verdade em Meus veículos (`react-native-gesture-handler` e `react-native-reanimated`).
 - [ ] **API: segurança da conta anônima**: rate limit (`@nestjs/throttler`), `POST /v1/auth/refresh` com rotação do token, job que apaga contas anônimas sem uso por 12 meses; no app, usar o refresh e reagir à volta da internet (`expo-network`).
 
 ## Como manter
