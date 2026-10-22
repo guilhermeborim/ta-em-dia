@@ -32,7 +32,8 @@ Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
 
 ## Fase B — Com API
 
-- [ ] **API: usuário anônimo** (`POST /v1/auth/anonymous`) e o app chamando quando houver internet.
+- [x] **API: usuário anônimo** (`POST /v1/auth/anonymous`): módulo `auth`, Prisma, migration `init`, guard JWT global.
+- [ ] **App: chamar o usuário anônimo** quando houver internet: `core/api`, tokens no SecureStore, refazer a chamada se falhar.
 - [ ] **API: sync** (`push` e `pull`) e o motor de sync no app. Telas: [23](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1656), [24](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1688).
 - [ ] **Login com Google** (Android e iOS) e **Apple** (só iOS), e vincular conta. Telas: [19](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1349), [19b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1399).
 - [ ] **Excluir conta** (tela 22): [22](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1598). App e API.
