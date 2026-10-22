@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDb } from '../../../core/db';
 import { buildAverage } from '../../../core/fuel';
 import { loadHomeState, type HomeState } from '../models/home.repository';
+import { buildHomeAlerts } from '../models/homeAlerts';
 import { buildHomeSummary, buildLastEntry, buildSavedToast } from '../models/homeSummary';
 import { vehicleDetails } from '../models/vehicleDetails';
 
@@ -66,6 +67,7 @@ export function useDashboardViewModel() {
   );
   const average = useMemo(() => buildAverage(entries), [entries]);
   const lastEntry = useMemo(() => buildLastEntry(entries), [entries]);
+  const alerts = useMemo(() => (state ? buildHomeAlerts(state) : null), [state]);
 
   return {
     loading: state === null,
@@ -74,9 +76,12 @@ export function useDashboardViewModel() {
     summary,
     average,
     lastEntry,
+    alertCards: alerts?.cards ?? [],
+    hasReminders: alerts?.hasReminders ?? false,
     toast,
     openFuel: () => router.push('/novo-abastecimento'),
     openMaintenance: () => router.navigate('/manutencao'),
+    openPlan: (id: string) => router.push({ pathname: '/plano-manutencao/[id]', params: { id } }),
     addVehicle: () => router.push('/primeiro-veiculo'),
     saveData: () => showToast({ title: 'Em breve' }),
   };

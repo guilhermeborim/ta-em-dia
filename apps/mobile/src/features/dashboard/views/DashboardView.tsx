@@ -1,12 +1,15 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ActionCard,
+  AlertCard,
   colors,
   ConsumptionCard,
   EmptyState,
   FloatingButton,
   FuelItem,
+  InfoBanner,
+  size,
   spacing,
   SummaryCard,
   SyncPill,
@@ -64,14 +67,48 @@ export function DashboardView() {
               />
             ) : null}
 
-            <ActionCard
-              icon="wrench"
-              title="Ative os lembretes de manutenção"
-              text="Óleo, filtros, pneus e revisão"
-              avatarBackground={colors.warningSoft}
-              avatarColor={colors.warning}
-              onPress={vm.openMaintenance}
-            />
+            {vm.alertCards.length > 0 ? (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text variant="h3">Próximos alertas</Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Ver todos os alertas"
+                    onPress={vm.openMaintenance}
+                    style={styles.seeAll}
+                  >
+                    <Text variant="bodyStrong" color="primary">
+                      Ver todos
+                    </Text>
+                  </Pressable>
+                </View>
+                {vm.alertCards.map((card) => (
+                  <AlertCard
+                    key={card.id}
+                    tone={card.tone}
+                    icon="wrench"
+                    title={card.title}
+                    subtitle={card.subtitle}
+                    status={card.status}
+                    progress={card.progress}
+                    progressLabel={card.progressLabel}
+                    hint={card.hint}
+                    onPress={() => vm.openPlan(card.id)}
+                  />
+                ))}
+              </View>
+            ) : vm.hasReminders ? (
+              <InfoBanner icon="check" text="Tudo em dia: nenhuma manutenção perto de vencer." />
+            ) : (
+              <ActionCard
+                icon="wrench"
+                title="Ative os lembretes de manutenção"
+                text="Óleo, filtros, pneus e revisão"
+                avatarBackground={colors.warningSoft}
+                avatarColor={colors.warning}
+                onPress={vm.openMaintenance}
+              />
+            )}
 
             {vm.lastEntry ? (
               <View style={styles.last}>
@@ -116,6 +153,13 @@ const styles = StyleSheet.create({
   content: { padding: spacing.lg, paddingTop: spacing.sm, gap: spacing.lg },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   last: { gap: spacing.md },
+  section: { gap: spacing.md },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  seeAll: { minHeight: size.touchTarget, justifyContent: 'center' },
   // Espaço para o botão flutuante não cobrir o último item.
   withFab: { paddingBottom: 96 },
   fab: { position: 'absolute', right: spacing.lg, bottom: spacing.lg },

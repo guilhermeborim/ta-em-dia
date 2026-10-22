@@ -1,6 +1,7 @@
-import type { FuelEntry, Vehicle } from '@ta-em-dia/shared';
+import type { FuelEntry, MaintenancePlan, Vehicle } from '@ta-em-dia/shared';
 import type { Db } from '../../../core/db';
 import { listFuelEntries } from '../../../core/fuel';
+import { listPlans } from '../../../core/maintenance';
 
 export interface HomeState {
   /** Veículo mostrado no topo (por enquanto, o mais antigo). `null` se não há veículo. */
@@ -12,6 +13,8 @@ export interface HomeState {
     | null;
   /** Abastecimentos do veículo, do mais recente ao mais antigo. */
   entries: FuelEntry[];
+  /** Planos de manutenção do veículo (ativos e desativados). */
+  plans: MaintenancePlan[];
 }
 
 interface VehicleRow {
@@ -32,7 +35,7 @@ export async function loadHomeState(db: Db): Promise<HomeState> {
       ORDER BY created_at, id
       LIMIT 1`,
   );
-  if (!row) return { vehicle: null, entries: [] };
+  if (!row) return { vehicle: null, entries: [], plans: [] };
 
   const entries = await listFuelEntries(db, row.id);
   const recordKm = await db.getFirstAsync<{ km: number | null }>(
@@ -52,5 +55,6 @@ export async function loadHomeState(db: Db): Promise<HomeState> {
       currentKm: Math.max(row.initial_km, lastKm),
     },
     entries,
+    plans: await listPlans(db, row.id),
   };
 }

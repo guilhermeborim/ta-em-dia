@@ -2,6 +2,7 @@ import { migrate } from '../../../core/db/migrations';
 import { createTestDb } from '../../../core/db/testing/testDb';
 import type { Db } from '../../../core/db';
 import { addFuelEntry } from '../../../core/fuel';
+import { activatePlan, setPlanEnabled } from '../../maintenance/models/plans.repository';
 import { createVehicle, deleteVehicle } from '../../vehicles/models/vehicles.repository';
 import { loadHomeState } from '../models/home.repository';
 import { vehicleDetails } from '../models/vehicleDetails';
@@ -18,7 +19,7 @@ beforeEach(async () => {
 
 describe('loadHomeState', () => {
   it('sem veículo: nada para mostrar', async () => {
-    expect(await loadHomeState(db)).toEqual({ vehicle: null, entries: [] });
+    expect(await loadHomeState(db)).toEqual({ vehicle: null, entries: [], plans: [] });
   });
 
   it('com veículo e sem abastecimento: estado vazio', async () => {
@@ -70,6 +71,22 @@ describe('loadHomeState', () => {
     await createVehicle(db, { name: 'Gol', type: 'flex', initialKm: 100 }, { id: VEHICLE_ID });
     await deleteVehicle(db, VEHICLE_ID);
     expect((await loadHomeState(db)).vehicle).toBeNull();
+  });
+});
+
+describe('loadHomeState: planos de manutenção', () => {
+  it('traz os planos do veículo (ativos e desativados)', async () => {
+    await createVehicle(db, { name: 'Gol', type: 'flex', initialKm: 100 }, { id: VEHICLE_ID });
+    const plan = await activatePlan(db, {
+      vehicleId: VEHICLE_ID,
+      type: 'oil',
+      intervalKm: 10000,
+      currentKm: 100,
+    });
+    expect((await loadHomeState(db)).plans).toEqual([plan]);
+
+    await setPlanEnabled(db, plan.id, false);
+    expect((await loadHomeState(db)).plans[0].enabled).toBe(false);
   });
 });
 
