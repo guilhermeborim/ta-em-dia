@@ -25,7 +25,8 @@ export function TabBar({ items, activeKey, onPress, bottomInset = 30 }: TabBarPr
         const active = item.key === activeKey;
         return (
           <Pressable
-            key={item.key}
+            // A chave muda com o estado: remonta o item e evita cantos quadrados na pílula (Android).
+            key={`${item.key}-${active}`}
             accessibilityRole="tab"
             accessibilityLabel={item.label}
             accessibilityState={{ selected: active }}
@@ -35,7 +36,7 @@ export function TabBar({ items, activeKey, onPress, bottomInset = 30 }: TabBarPr
             <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
               <Icon name={item.icon} size={22} color={active ? colors.primary : colors.text3} />
             </View>
-            <Text variant="caption" color={active ? 'primary' : 'text3'}>
+            <Text variant="caption" color={active ? 'primary' : 'text3'} numberOfLines={1}>
               {item.label}
             </Text>
           </Pressable>
@@ -50,12 +51,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 4,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  item: { width: 68, alignItems: 'center', gap: 4 },
+  // Em telas de 360 pt, 5 itens de 68 pt não cabem: cada item divide a largura, até 76 pt.
+  item: { flex: 1, maxWidth: 76, alignItems: 'center', gap: 4 },
   iconWrap: {
     width: 52,
     height: 28,

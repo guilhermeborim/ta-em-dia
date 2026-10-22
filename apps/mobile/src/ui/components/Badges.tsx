@@ -59,14 +59,14 @@ const sync: Record<'synced' | 'local', { icon: IconName; label: string }> = {
   local: { icon: 'cloud-off', label: 'Salvo no aparelho' },
 };
 
-/** Estado do backup: "Sincronizado" ou "Salvo no aparelho". */
-export function SyncPill({ state }: { state: 'synced' | 'local' }) {
+/** Estado do backup: "Sincronizado" ou "Salvo no aparelho". `label` troca o texto (ex.: "No aparelho"). */
+export function SyncPill({ state, label }: { state: 'synced' | 'local'; label?: string }) {
   const s = sync[state];
   return (
     <View style={[styles.pill, styles.status, { backgroundColor: colors.surface2 }]}>
       <Icon name={s.icon} size={14} color={colors.text2} />
       <Text variant="caption" color="text2">
-        {s.label}
+        {label ?? s.label}
       </Text>
     </View>
   );

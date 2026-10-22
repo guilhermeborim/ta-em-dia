@@ -2,12 +2,14 @@ import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  ActionCard,
   AlertCard,
   BrandSymbol,
   Button,
   Chip,
   colors,
   ConsumptionCard,
+  EmptyState,
   FloatingButton,
   FuelItem,
   Icon,
@@ -133,6 +135,7 @@ export function ComponentsView() {
             <OwnBadge />
             <SyncPill state="synced" />
             <SyncPill state="local" />
+            <SyncPill state="local" label="No aparelho" />
           </View>
           <View style={styles.row}>
             <StatusPill tone="ok" label="Em dia" />
@@ -201,6 +204,28 @@ export function ComponentsView() {
           <ConsumptionCard periodAverage="11,8" periodCalc="3 trechos" exactAverage="12,1" />
           <ConsumptionCard periodAverage="11,8" periodCalc="3 trechos" />
           <ConsumptionCard />
+        </Section>
+
+        <Section title="Cartões de chamada e vazio">
+          <ActionCard
+            tone="soft"
+            icon="cloud"
+            title="Salve seus dados na nuvem"
+            text="Entre com Google ou Apple"
+          />
+          <ActionCard
+            icon="wrench"
+            title="Ative os lembretes de manutenção"
+            text="Óleo, filtros, pneus e revisão"
+            avatarBackground={colors.warningSoft}
+            avatarColor={colors.warning}
+          />
+          <EmptyState
+            icon="fuel"
+            title="Registre seu primeiro abastecimento"
+            text="Com 2 abastecimentos de tanque cheio, o Tá em Dia já mostra seu km/l real."
+            actionLabel="+ Abastecer agora"
+          />
         </Section>
 
         <Section title="Notificação">

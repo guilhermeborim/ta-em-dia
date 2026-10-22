@@ -27,12 +27,14 @@ export function VehicleSelector({ name, details, onPress }: VehicleSelectorProps
         background={colors.primary}
         color={colors.onPrimary}
       />
-      <View>
+      <View style={styles.texts}>
         <View style={styles.nameRow}>
-          <Text variant="h2">{name}</Text>
+          <Text variant="h2" numberOfLines={1} style={styles.name}>
+            {name}
+          </Text>
           <Icon name="chevron-down" size={20} color={colors.text} />
         </View>
-        <Text variant="small" color="text2">
+        <Text variant="small" color="text2" numberOfLines={1}>
           {details}
         </Text>
       </View>
@@ -41,6 +43,9 @@ export function VehicleSelector({ name, details, onPress }: VehicleSelectorProps
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  // Encolhe com nome ou detalhes longos, para não empurrar o que vem ao lado (ex.: selo de sync).
+  row: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  texts: { flexShrink: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  name: { flexShrink: 1 },
 });
