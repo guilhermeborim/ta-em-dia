@@ -28,7 +28,7 @@ Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
 - [x] **Alertas de documentos**: notificações locais 30 e 7 dias antes de cada vencimento (reagendar como nos avisos de manutenção), banner "Avisamos 30 e 7 dias antes" da tela 18, editar a antecedência ("editar lembrete"), documentos vencidos ou perto de vencer entrando em "Próximos alertas" do Início, no selo do cartão de Meus veículos e no valor "1 vencido" de Documentos e prazos na aba Mais.
 - [x] **Relatórios** (tela 14): [14](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1094).
 - [x] **Mais e Premium em breve** (telas 15, 21): [15](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1236), [21](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1521). Premium atrás de feature flag. Conta, Configurações e Ajuda avisam "Em breve" até chegarem.
-- [ ] **Configurações** (tela 20): [20](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1446). Interruptores de notificação (manutenções, documentos, lembrar de atualizar o km a cada 15 dias), antecedência padrão dos prazos, unidades (km e litros) e "Exportar dados" (Em breve). Sem o seletor de aparência: o app é só tema claro (`apps/mobile/CLAUDE.md`).
+- [x] **Configurações** (tela 20): [20](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1446). Interruptores de notificação (manutenções, documentos, lembrar de atualizar o km a cada 15 dias), antecedência padrão dos prazos, unidades (km e litros) e "Exportar dados" (Em breve). Sem o seletor de aparência: o app é só tema claro (`apps/mobile/CLAUDE.md`).
 
 ## Fase B — Com API
 
