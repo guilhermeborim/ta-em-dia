@@ -139,16 +139,18 @@ Testado só contra um Postgres local (Docker) e no CI sem banco; nunca no Render
 - [ ] `GET /health` e `GET /v1/config` seguem abertos (sem token).
 - [ ] Primeira chamada com o serviço dormindo (plano grátis) demora cerca de 1 minuto: o app precisa de um timeout generoso (PR do app).
 
-### 2.10 App: usuário anônimo (PR #37)
+### 2.10 App: usuário anônimo (PR #37) e renovação pelo refresh
 
-Precisa da API de staging no ar (PR #36 aplicado) e de um build novo do app apontando para ela (`EXPO_PUBLIC_API_URL`).
+Precisa da API de staging no ar (PR #36 e o de segurança, 2.14, aplicados) e de um **development build novo**: `expo-network` é módulo nativo. O app deve apontar para a API (`EXPO_PUBLIC_API_URL`).
 
 - [ ] Primeira abertura: boas-vindas → "Continuar sem login" → o app abre normalmente, sem esperar a API. Em Mais → Status do app, a linha "Usuário anônimo na API" passa a "criado, acesso válido" (toque em "Testar de novo" depois de alguns segundos).
 - [ ] No Neon: um `users` com `isAnonymous = true`, um `devices` com a plataforma certa e um `refresh_tokens`.
 - [ ] Reabrir o app (e voltar do segundo plano) com acesso ainda válido não cria nada novo no banco.
-- [ ] Modo avião na primeira abertura: o app funciona normal e a Status mostra "ainda não criado". Desligue o modo avião com o app aberto: em até 5 minutos (ou ao sair e voltar ao app) vira "criado".
+- [ ] Modo avião na primeira abertura: o app funciona normal e a Status mostra "ainda não criado". Desligue o modo avião com o app aberto: em poucos segundos (o app tenta quando a internet volta) vira "criado". Teste também ligando só o Wi-Fi e só o 4G.
 - [ ] Com o serviço do Render dormindo, a primeira chamada demora cerca de 1 minuto e o app não trava nem mostra erro.
-- [ ] Passados 15 minutos, ao voltar ao app a Status mostra "criado, acesso válido" de novo (o acesso foi renovado; o `users` continua um só).
+- [ ] Passados 15 minutos, ao voltar ao app a Status mostra "criado, acesso válido" de novo (o acesso foi renovado; o `users` continua um só). No banco, o refresh token antigo está com `revokedAt` e há um novo ativo (sem acumular: um ativo por aparelho).
+- [ ] Renovação pelo refresh: depois dos 15 minutos o app chama `/auth/refresh` (não `/auth/anonymous`; veja nos logs do Render). Apague a linha do refresh token no banco e force a renovação: o app cai para o login pelo segredo e continua no mesmo usuário.
+- [ ] Com o limite de chamadas estourado (429), o app não desiste: tenta de novo pelas esperas de 15 s a 5 min.
 - [ ] "Reiniciar App" (Status) apaga a sessão e, ao refazer o login, cria um usuário novo.
 - [ ] Nenhum token, segredo ou id de aparelho aparece em `adb logcat`.
 
