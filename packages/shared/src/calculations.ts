@@ -21,18 +21,56 @@ export interface OdometerReading {
   readAt: Date;
 }
 
+export interface PeriodConsumption {
+  kmPerLiter: number;
+  distanceKm: number;
+  liters: number;
+}
+
 /**
  * Média do período (principal): km rodados entre o primeiro e o último
  * abastecimento ÷ litros colocados depois do primeiro. Funciona com
  * abastecimento parcial. Retorna null com menos de dois abastecimentos.
+ * Traz também a conta (km e litros) para mostrar "1.780 km ÷ 143,5 L".
  */
-export function periodKmPerLiter(entries: FuelEntryInput[]): number | null {
+export function periodConsumption(entries: FuelEntryInput[]): PeriodConsumption | null {
   if (entries.length < 2) return null;
   const sorted = [...entries].sort((a, b) => a.km - b.km);
-  const distance = sorted[sorted.length - 1].km - sorted[0].km;
+  const distanceKm = sorted[sorted.length - 1].km - sorted[0].km;
   const liters = sorted.slice(1).reduce((sum, e) => sum + e.liters, 0);
-  if (distance <= 0 || liters <= 0) return null;
-  return distance / liters;
+  if (distanceKm <= 0 || liters <= 0) return null;
+  return { kmPerLiter: distanceKm / liters, distanceKm, liters };
+}
+
+/** Só a média do período (km/l). Ver `periodConsumption`. */
+export function periodKmPerLiter(entries: FuelEntryInput[]): number | null {
+  return periodConsumption(entries)?.kmPerLiter ?? null;
+}
+
+/**
+ * km/l de cada trecho, na mesma ordem de `entries`. O trecho termina num
+ * abastecimento de tanque cheio e começa no tanque cheio anterior, somando os
+ * litros dos parciais do meio. Abastecimento parcial, o primeiro tanque cheio
+ * e trecho sem distância ou litros ficam com null.
+ */
+export function segmentKmPerLiter(entries: FuelEntryInput[]): (number | null)[] {
+  const result: (number | null)[] = entries.map(() => null);
+  const order = entries.map((_, i) => i).sort((a, b) => entries[a].km - entries[b].km);
+
+  let startKm: number | null = null;
+  let liters = 0;
+  for (const i of order) {
+    const entry = entries[i];
+    if (startKm !== null) liters += entry.liters;
+    if (!entry.fullTank) continue;
+    if (startKm !== null) {
+      const distance = entry.km - startKm;
+      if (distance > 0 && liters > 0) result[i] = distance / liters;
+    }
+    startKm = entry.km;
+    liters = 0;
+  }
+  return result;
 }
 
 /**
