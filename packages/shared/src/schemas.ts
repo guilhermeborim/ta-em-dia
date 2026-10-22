@@ -44,6 +44,21 @@ export const maintenancePlanSchema = z.object({
   notifyBeforeDays: z.number().int().nonnegative().optional(),
 });
 
+export const maintenanceRecordSchema = z.object({
+  id: z.uuid(),
+  vehicleId: z.uuid(),
+  /** Plano que este serviço reiniciou, se houver. */
+  planId: z.uuid().optional(),
+  /** Código da lista pronta ou nome digitado em "Outro". */
+  type: z.string().min(1).max(60),
+  date: z.coerce.date(),
+  km: z.number().int().nonnegative(),
+  cost: z.number().nonnegative().optional(),
+  shop: z.string().max(80).optional(),
+  note: z.string().max(500).optional(),
+});
+
 export type Vehicle = z.infer<typeof vehicleSchema>;
 export type FuelEntry = z.infer<typeof fuelEntrySchema>;
 export type MaintenancePlan = z.infer<typeof maintenancePlanSchema>;
+export type MaintenanceRecord = z.infer<typeof maintenanceRecordSchema>;
