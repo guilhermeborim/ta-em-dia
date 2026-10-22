@@ -33,7 +33,9 @@ export function LoginView() {
         </View>
 
         <View style={styles.texts}>
-          <Text variant="h1">Bora cuidar do seu carro?</Text>
+          <Text variant="display" style={styles.title}>
+            Bora cuidar do seu carro?
+          </Text>
           <Text variant="body" color="text2">
             Gastos, manutenções e documentos num lugar só. Leva 1 minuto pra começar.
           </Text>
@@ -94,6 +96,7 @@ const styles = StyleSheet.create({
   },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: spacing.sm },
   wordmark: { fontSize: 32, lineHeight: 38, letterSpacing: -1.5 },
+  title: { fontSize: 32, lineHeight: 38, letterSpacing: -0.5 },
   texts: { gap: 14 },
   highlights: { flexDirection: 'row', gap: 10 },
   highlight: {
