@@ -12,6 +12,13 @@ export const anonymousAuthSchema = z.object({
 
 export type AnonymousAuthRequest = z.infer<typeof anonymousAuthSchema>;
 
+/** Contrato de `POST /v1/auth/refresh`: troca o refresh token por um par novo (o antigo deixa de valer). */
+export const refreshRequestSchema = z.object({
+  refreshToken: z.string().min(1).max(256),
+});
+
+export type RefreshRequest = z.infer<typeof refreshRequestSchema>;
+
 export const authTokensSchema = z.object({
   /** JWT de curta duração (`Authorization: Bearer`). */
   accessToken: z.string().min(1),

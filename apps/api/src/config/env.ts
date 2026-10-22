@@ -11,6 +11,8 @@ export const envSchema = z.object({
   APPLE_CLIENT_ID: z.string().default(''),
   SENTRY_DSN: z.string().default(''),
   CORS_ORIGINS: z.string().default(''),
+  // Quantos proxies ficam entre a internet e a API (o Render é 1). O rate limit usa o IP do cliente.
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
 });
 
 export type Env = z.infer<typeof envSchema>;

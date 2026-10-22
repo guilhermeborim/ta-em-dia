@@ -176,6 +176,16 @@ Com um aparelho que já tem dados da versão anterior ao PR #28:
 - [ ] **Moto (migration 8, recria `vehicles`)**: com veículos antigos (um carro e uma moto cadastrados antes), depois de atualizar nada some: mesma ordem, placa, km, abastecimentos, serviços e prazos; a moto antiga passa a mostrar o ícone de moto e "Tipo: Moto". Cadastre uma moto nova (Carro/Moto no formulário) e confira o ícone no Início (seletor), em Meus veículos e no detalhe. Confira também o ícone no Android e no iOS, em fonte grande.
 - [ ] Voltar para a versão anterior do app com o banco novo não quebra (as migrations só adicionam colunas e tabelas). A migration 8 recria uma tabela e grava `motorcycle`: voltar à versão anterior mostra a moto com ícone de carro, e editar essa moto na versão antiga falha. Só vale para quem testou o app antes do lançamento.
 
+### 2.14 API: segurança da conta anônima
+
+Só dá para conferir com o staging no ar (merge na `main` dispara o deploy).
+
+- [ ] O deploy aplica as duas migrations novas (`vehicle_type_motorcycle` e `device_last_seen`) sem erro; `GET /health` responde.
+- [ ] **Rate limit pelo IP certo**: no Render, mande 25 chamadas seguidas a `POST /v1/auth/anonymous` com corpo vazio (`curl`) e veja o `429 RATE_LIMITED`. Depois peça de outro celular/rede: deve responder normal (se der 429 para todo mundo, o `TRUST_PROXY_HOPS` está errado; o Render pode ter mais de um proxy).
+- [ ] `POST /v1/auth/refresh` com o `refreshToken` de uma resposta do `/auth/anonymous` devolve um par novo; repetir o token antigo dá `401 INVALID_REFRESH_TOKEN`.
+- [ ] **Limpeza**: em Actions → "Limpeza da API" → Run workflow com "Só contar" ligado. O log mostra as contagens (0 e 0 no começo). Só desligue o "Só contar" quando tiver confiança. A execução agendada (segunda, 6h UTC) apaga de verdade.
+- [ ] O `production` da limpeza espera a sua aprovação (environment `production`), como o deploy.
+
 ## 3. Decisões em aberto
 
 Cada item traz minha recomendação. As decisões já tomadas saíram daqui e estão em `docs/01-roadmap.md`, `docs/03-arquitetura.md` e no backlog (`docs/06-backlog.md`, "Decisões do dono"). A numeração não é refeita: os números que faltam já foram decididos.
@@ -222,3 +232,7 @@ Sem development build para iOS, nenhum aviso agenda. Quando houver, apague `sche
 ### 3.20 `GET /v1/config` continua público
 
 Devolve sempre o plano `free`. Com o guard global agora existindo, ele ficou marcado `@Public()`. Quando o app mandar o token, a rota deve passar a ler o plano do usuário. Nada a decidir agora; só não esquecer no PR do app ou do sync.
+
+### 3.23 Limites do rate limit
+
+100 chamadas por minuto por IP em qualquer rota, 20 em `POST /v1/auth/anonymous` e 30 em `POST /v1/auth/refresh` (`src/common/throttle/throttle.ts`). Na rede móvel muita gente divide um IP (CGNAT): 20 contas novas por minuto por IP é folgado para o uso real e ainda segura quem tenta encher o banco (no máximo ~29 mil por dia por IP). **Decidir** se quer mais apertado (ex.: 10 por minuto). Recomendação: manter e olhar os 429 nos logs depois do lançamento.

@@ -1,6 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Public } from '../../common/auth/public.decorator';
 
+// O health check do deploy e do host chama a toda hora: fora do rate limit.
+@SkipThrottle()
 @Controller('health')
 export class HealthController {
   @Public()
