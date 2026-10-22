@@ -39,6 +39,18 @@ Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
 - [ ] **Excluir conta** (tela 22): [22](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1598). App e API.
 - [ ] **Exportar meus dados** (LGPD, ver `docs/05-privacidade-lgpd.md`).
 
+## Decisões do dono (22/10/2026)
+
+Escolhas tomadas em `docs/07-validacao-e-decisoes.md`. Cada item é um PR e pode ser feito fora da ordem das fases.
+
+- [ ] **Regras de veículos e prazos**: o texto do "Avise-me quando lançar" não promete mais nada ("Anotado!" sem aviso futuro); prazo cadastrado já dentro da janela avisa uma vez no próximo 9h (igual à manutenção); avisos de documentos de **todos** os veículos ativos; arquivar o único veículo ativo é bloqueado ("Você precisa de outro veículo ativo").
+- [ ] **Limite grátis de 1 veículo**: `vehicles.max` = 1 no plano grátis (`flags.ts`), aplicado em "Adicionar veículo" e no primeiro veículo.
+- [ ] **Moto**: tipo `motorcycle` no `shared`, no SQLite (migration só adiciona) e no Prisma, com ícone próprio.
+- [ ] **Prazos por ano**: guardar cada prazo de documento por ano (IPVA 2026, IPVA 2027...), com histórico.
+- [ ] **Seletor de data**: chip "Hoje" e calendário nativo (`@react-native-community/datetimepicker`) nos formulários de abastecimento, manutenção e prazo.
+- [ ] **Reordenar arrastando**: arrastar de verdade em Meus veículos (`react-native-gesture-handler` e `react-native-reanimated`).
+- [ ] **API: segurança da conta anônima**: rate limit (`@nestjs/throttler`), `POST /v1/auth/refresh` com rotação do token, job que apaga contas anônimas sem uso por 12 meses; no app, usar o refresh e reagir à volta da internet (`expo-network`).
+
 ## Como manter
 
 - Ao terminar um item, marque `[x]` no mesmo PR da feature.
