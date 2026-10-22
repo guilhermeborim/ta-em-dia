@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   documentReminders,
+  lateDocumentReminder,
   documentStatus,
   isVehicleDocument,
   parseDueDate,
@@ -127,5 +128,49 @@ describe('documentReminders', () => {
       now,
     );
     expect(reminders.map((r) => r.documentId)).toEqual(['b', 'a']);
+  });
+});
+
+describe('lateDocumentReminder', () => {
+  const now = new Date(2026, 9, 21, 10);
+  const input = (patch = {}) => ({
+    id: 'a',
+    kind: 'ipva' as const,
+    dueDate: '2026-10-31',
+    notifyDays: [30, 7],
+    ...patch,
+  });
+
+  it('prazo dentro da janela: avisa uma vez, no próximo 9h, com os dias que faltam', () => {
+    expect(lateDocumentReminder(input(), now)).toEqual({
+      documentId: 'a',
+      kind: 'ipva',
+      daysLeft: 9,
+      fireAt: new Date(2026, 9, 22, 9),
+    });
+  });
+
+  it('antes das 9h o aviso é de hoje', () => {
+    const early = new Date(2026, 9, 21, 8);
+    expect(lateDocumentReminder(input(), early)).toMatchObject({
+      daysLeft: 10,
+      fireAt: new Date(2026, 9, 21, 9),
+    });
+  });
+
+  it('nenhum aviso perdido: nada', () => {
+    expect(lateDocumentReminder(input({ dueDate: '2026-12-31' }), now)).toBeNull();
+  });
+
+  it('vence hoje antes das 9h ainda avisa; depois das 9h o próximo 9h já é tarde', () => {
+    const due = input({ dueDate: '2026-10-21' });
+    expect(lateDocumentReminder(due, new Date(2026, 9, 21, 8))).toMatchObject({ daysLeft: 0 });
+    expect(lateDocumentReminder(due, now)).toBeNull();
+  });
+
+  it('vencido, sem antecedência ou data inválida: nada', () => {
+    expect(lateDocumentReminder(input({ dueDate: '2026-10-15' }), now)).toBeNull();
+    expect(lateDocumentReminder(input({ notifyDays: [] }), now)).toBeNull();
+    expect(lateDocumentReminder(input({ dueDate: 'xx' }), now)).toBeNull();
   });
 });

@@ -171,6 +171,12 @@ export function maintenanceStatus(
 /** Hora do dia (fuso do aparelho) em que os avisos de manutenção chegam. */
 export const REMINDER_HOUR = 9;
 
+/** Próxima vez que os avisos chegam: as 9h de hoje, se ainda não deu a hora; senão as de amanhã. */
+export function nextReminderTime(now: Date = new Date(), hour: number = REMINDER_HOUR): Date {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour);
+  return today > now ? today : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, hour);
+}
+
 export interface MaintenanceReminderInput extends MaintenancePlanInput {
   id: string;
   enabled: boolean;
