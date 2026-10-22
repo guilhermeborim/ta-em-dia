@@ -48,7 +48,7 @@ export function useDashboardViewModel() {
     // O cartão do mês entra no item "Início com dados"; até lá, com dados só some o vazio.
     showEmptyFuel: vehicle !== null && state?.hasFuelEntries === false,
     toast,
-    openFuel: () => router.navigate('/abastecer'),
+    openFuel: () => router.push('/novo-abastecimento'),
     openMaintenance: () => router.navigate('/manutencao'),
     addVehicle: () => router.push('/primeiro-veiculo'),
     saveData: comingSoon,

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { requestNotificationPermission } from '../../../core/notifications';
+// import { requestNotificationPermission } from '../../../core/notifications';
 import { sampleNotifications } from '../models/content';
 
 /** ViewModel: pede a permissão ao sistema e segue para o app, aceitando ou não. */
@@ -13,7 +13,7 @@ export function useNotificationsPermissionViewModel() {
   const allow = useCallback(async () => {
     setBusy(true);
     try {
-      await requestNotificationPermission();
+      // await requestNotificationPermission();
     } finally {
       setBusy(false);
     }

@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet } from 'react-native';
 import { colors, radius } from '../theme/tokens';
 import { OwnBadge } from './Badges';
+import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
 
 interface ChipProps {
@@ -9,10 +10,12 @@ interface ChipProps {
   onPress?: () => void;
   /** Tipo criado pela pessoa: mostra o selo "Seu". */
   own?: boolean;
+  /** Ícone antes do rótulo (ex.: data e veículo no formulário). */
+  icon?: IconName;
 }
 
 /** Chip de escolha (combustível, tipo de manutenção). Selecionado fica escuro. */
-export function Chip({ label, selected = false, onPress, own = false }: ChipProps) {
+export function Chip({ label, selected = false, onPress, own = false, icon }: ChipProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -22,10 +25,11 @@ export function Chip({ label, selected = false, onPress, own = false }: ChipProp
       style={[
         styles.base,
         selected ? styles.selected : styles.normal,
-        own ? styles.own : styles.plain,
+        own ? styles.own : icon ? styles.withIcon : styles.plain,
       ]}
     >
-      <Text variant="small" color={selected ? 'bg' : 'text2'}>
+      {icon ? <Icon name={icon} size={16} color={selected ? colors.bg : colors.text} /> : null}
+      <Text variant="small" color={selected ? 'bg' : icon ? 'text' : 'text2'}>
         {label}
       </Text>
       {own ? <OwnBadge /> : null}
@@ -38,5 +42,6 @@ const styles = StyleSheet.create({
   normal: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border },
   selected: { backgroundColor: colors.text, borderWidth: 1.5, borderColor: colors.text },
   plain: { paddingHorizontal: 14, paddingVertical: 8 },
+  withIcon: { paddingLeft: 12, paddingRight: 14, paddingVertical: 8, gap: 6 },
   own: { paddingLeft: 14, paddingRight: 6, paddingVertical: 6 },
 });

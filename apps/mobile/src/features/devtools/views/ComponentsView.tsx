@@ -30,6 +30,7 @@ import {
   TabBar,
   Text,
   TextField,
+  SwitchRow,
   Toast,
   typography,
   VehicleSelector,
@@ -57,6 +58,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export function ComponentsView() {
   const [tab, setTab] = useState('home');
   const [chip, setChip] = useState('Todos');
+  const [fullTank, setFullTank] = useState(false);
   const [text, setText] = useState('');
   const [number, setNumber] = useState('');
 
@@ -127,6 +129,13 @@ export function ComponentsView() {
             onChangeText={setNumber}
             placeholder="0,00"
           />
+          <NumberField label="Valor total" prefix="R$" error="Preencha 2 dos 3 valores" />
+          <SwitchRow
+            label="Tanque cheio"
+            hint="Opcional"
+            value={fullTank}
+            onValueChange={setFullTank}
+          />
         </Section>
 
         <Section title="Selos e status">
@@ -156,6 +165,8 @@ export function ComponentsView() {
               />
             ))}
             <Chip label="Meu tipo" own />
+            <Chip label="Hoje, 21 out" icon="calendar" />
+            <Chip label="Golzinho" icon="car" />
           </View>
         </Section>
 

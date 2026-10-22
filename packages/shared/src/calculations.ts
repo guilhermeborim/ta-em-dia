@@ -53,6 +53,42 @@ export function exactKmPerLiter(entries: FuelEntryInput[]): number | null {
   return distance / liters;
 }
 
+export type FuelAmountField = 'pricePerLiter' | 'liters' | 'total';
+export type FuelAmountsInput = Partial<Record<FuelAmountField, number | null>>;
+
+const FUEL_AMOUNT_FIELDS: FuelAmountField[] = ['pricePerLiter', 'liters', 'total'];
+
+const round = (value: number, decimals: number) => Number(value.toFixed(decimals));
+
+/**
+ * Dois dos três valores (preço/litro, litros, total) preenchem o terceiro.
+ * `order` lista os campos na ordem em que foram digitados, o mais recente por
+ * último: valem os dois últimos com valor; o outro é o calculado. Retorna
+ * null com menos de dois valores. Preço com 3 casas, litros e total com 2.
+ */
+export function calculateMissingFuelAmount(
+  amounts: FuelAmountsInput,
+  order: FuelAmountField[],
+): { field: FuelAmountField; value: number } | null {
+  const inputs: FuelAmountField[] = [];
+  for (const field of [...order].reverse()) {
+    const value = amounts[field];
+    if (value != null && value > 0 && !inputs.includes(field)) inputs.push(field);
+    if (inputs.length === 2) break;
+  }
+  if (inputs.length < 2) return null;
+
+  const field = FUEL_AMOUNT_FIELDS.find((f) => !inputs.includes(f))!;
+  const { pricePerLiter, liters, total } = amounts;
+  const value =
+    field === 'total'
+      ? round(pricePerLiter! * liters!, 2)
+      : field === 'liters'
+        ? round(total! / pricePerLiter!, 2)
+        : round(total! / liters!, 3);
+  return value > 0 ? { field, value } : null;
+}
+
 /** Custo por km rodado no período, ou null sem distância. */
 export function costPerKm(totalSpent: number, distanceKm: number): number | null {
   if (distanceKm <= 0) return null;

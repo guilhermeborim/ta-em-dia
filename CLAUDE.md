@@ -2,6 +2,8 @@
 
 App para controlar gastos e manutenções do carro (abastecimentos, consumo, manutenções com alerta, documentos). Monorepo pnpm + Turborepo: `apps/mobile` (Expo), `apps/api` (NestJS + Prisma + PostgreSQL), `packages/shared` (`@ta-em-dia/shared`).
 
+Use a skill `i-have-adhd` em todas as respostas (invoque `/i-have-adhd` no início da sessão).
+
 Responda e escreva textos de interface em português (BR). Código, nomes e commits em inglês técnico ou português, seguindo o que já existe no arquivo.
 
 ## Leia antes de decidir
