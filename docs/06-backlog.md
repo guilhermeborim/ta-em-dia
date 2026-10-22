@@ -26,7 +26,7 @@ Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
 - [x] **Editar, arquivar e excluir veículo** (lápis da tela 17, sem frame no Figma ainda): editar marca, modelo, ano, apelido e placa (validar a placa); arquivar; excluir com confirmação, apagando de forma lógica o que depende do veículo e cancelando os avisos dele.
 - [x] **Documentos e prazos** (tela 18): [18](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1527). Só datas, sem número da CNH nem foto. Lista, adicionar, editar a data e excluir; sem avisos ainda (item abaixo).
 - [x] **Alertas de documentos**: notificações locais 30 e 7 dias antes de cada vencimento (reagendar como nos avisos de manutenção), banner "Avisamos 30 e 7 dias antes" da tela 18, editar a antecedência ("editar lembrete"), documentos vencidos ou perto de vencer entrando em "Próximos alertas" do Início, no selo do cartão de Meus veículos e no valor "1 vencido" de Documentos e prazos na aba Mais.
-- [ ] **Relatórios** (tela 14): [14](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1094).
+- [x] **Relatórios** (tela 14): [14](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1094).
 - [ ] **Mais, Configurações e Premium em breve** (telas 15, 20, 21): [15](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1236), [20](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1446), [21](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1521). Premium atrás de feature flag.
 
 ## Fase B — Com API
