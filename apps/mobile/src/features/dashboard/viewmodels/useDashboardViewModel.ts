@@ -6,6 +6,7 @@ import { useToast } from '../../../core/toast/useToast';
 import { loadHomeState, type HomeState } from '../models/home.repository';
 import { buildHomeAlerts, type HomeAlertCard } from '../models/homeAlerts';
 import { buildHomeSummary, buildLastEntry, buildSavedToast } from '../models/homeSummary';
+import { vehicleIcon } from '../../../core/vehicle';
 import { vehicleDetails } from '../models/vehicleDetails';
 
 /**
@@ -51,7 +52,11 @@ export function useDashboardViewModel() {
 
   return {
     loading: state === null,
-    vehicle: vehicle && { name: vehicle.name, details: vehicleDetails(vehicle) },
+    vehicle: vehicle && {
+      name: vehicle.name,
+      icon: vehicleIcon(vehicle.type),
+      details: vehicleDetails(vehicle),
+    },
     showEmptyFuel: vehicle !== null && !hasFuelEntries,
     summary,
     average,

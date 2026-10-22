@@ -49,10 +49,10 @@ describe('firstVehicle', () => {
     expect(buildVehicleInput({ ...full, nickname: ' ' }).value?.name).toBe('Gol');
   });
 
-  it('monta o veículo; moto vira combustion', () => {
+  it('monta o veículo; moto vira motorcycle', () => {
     expect(buildVehicleInput({ ...full, kind: 'motorcycle' }).value).toEqual({
       name: 'Golzinho',
-      type: 'combustion',
+      type: 'motorcycle',
       brand: 'VW',
       model: 'Gol',
       year: 2019,

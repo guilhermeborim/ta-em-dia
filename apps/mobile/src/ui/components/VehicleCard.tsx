@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { colors } from '../theme/tokens';
 import { StatusPill, type StatusTone } from './Badges';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
 
 /** Cores da faixa do cartão (Figma): os cartões alternam entre elas. */
@@ -17,6 +17,8 @@ interface VehicleCardProps {
   /** Ex.: "VW Gol 1.0 · 2019 · 48.910 km". */
   details: string;
   accent?: VehicleCardAccent;
+  /** Ícone do tipo de veículo: `car` (padrão) ou `motorbike`. */
+  icon?: IconName;
   /** Selo de situação. Sem lembretes, omita. */
   status?: { tone: StatusTone; label: string };
   onPress?: () => void;
@@ -32,6 +34,7 @@ export function VehicleCard({
   name,
   details,
   accent = 'primary',
+  icon = 'car',
   status,
   onPress,
   onLongPress,
@@ -59,7 +62,7 @@ export function VehicleCard({
       style={styles.card}
     >
       <View style={[styles.photo, { backgroundColor: color.background }]}>
-        <Icon name="car" size={64} color={color.icon} />
+        <Icon name={icon} size={64} color={color.icon} />
       </View>
       <View style={styles.footer}>
         <View style={styles.texts}>

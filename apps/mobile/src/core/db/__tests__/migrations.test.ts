@@ -54,4 +54,88 @@ describe('migrate', () => {
     );
     expect(tables).toHaveLength(0);
   });
+
+  it('recria vehicles para aceitar motorcycle sem perder dados nem as chaves estrangeiras', async () => {
+    const db = createTestDb();
+    // O banco como estava antes da migration da moto.
+    await migrate(db, MIGRATIONS.slice(0, MIGRATIONS.length - 1));
+    const at = '2026-10-01T10:00:00.000Z';
+    for (const [id, name, type, sort] of [
+      ['v1', 'Gol', 'flex', 0],
+      ['v2', 'CG', 'combustion', 1],
+    ] as const) {
+      await db.runAsync(
+        `INSERT INTO vehicles (id, name, type, plate, initial_km, archived, created_at, updated_at, sort_order)
+         VALUES (?, ?, ?, 'ABC1D23', 100, 0, ?, ?, ?)`,
+        id,
+        name,
+        type,
+        at,
+        at,
+        sort,
+      );
+    }
+    await db.runAsync(
+      `INSERT INTO fuel_entries (id, vehicle_id, date, km, fuel_type, liters, price_per_liter, total, full_tank, created_at, updated_at)
+       VALUES ('f1', 'v2', ?, 200, 'gasoline', 10, 6, 60, 1, ?, ?)`,
+      at,
+      at,
+      at,
+    );
+
+    await migrate(db);
+
+    const rows = await db.getAllAsync<{
+      id: string;
+      type: string;
+      plate: string;
+      sort_order: number;
+    }>('SELECT id, type, plate, sort_order FROM vehicles ORDER BY sort_order');
+    expect(rows).toEqual([
+      { id: 'v1', type: 'flex', plate: 'ABC1D23', sort_order: 0 },
+      { id: 'v2', type: 'motorcycle', plate: 'ABC1D23', sort_order: 1 },
+    ]);
+    // O abastecimento continua ligado à moto e as chaves estrangeiras voltaram a valer.
+    expect(
+      await db.getFirstAsync<{ plate: string }>(
+        'SELECT v.plate FROM fuel_entries f JOIN vehicles v ON v.id = f.vehicle_id WHERE f.id = ?',
+        'f1',
+      ),
+    ).toEqual({ plate: 'ABC1D23' });
+    expect(await db.getFirstAsync('PRAGMA foreign_keys')).toEqual({ foreign_keys: 1 });
+    await expect(
+      db.runAsync(
+        `INSERT INTO odometer_readings (id, vehicle_id, km, read_at, source, created_at, updated_at)
+         VALUES ('o1', 'nao-existe', 1, ?, 'manual', ?, ?)`,
+        at,
+        at,
+        at,
+      ),
+    ).rejects.toThrow();
+    await db.runAsync(
+      `INSERT INTO vehicles (id, name, type, initial_km, created_at, updated_at)
+       VALUES ('v3', 'Biz', 'motorcycle', 0, ?, ?)`,
+      at,
+      at,
+    );
+    await expect(
+      db.runAsync(
+        `INSERT INTO vehicles (id, name, type, initial_km, created_at, updated_at)
+         VALUES ('v4', 'X', 'bicycle', 0, ?, ?)`,
+        at,
+        at,
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('desfaz tudo e religa as chaves estrangeiras se a migration de recriar falhar', async () => {
+    const db = createTestDb();
+    await expect(
+      migrate(db, [
+        { foreignKeysOff: true, sql: 'CREATE TABLE a (id INTEGER); CREATE TABLE a (id INTEGER);' },
+      ]),
+    ).rejects.toThrow();
+    expect(await db.getFirstAsync('PRAGMA foreign_keys')).toEqual({ foreign_keys: 1 });
+    expect(await db.getFirstAsync('PRAGMA user_version')).toEqual({ user_version: 0 });
+  });
 });

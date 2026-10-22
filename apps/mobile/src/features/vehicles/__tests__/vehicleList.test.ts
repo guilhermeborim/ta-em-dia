@@ -105,6 +105,7 @@ describe('buildVehicleCards', () => {
     expect(cards[0]).toEqual({
       id: GOL,
       name: 'Golzinho',
+      icon: 'car',
       details: 'VW Gol 1.0 · 2019 · 48.910 km',
       status: undefined,
       canMoveUp: false,
