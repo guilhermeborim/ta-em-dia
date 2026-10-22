@@ -213,6 +213,7 @@ const DEPENDENTS = [
   'maintenance_plans',
   'fuel_entries',
   'odometer_readings',
+  'documents',
 ] as const;
 
 /**

@@ -141,6 +141,25 @@ export const MIGRATIONS: string[] = [
   );
   CREATE INDEX idx_odometer_readings_vehicle ON odometer_readings (vehicle_id, read_at);
   `,
+  `
+  -- Documentos e prazos (sincronizável). Espelha Document no Prisma. Só a data de vencimento:
+  -- sem número, sem foto (docs/05-privacidade-lgpd.md). vehicle_id é nulo para a CNH (da pessoa).
+  -- due_date: "aaaa-mm-dd". notify_days: JSON, ex.: [30,7].
+  CREATE TABLE documents (
+    id          TEXT PRIMARY KEY NOT NULL,
+    user_id     TEXT,
+    vehicle_id  TEXT REFERENCES vehicles(id),
+    kind        TEXT NOT NULL CHECK (kind IN ('ipva', 'licensing', 'insurance', 'cnh')),
+    due_date    TEXT NOT NULL,
+    notify_days TEXT NOT NULL,
+    note        TEXT,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL,
+    deleted_at  TEXT,
+    version     INTEGER
+  );
+  CREATE INDEX idx_documents_vehicle ON documents (vehicle_id);
+  `,
 ];
 
 export async function migrate(db: Db, migrations: string[] = MIGRATIONS): Promise<void> {
