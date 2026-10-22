@@ -8,6 +8,7 @@ import {
   periodConsumption,
   periodKmPerLiter,
   segmentKmPerLiter,
+  monthFuelSummary,
   monthOverMonth,
   monthProjection,
   nextMaintenance,
@@ -218,5 +219,64 @@ describe('segmentKmPerLiter', () => {
 
   it('retorna lista vazia sem abastecimentos', () => {
     expect(segmentKmPerLiter([])).toEqual([]);
+  });
+});
+
+describe('monthFuelSummary', () => {
+  const today = new Date(2026, 9, 21);
+  const e = (date: Date, km: number, total: number) => ({
+    date,
+    km,
+    liters: total / 6,
+    total,
+    fullTank: true,
+  });
+
+  it('soma o mês, compara com o anterior e parte do último abastecimento antes do mês', () => {
+    const summary = monthFuelSummary(
+      [
+        e(new Date(2026, 9, 18), 11800, 240),
+        e(new Date(2026, 9, 9), 11400, 180),
+        e(new Date(2026, 8, 24), 11000, 200),
+        e(new Date(2026, 8, 2), 10600, 100),
+      ],
+      today,
+    );
+    expect(summary).toMatchObject({ spent: 420, previousSpent: 300, count: 2, distanceKm: 800 });
+    expect(summary.costPerKm).toBeCloseTo(0.525);
+  });
+
+  it('sem abastecimento antes do mês, o primeiro do mês só marca o km de partida', () => {
+    const summary = monthFuelSummary(
+      [e(new Date(2026, 9, 18), 11800, 240), e(new Date(2026, 9, 9), 11000, 180)],
+      today,
+    );
+    expect(summary).toMatchObject({ spent: 420, previousSpent: 0, count: 2, distanceKm: 800 });
+    expect(summary.costPerKm).toBeCloseTo(0.3);
+  });
+
+  it('um abastecimento só no mês e nenhum antes: sem distância nem custo por km', () => {
+    expect(monthFuelSummary([e(new Date(2026, 9, 9), 11000, 180)], today)).toEqual({
+      spent: 180,
+      previousSpent: 0,
+      count: 1,
+      distanceKm: null,
+      costPerKm: null,
+    });
+  });
+
+  it('mês sem abastecimentos: gasto zero e base do mês anterior', () => {
+    expect(monthFuelSummary([e(new Date(2026, 8, 24), 11000, 200)], today)).toEqual({
+      spent: 0,
+      previousSpent: 200,
+      count: 0,
+      distanceKm: null,
+      costPerKm: null,
+    });
+  });
+
+  it('janeiro compara com dezembro do ano anterior', () => {
+    const summary = monthFuelSummary([e(new Date(2025, 11, 20), 10000, 150)], new Date(2026, 0, 5));
+    expect(summary.previousSpent).toBe(150);
   });
 });

@@ -142,6 +142,7 @@ Os atalhos de tipos criados pelo usuário em "Outro" vêm dos nomes distintos j�
 - **Valores do abastecimento:** dois entre preço/litro, litros e total preenchem o terceiro (`calculateMissingFuelAmount`). Valem os dois campos digitados por último; com os três preenchidos, o digitado há mais tempo é recalculado. Preço com 3 casas, litros e total com 2.
 - **Média diária:** (km da última leitura − km de ~60 dias atrás) ÷ dias entre elas; sem histórico, usa 30 km/dia até haver duas leituras.
 - **Próxima manutenção:** o que vier primeiro entre `last_done_km + interval_km` (convertido em data pela média diária) e `last_done_at + interval_months`.
+- **Resumo do mês (Início):** gasto do mês e do mês anterior (variação em %), nº de abastecimentos, km rodados e custo por km (`monthFuelSummary`). Km rodados = último abastecimento do mês − último antes do mês (sem ele, o primeiro do mês marca a partida e seu valor não entra no custo por km).
 - **Projeção do mês:** gasto até hoje ÷ dias passados × dias do mês.
 
 ## Sync offline-first
