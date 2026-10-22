@@ -1,4 +1,8 @@
-import { ensureInstallationCredentials, type SecretStore } from '../installation';
+import {
+  clearInstallationCredentials,
+  ensureInstallationCredentials,
+  type SecretStore,
+} from '../installation';
 
 function memoryStore(): SecretStore & { data: Map<string, string> } {
   const data = new Map<string, string>();
@@ -6,6 +10,7 @@ function memoryStore(): SecretStore & { data: Map<string, string> } {
     data,
     getItemAsync: async (key) => data.get(key) ?? null,
     setItemAsync: async (key, value) => void data.set(key, value),
+    deleteItemAsync: async (key) => void data.delete(key),
   };
 }
 
@@ -28,5 +33,12 @@ describe('ensureInstallationCredentials', () => {
       secret: () => 's-2',
     });
     expect(again).toEqual({ installationId: 'id-1', secret: 's-1' });
+  });
+
+  it('apaga as credenciais ao limpar', async () => {
+    const store = memoryStore();
+    await ensureInstallationCredentials(store, { id: () => 'id-1', secret: () => 's-1' });
+    await clearInstallationCredentials(store);
+    expect(store.data.size).toBe(0);
   });
 });

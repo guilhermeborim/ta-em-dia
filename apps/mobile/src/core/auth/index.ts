@@ -1,4 +1,5 @@
 export {
+  clearInstallationCredentials,
   ensureInstallationCredentials,
   type InstallationCredentials,
   type SecretStore,

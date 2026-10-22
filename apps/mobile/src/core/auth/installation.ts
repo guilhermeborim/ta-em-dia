@@ -9,6 +9,7 @@ const INSTALLATION_SECRET_KEY = 'installation_secret';
 export interface SecretStore {
   getItemAsync(key: string): Promise<string | null>;
   setItemAsync(key: string, value: string): Promise<void>;
+  deleteItemAsync(key: string): Promise<void>;
 }
 
 export interface InstallationCredentials {
@@ -39,4 +40,12 @@ export async function ensureInstallationCredentials(
     await store.setItemAsync(INSTALLATION_SECRET_KEY, secret);
   }
   return { installationId, secret };
+}
+
+/** Apaga o id e o segredo do aparelho. Só para reiniciar o app em desenvolvimento. */
+export async function clearInstallationCredentials(
+  store: SecretStore = SecureStore,
+): Promise<void> {
+  await store.deleteItemAsync(INSTALLATION_ID_KEY);
+  await store.deleteItemAsync(INSTALLATION_SECRET_KEY);
 }
