@@ -53,6 +53,7 @@ function AppReady() {
         <Stack.Screen name="historico" />
         <Stack.Screen name="veiculos" />
         <Stack.Screen name="veiculo/[id]" />
+        <Stack.Screen name="veiculo/[id]/editar" options={{ presentation: 'modal' }} />
         <Stack.Screen name="veiculo/[id]/atualizar-km" options={{ presentation: 'modal' }} />
         <Stack.Screen name="novo-veiculo" options={{ presentation: 'modal' }} />
         <Stack.Screen name="plano-manutencao/[id]" />

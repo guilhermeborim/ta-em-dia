@@ -20,7 +20,11 @@ export function VehicleDetailView() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TopBar title={view?.title ?? 'Veículo'} onBack={vm.back} />
+      <TopBar
+        title={view?.title ?? 'Veículo'}
+        onBack={vm.back}
+        action={view ? { icon: 'edit', label: 'Editar veículo', onPress: vm.edit } : undefined}
+      />
 
       {vm.loading ? null : !view ? (
         <View style={styles.content}>

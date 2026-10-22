@@ -11,9 +11,10 @@ type VehicleRow = {
   plate: string | null;
   initial_km: number;
   sort_order: number;
+  archived: number;
 };
 
-const COLUMNS = 'id, name, type, brand, model, year, plate, initial_km, sort_order';
+const COLUMNS = 'id, name, type, brand, model, year, plate, initial_km, sort_order, archived';
 
 export type NewVehicle = Omit<Vehicle, 'id'>;
 
@@ -28,6 +29,7 @@ function toVehicle(row: VehicleRow): Vehicle {
     plate: row.plate ?? undefined,
     initialKm: row.initial_km,
     sortOrder: row.sort_order,
+    archived: row.archived === 1,
   };
 }
 
@@ -46,7 +48,7 @@ export async function createVehicle(
     const last = await db.getFirstAsync<{ next: number }>(
       'SELECT COALESCE(MAX(sort_order) + 1, 0) AS next FROM vehicles WHERE deleted_at IS NULL',
     );
-    vehicle = { ...base, sortOrder: last?.next ?? 0 };
+    vehicle = { ...base, sortOrder: last?.next ?? 0, archived: false };
     await db.runAsync(
       `INSERT INTO vehicles
          (id, name, type, brand, model, year, plate, initial_km, sort_order, created_at, updated_at)
@@ -118,10 +120,123 @@ export async function reorderVehicles(
   });
 }
 
-/** Exclusão lógica: a linha fica com deleted_at para o sync propagar. */
+/** Veículos arquivados (não excluídos), na ordem de "Meus veículos". */
+export async function listArchivedVehicles(db: Db): Promise<Vehicle[]> {
+  const rows = await db.getAllAsync<VehicleRow>(
+    `SELECT ${COLUMNS}
+       FROM vehicles
+      WHERE deleted_at IS NULL AND archived = 1
+      ORDER BY sort_order, created_at, id`,
+  );
+  return rows.map(toVehicle);
+}
+
+/** Dados que a edição pode mudar. Campo opcional sem valor (`undefined`) é removido. */
+export type VehiclePatch = Pick<Vehicle, 'name' | 'brand' | 'model' | 'year' | 'plate'>;
+
+/** Valida, grava a edição e enfileira o upsert. `null` se o veículo não existe. */
+export async function updateVehicle(
+  db: Db,
+  id: string,
+  patch: VehiclePatch,
+  now: Date = new Date(),
+): Promise<Vehicle | null> {
+  const at = now.toISOString();
+  let updated: Vehicle | null = null;
+
+  await db.withTransactionAsync(async () => {
+    const current = await findVehicle(db, id);
+    if (!current) return;
+    updated = vehicleSchema.parse({
+      ...current,
+      name: patch.name,
+      brand: patch.brand,
+      model: patch.model,
+      year: patch.year,
+      plate: patch.plate,
+    });
+    await db.runAsync(
+      `UPDATE vehicles
+          SET name = ?, brand = ?, model = ?, year = ?, plate = ?, updated_at = ?
+        WHERE id = ?`,
+      updated.name,
+      updated.brand ?? null,
+      updated.model ?? null,
+      updated.year ?? null,
+      updated.plate ?? null,
+      at,
+      id,
+    );
+    await enqueue(db, 'vehicles', id, 'upsert', updated, at);
+  });
+
+  return updated;
+}
+
+/**
+ * Arquiva ou restaura. Arquivar tira o veículo das listas e dos avisos; restaurar o põe no fim
+ * de "Meus veículos". `false` se o veículo não existe.
+ */
+export async function setVehicleArchived(
+  db: Db,
+  id: string,
+  archived: boolean,
+  now: Date = new Date(),
+): Promise<boolean> {
+  const at = now.toISOString();
+  let found = false;
+
+  await db.withTransactionAsync(async () => {
+    const current = await findVehicle(db, id);
+    if (!current) return;
+    found = true;
+    const last = await db.getFirstAsync<{ next: number }>(
+      'SELECT COALESCE(MAX(sort_order) + 1, 0) AS next FROM vehicles WHERE deleted_at IS NULL',
+    );
+    const sortOrder = archived ? (current.sortOrder ?? 0) : (last?.next ?? 0);
+    await db.runAsync(
+      'UPDATE vehicles SET archived = ?, sort_order = ?, updated_at = ? WHERE id = ?',
+      archived ? 1 : 0,
+      sortOrder,
+      at,
+      id,
+    );
+    await enqueue(db, 'vehicles', id, 'upsert', { ...current, archived, sortOrder }, at);
+  });
+
+  return found;
+}
+
+/** Tabelas que dependem do veículo e saem junto com ele. */
+const DEPENDENTS = [
+  'maintenance_records',
+  'maintenance_plans',
+  'fuel_entries',
+  'odometer_readings',
+] as const;
+
+/**
+ * Exclusão lógica do veículo e de tudo que depende dele (abastecimentos, planos, serviços e
+ * leituras de km): as linhas ficam com deleted_at para o sync propagar, tudo na mesma transação.
+ */
 export async function deleteVehicle(db: Db, id: string, now: Date = new Date()): Promise<void> {
   const at = now.toISOString();
   await db.withTransactionAsync(async () => {
+    for (const table of DEPENDENTS) {
+      const rows = await db.getAllAsync<{ id: string }>(
+        `SELECT id FROM ${table} WHERE vehicle_id = ? AND deleted_at IS NULL`,
+        id,
+      );
+      for (const row of rows) {
+        await db.runAsync(
+          `UPDATE ${table} SET deleted_at = ?, updated_at = ? WHERE id = ?`,
+          at,
+          at,
+          row.id,
+        );
+        await enqueue(db, table, row.id, 'delete', { id: row.id, deletedAt: at }, at);
+      }
+    }
     await db.runAsync(
       'UPDATE vehicles SET deleted_at = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL',
       at,

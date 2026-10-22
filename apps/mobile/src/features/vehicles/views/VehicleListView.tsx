@@ -1,9 +1,10 @@
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   colors,
   DashedAddCard,
   EmptyState,
+  MenuItem,
   spacing,
   Text,
   TopBar,
@@ -53,6 +54,21 @@ export function VehicleListView() {
                 />
               ))}
               <DashedAddCard label="Adicionar veículo" onPress={vm.addVehicle} />
+              {vm.archived.length > 0 ? (
+                <View style={styles.archived}>
+                  <Text variant="caption" color="text3">
+                    Arquivados
+                  </Text>
+                  {vm.archived.map((vehicle) => (
+                    <MenuItem
+                      key={vehicle.id}
+                      icon="car"
+                      label={vehicle.name}
+                      onPress={() => vm.openVehicle(vehicle.id)}
+                    />
+                  ))}
+                </View>
+              ) : null}
               {vm.canReorder ? (
                 <Text variant="small" color="text3" style={styles.hint}>
                   Segure um veículo para mudar a ordem.
@@ -70,4 +86,5 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.lg, paddingBottom: 40, gap: 14, flexGrow: 1 },
   hint: { textAlign: 'center' },
+  archived: { gap: 8, paddingTop: 8 },
 });
