@@ -2,7 +2,14 @@ import { migrate } from '../../../core/db/migrations';
 import { createTestDb } from '../../../core/db/testing/testDb';
 import type { Db } from '../../../core/db';
 import { addFuelEntry, listFuelEntries, deleteFuelEntry } from '../../../core/fuel';
-import { createVehicle, deleteVehicle, listVehicles } from '../models/vehicles.repository';
+import {
+  countVehicles,
+  createVehicle,
+  deleteVehicle,
+  listVehicles,
+  setVehicleArchived,
+  VehicleLimitError,
+} from '../models/vehicles.repository';
 
 const VEHICLE_ID = '018bcfe5-6800-7000-8000-000000000001';
 const ENTRY_ID = '018bcfe5-6800-7000-8000-000000000002';
@@ -38,6 +45,35 @@ describe('vehicles.repository', () => {
       'SELECT table_name, row_id, op FROM outbox',
     );
     expect(outbox).toEqual([{ table_name: 'vehicles', row_id: VEHICLE_ID, op: 'upsert' }]);
+  });
+
+  it('respeita o limite do plano: o primeiro cabe, o segundo não, e nada é gravado', async () => {
+    await createVehicle(db, newVehicle, { id: VEHICLE_ID, max: 1 });
+
+    await expect(
+      createVehicle(db, { ...newVehicle, name: 'Civic' }, { max: 1 }),
+    ).rejects.toBeInstanceOf(VehicleLimitError);
+    expect(await countVehicles(db)).toBe(1);
+    expect(await db.getAllAsync('SELECT * FROM outbox')).toHaveLength(1);
+  });
+
+  it('sem limite (nulo ou ausente) cadastra quantos quiser', async () => {
+    await createVehicle(db, newVehicle, { max: null });
+    await createVehicle(db, { ...newVehicle, name: 'Civic' });
+    await createVehicle(db, { ...newVehicle, name: 'Uno' }, { max: 3 });
+    expect(await countVehicles(db)).toBe(3);
+  });
+
+  it('arquivado conta no limite; excluído libera a vaga', async () => {
+    await createVehicle(db, newVehicle, { id: VEHICLE_ID });
+    const other = await createVehicle(db, { ...newVehicle, name: 'Civic' });
+    await setVehicleArchived(db, VEHICLE_ID, true);
+
+    await expect(createVehicle(db, newVehicle, { max: 2 })).rejects.toBeInstanceOf(
+      VehicleLimitError,
+    );
+    await deleteVehicle(db, other.id);
+    await expect(createVehicle(db, newVehicle, { max: 2 })).resolves.toBeDefined();
   });
 
   it('rejeita dados inválidos sem gravar nada', async () => {

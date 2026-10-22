@@ -7,7 +7,7 @@ describe('premiumFeatures', () => {
     expect(premiumFeatures.map((f) => f.title)).toEqual([
       'Leitura da bomba pela câmera',
       'Lembrete ao chegar no posto',
-      'Veículos ilimitados',
+      'Mais veículos',
       'Relatório em PDF',
       'Valor FIPE e multas',
     ]);
