@@ -20,7 +20,7 @@ Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
 - [x] **Manutenções: plano do item** (telas 11, 11b, 11c): [11](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=10-1012), [11b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=34-1881), [11c](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=34-1955). Detalhe com anel de progresso e previsão (`nextMaintenance`, média diária), editar intervalo, desativar lembrete.
 - [x] **Registrar manutenção** (tela 12): [12](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=10-1067), [12b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=34-2024). Tipo "Outro" salvo como atalho "Seu".
 - [x] **Alertas de manutenção** (notificações locais): reagendar a cada mudança de km ou data (ver `docs/03-arquitetura.md`).
-- [ ] **Histórico** (tela 13): [13](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=10-1136).
+- [x] **Histórico** (tela 13): [13](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=10-1136).
 - [ ] **Meus veículos e detalhe** (telas 16, 17): [16](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1396), [17](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1454). Respeitar `docs/05-privacidade-lgpd.md` (placa nunca em log).
 - [ ] **Documentos e prazos** (tela 18): [18](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1527). Só datas, sem número da CNH nem foto.
 - [ ] **Relatórios** (tela 14): [14](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1094).

@@ -27,8 +27,8 @@ flowchart TD
     Inicio[Início: painel do mês, alertas, trocar veículo]
     Abastecer[Abastecer: lista, novo/editar, resumo km/l]
     Manut[Manutenções: próximas, feitas, plano, registrar]
-    Hist[Histórico: linha do tempo, relatórios, gráficos]
-    Mais[Mais: veículos, documentos, conta, configurações, Premium]
+    Hist[Relatórios: totais, gráficos]
+    Mais[Mais: veículos, documentos, histórico, conta, configurações, Premium]
   end
 ```
 

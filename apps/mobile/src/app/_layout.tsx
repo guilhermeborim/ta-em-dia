@@ -50,6 +50,7 @@ function AppReady() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="novo-abastecimento" options={{ presentation: 'modal' }} />
         <Stack.Screen name="registrar-manutencao" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="historico" />
         <Stack.Screen name="plano-manutencao/[id]" />
         <Stack.Screen name="plano-manutencao/[id]/editar" options={{ presentation: 'modal' }} />
       </Stack.Protected>

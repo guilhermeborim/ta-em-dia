@@ -15,6 +15,7 @@ export function MoreView() {
           title="Mais opções em breve"
           text="Veículos, documentos, conta e configurações aparecem aqui."
         />
+        <MenuItem icon="history" label="Histórico" onPress={vm.openHistory} />
         {vm.showDevTools ? (
           <View style={styles.dev}>
             <Text variant="small" color="text3">

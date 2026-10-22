@@ -37,6 +37,7 @@ import {
   SegmentedControl,
   SuggestionItem,
   SwitchRow,
+  TimelineItem,
   Toast,
   typography,
   VehicleSelector,
@@ -362,6 +363,30 @@ export function ComponentsView() {
           />
           <MenuItem icon="car" label="Meus veículos" />
           <MenuItem icon="bell" label="Lembretes" value="Ativos" />
+        </Section>
+
+        <Section title="Linha do tempo">
+          <View>
+            <TimelineItem
+              kind="fuel"
+              title="Abastecimento"
+              details="18 out · 38,2 L · 13,1 km/l"
+              value="R$ 229,10"
+            />
+            <TimelineItem
+              kind="maintenance"
+              title="Troca de óleo + filtro"
+              details="12 out · Auto Center do Zé"
+              value="R$ 289,00"
+            />
+            <TimelineItem
+              kind="document"
+              title="Licenciamento pago"
+              details="28 set · válido até set/2027"
+              value="R$ 160,22"
+              last
+            />
+          </View>
         </Section>
 
         <Section title="Botão flutuante">
