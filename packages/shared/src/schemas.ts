@@ -14,6 +14,8 @@ export const vehicleSchema = z.object({
   year: z.number().int().min(1950).max(2100).optional(),
   plate: z.string().max(10).optional(),
   initialKm: z.number().int().nonnegative(),
+  /** Posição em "Meus veículos" (0 é o primeiro, o veículo ativo). */
+  sortOrder: z.number().int().nonnegative().optional(),
 });
 
 export const fuelEntrySchema = z.object({
