@@ -10,7 +10,10 @@ type VehicleRow = {
   year: number | null;
   plate: string | null;
   initial_km: number;
+  sort_order: number;
 };
+
+const COLUMNS = 'id, name, type, brand, model, year, plate, initial_km, sort_order';
 
 export type NewVehicle = Omit<Vehicle, 'id'>;
 
@@ -24,6 +27,7 @@ function toVehicle(row: VehicleRow): Vehicle {
     year: row.year ?? undefined,
     plate: row.plate ?? undefined,
     initialKm: row.initial_km,
+    sortOrder: row.sort_order,
   };
 }
 
@@ -33,14 +37,20 @@ export async function createVehicle(
   input: NewVehicle,
   ctx: { id?: string; now?: Date } = {},
 ): Promise<Vehicle> {
-  const vehicle = vehicleSchema.parse({ ...input, id: ctx.id ?? newId() });
+  const base = vehicleSchema.parse({ ...input, id: ctx.id ?? newId() });
   const now = (ctx.now ?? new Date()).toISOString();
+  let vehicle: Vehicle = base;
 
   await db.withTransactionAsync(async () => {
+    // O veículo novo vai para o fim de "Meus veículos".
+    const last = await db.getFirstAsync<{ next: number }>(
+      'SELECT COALESCE(MAX(sort_order) + 1, 0) AS next FROM vehicles WHERE deleted_at IS NULL',
+    );
+    vehicle = { ...base, sortOrder: last?.next ?? 0 };
     await db.runAsync(
       `INSERT INTO vehicles
-         (id, name, type, brand, model, year, plate, initial_km, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, name, type, brand, model, year, plate, initial_km, sort_order, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       vehicle.id,
       vehicle.name,
       vehicle.type,
@@ -49,6 +59,7 @@ export async function createVehicle(
       vehicle.year ?? null,
       vehicle.plate ?? null,
       vehicle.initialKm,
+      vehicle.sortOrder ?? 0,
       now,
       now,
     );
@@ -58,15 +69,44 @@ export async function createVehicle(
   return vehicle;
 }
 
-/** Veículos ativos (não excluídos nem arquivados), do mais antigo ao mais novo. */
+/** Veículos ativos (não excluídos nem arquivados), na ordem de "Meus veículos". */
 export async function listVehicles(db: Db): Promise<Vehicle[]> {
   const rows = await db.getAllAsync<VehicleRow>(
-    `SELECT id, name, type, brand, model, year, plate, initial_km
+    `SELECT ${COLUMNS}
        FROM vehicles
       WHERE deleted_at IS NULL AND archived = 0
-      ORDER BY created_at, id`,
+      ORDER BY sort_order, created_at, id`,
   );
   return rows.map(toVehicle);
+}
+
+/**
+ * Grava a nova ordem dos veículos (`ids`, o primeiro é o ativo). Só os que mudaram de posição
+ * são atualizados e enfileirados; ids que não são de veículo ativo são ignorados.
+ */
+export async function reorderVehicles(
+  db: Db,
+  ids: string[],
+  now: Date = new Date(),
+): Promise<void> {
+  const at = now.toISOString();
+  await db.withTransactionAsync(async () => {
+    const current = new Map((await listVehicles(db)).map((vehicle) => [vehicle.id, vehicle]));
+    let position = 0;
+    for (const id of ids) {
+      const vehicle = current.get(id);
+      if (!vehicle) continue;
+      const sortOrder = position++;
+      if (vehicle.sortOrder === sortOrder) continue;
+      await db.runAsync(
+        'UPDATE vehicles SET sort_order = ?, updated_at = ? WHERE id = ?',
+        sortOrder,
+        at,
+        id,
+      );
+      await enqueue(db, 'vehicles', id, 'upsert', { ...vehicle, sortOrder }, at);
+    }
+  });
 }
 
 /** Exclusão lógica: a linha fica com deleted_at para o sync propagar. */

@@ -1,15 +1,14 @@
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Chip,
   colors,
   EmptyState,
-  Icon,
   SegmentedControl,
-  size,
   spacing,
   Text,
   TimelineItem,
+  TopBar,
 } from '../../../ui';
 import { useHistoryViewModel } from '../viewmodels/useHistoryViewModel';
 
@@ -18,30 +17,21 @@ export function HistoryView() {
   const vm = useHistoryViewModel();
 
   const top = (
-    <View style={styles.top}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Voltar"
-        onPress={vm.back}
-        style={styles.round}
-      >
-        <Icon name="chevron-left" size={22} color={colors.text} />
-      </Pressable>
-      <Text variant="h2" style={styles.title}>
-        Histórico
-      </Text>
-      {vm.loading || vm.isEmpty || !vm.hasVehicle ? null : (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Filtrar por período"
-          accessibilityState={{ expanded: vm.periodOpen }}
-          onPress={vm.togglePeriod}
-          style={[styles.round, vm.periodActive && styles.roundActive]}
-        >
-          <Icon name="calendar" size={20} color={vm.periodActive ? colors.primary : colors.text} />
-        </Pressable>
-      )}
-    </View>
+    <TopBar
+      title="Histórico"
+      onBack={vm.back}
+      action={
+        vm.loading || vm.isEmpty || !vm.hasVehicle
+          ? undefined
+          : {
+              icon: 'calendar',
+              label: 'Filtrar por período',
+              onPress: vm.togglePeriod,
+              active: vm.periodActive,
+              expanded: vm.periodOpen,
+            }
+      }
+    />
   );
 
   if (vm.loading) return <SafeAreaView style={styles.container}>{top}</SafeAreaView>;
@@ -125,23 +115,6 @@ export function HistoryView() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  top: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  round: {
-    width: size.touchTarget,
-    height: size.touchTarget,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-  },
-  roundActive: { backgroundColor: colors.primarySoft },
-  title: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: 40, gap: spacing.md, flexGrow: 1 },
   // Os chips vão até a borda da tela ao rolar.
   chipsScroll: { marginHorizontal: -spacing.lg, flexGrow: 0 },

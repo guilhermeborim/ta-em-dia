@@ -11,8 +11,11 @@ import {
 } from '../models/firstVehicle';
 import { createVehicle } from '../models/vehicles.repository';
 
-/** ViewModel: estado do formulário, validação, gravação local e saída (salvar ou pular). */
-export function useFirstVehicleViewModel() {
+/**
+ * ViewModel: estado do formulário, validação, gravação local e saída. No primeiro uso
+ * (`first`), segue para as notificações e pode pular; em `add` (Meus veículos), volta.
+ */
+export function useFirstVehicleViewModel(mode: 'first' | 'add' = 'first') {
   const db = useDb();
   const router = useRouter();
   const [form, setForm] = useState<FirstVehicleForm>(emptyFirstVehicleForm);
@@ -27,7 +30,10 @@ export function useFirstVehicleViewModel() {
     [],
   );
 
-  const next = useCallback(() => router.replace('/permissao-notificacoes'), [router]);
+  const next = useCallback(
+    () => (mode === 'add' ? router.back() : router.replace('/permissao-notificacoes')),
+    [mode, router],
+  );
 
   const save = useCallback(async () => {
     const result = buildVehicleInput(form);
@@ -45,7 +51,8 @@ export function useFirstVehicleViewModel() {
   }, [db, form, next]);
 
   return {
-    step: 'Passo 1 de 2',
+    step: mode === 'add' ? undefined : 'Passo 1 de 2',
+    skipLabel: mode === 'add' ? 'Cancelar' : 'Pular',
     form,
     errors,
     busy,

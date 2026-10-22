@@ -114,6 +114,16 @@ export const MIGRATIONS: string[] = [
   );
   CREATE INDEX idx_maintenance_records_vehicle_date ON maintenance_records (vehicle_id, date);
   `,
+  `
+  -- Ordem dos veículos em "Meus veículos"; o primeiro é o veículo ativo. Só adiciona (compatível
+  -- com a versão anterior do app). Os veículos que já existem seguem a ordem de criação.
+  ALTER TABLE vehicles ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0;
+  UPDATE vehicles SET sort_order = (
+    SELECT COUNT(*) FROM vehicles other
+     WHERE other.created_at < vehicles.created_at
+        OR (other.created_at = vehicles.created_at AND other.id < vehicles.id)
+  );
+  `,
 ];
 
 export async function migrate(db: Db, migrations: string[] = MIGRATIONS): Promise<void> {

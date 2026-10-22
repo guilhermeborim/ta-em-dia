@@ -1,18 +1,17 @@
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Button,
   colors,
   EmptyState,
-  Icon,
   IconAvatar,
   InfoCard,
   OwnBadge,
   ProgressRing,
-  size,
   spacing,
   StatusPill,
   Text,
+  TopBar,
 } from '../../../ui';
 import { usePlanDetailViewModel } from '../viewmodels/usePlanDetailViewModel';
 
@@ -28,30 +27,12 @@ export function PlanDetailView() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.top}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Voltar"
-          onPress={vm.back}
-          style={styles.round}
-        >
-          <Icon name="chevron-left" size={22} color={colors.text} />
-        </Pressable>
-        <Text variant="h2" numberOfLines={1} style={styles.title}>
-          {view?.title ?? 'Manutenção'}
-        </Text>
-        {view?.own ? <OwnBadge /> : null}
-        {view ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Editar intervalo"
-            onPress={vm.edit}
-            style={styles.round}
-          >
-            <Icon name="edit" size={20} color={colors.text} />
-          </Pressable>
-        ) : null}
-      </View>
+      <TopBar
+        title={view?.title ?? 'Manutenção'}
+        onBack={vm.back}
+        badge={view?.own ? <OwnBadge /> : null}
+        action={view ? { icon: 'edit', label: 'Editar intervalo', onPress: vm.edit } : undefined}
+      />
 
       {!view ? (
         <View style={styles.content}>
@@ -133,22 +114,6 @@ export function PlanDetailView() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  top: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  round: {
-    width: size.touchTarget,
-    height: size.touchTarget,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-  },
-  title: { flex: 1 },
   content: { padding: spacing.lg, gap: 14, flexGrow: 1 },
   hero: {
     alignItems: 'center',

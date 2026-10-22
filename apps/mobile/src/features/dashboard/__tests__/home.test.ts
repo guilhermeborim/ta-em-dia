@@ -92,20 +92,12 @@ describe('loadHomeState: planos de manutenção', () => {
 
 describe('vehicleDetails', () => {
   it('junta marca, modelo, ano e km em pt-BR', () => {
-    expect(
-      vehicleDetails({
-        id: 'x',
-        name: 'G',
-        brand: 'VW',
-        model: 'Gol 1.0',
-        year: 2019,
-        initialKm: 48320,
-        currentKm: 48910,
-      }),
-    ).toBe('VW Gol 1.0 · 2019 · 48.910 km');
+    expect(vehicleDetails({ brand: 'VW', model: 'Gol 1.0', year: 2019, currentKm: 48910 })).toBe(
+      'VW Gol 1.0 · 2019 · 48.910 km',
+    );
   });
 
   it('pula o que não existe', () => {
-    expect(vehicleDetails({ id: 'x', name: 'G', initialKm: 0, currentKm: 0 })).toBe('0 km');
+    expect(vehicleDetails({ currentKm: 0 })).toBe('0 km');
   });
 });

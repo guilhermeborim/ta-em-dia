@@ -4,7 +4,7 @@ import { listFuelEntries } from '../../../core/fuel';
 import { listPlans } from '../../../core/maintenance';
 
 export interface HomeState {
-  /** Veículo mostrado no topo (por enquanto, o mais antigo). `null` se não há veículo. */
+  /** Veículo mostrado no topo (o primeiro de "Meus veículos"). `null` se não há veículo. */
   vehicle:
     | (Pick<Vehicle, 'id' | 'name' | 'brand' | 'model' | 'year' | 'initialKm'> & {
         /** O maior entre o km inicial e o do último abastecimento ou serviço de manutenção. */
@@ -32,7 +32,7 @@ export async function loadHomeState(db: Db): Promise<HomeState> {
     `SELECT id, name, brand, model, year, initial_km
        FROM vehicles
       WHERE deleted_at IS NULL AND archived = 0
-      ORDER BY created_at, id
+      ORDER BY sort_order, created_at, id
       LIMIT 1`,
   );
   if (!row) return { vehicle: null, entries: [], plans: [] };

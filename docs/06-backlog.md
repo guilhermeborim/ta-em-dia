@@ -21,7 +21,8 @@ Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
 - [x] **Registrar manutenção** (tela 12): [12](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=10-1067), [12b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=34-2024). Tipo "Outro" salvo como atalho "Seu".
 - [x] **Alertas de manutenção** (notificações locais): reagendar a cada mudança de km ou data (ver `docs/03-arquitetura.md`).
 - [x] **Histórico** (tela 13): [13](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=10-1136).
-- [ ] **Meus veículos e detalhe** (telas 16, 17): [16](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1396), [17](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1454). Respeitar `docs/05-privacidade-lgpd.md` (placa nunca em log).
+- [x] **Meus veículos** (tela 16): [16](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1396). Lista, adicionar e reordenar. Respeitar `docs/05-privacidade-lgpd.md` (placa nunca em log).
+- [ ] **Detalhe do veículo** (tela 17): [17](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1454). Dados, placa, km atual, média diária e custo/km; atualizar km, editar, arquivar e excluir. Abrir pelo cartão da tela 16. Placa nunca em log.
 - [ ] **Documentos e prazos** (tela 18): [18](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1527). Só datas, sem número da CNH nem foto.
 - [ ] **Relatórios** (tela 14): [14](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1094).
 - [ ] **Mais, Configurações e Premium em breve** (telas 15, 20, 21): [15](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1236), [20](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1446), [21](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1521). Premium atrás de feature flag.

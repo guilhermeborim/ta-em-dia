@@ -38,9 +38,12 @@ import {
   SuggestionItem,
   SwitchRow,
   TimelineItem,
+  TopBar,
   Toast,
   typography,
+  VehicleCard,
   VehicleSelector,
+  DashedAddCard,
   type TabBarItem,
 } from '../../../ui';
 
@@ -389,6 +392,31 @@ export function ComponentsView() {
           </View>
         </Section>
 
+        <Section title="Barra de topo">
+          <View style={styles.bleed}>
+            <TopBar
+              title="Meus veículos"
+              onBack={() => {}}
+              action={{ icon: 'plus', label: 'Adicionar', onPress: () => {} }}
+            />
+          </View>
+        </Section>
+
+        <Section title="Cartão de veículo">
+          <VehicleCard
+            name="Golzinho"
+            details="VW Gol 1.0 · 2019 · 48.910 km"
+            status={{ tone: 'danger', label: '1 vencido' }}
+          />
+          <VehicleCard
+            accent="oil"
+            name="Moto do trampo"
+            details="Honda CG 160 · 2022 · 21.300 km"
+            status={{ tone: 'ok', label: 'Tudo em dia' }}
+          />
+          <DashedAddCard label="Adicionar veículo" />
+        </Section>
+
         <Section title="Botão flutuante">
           <View style={styles.row}>
             <FloatingButton label="Abastecer" />
@@ -411,5 +439,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md },
   swatch: { width: 84, gap: 4 },
   swatchColor: { height: 40, borderRadius: 8, borderWidth: 1, borderColor: colors.border },
+  // A barra de topo já tem a margem lateral da tela.
+  bleed: { marginHorizontal: -spacing.lg },
   iconCell: { width: 72, alignItems: 'center', gap: 4 },
 });

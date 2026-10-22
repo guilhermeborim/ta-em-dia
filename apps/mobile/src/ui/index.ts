@@ -42,4 +42,6 @@ export { TabBar, type TabBarItem } from './components/TabBar';
 export { Text, type TextColor, type TextVariant } from './components/Text';
 export { TextField } from './components/TextField';
 export { Toast } from './components/Toast';
+export { DashedAddCard, VehicleCard, type VehicleCardAccent } from './components/VehicleCard';
+export { TopBar } from './components/TopBar';
 export { VehicleSelector } from './components/VehicleSelector';
