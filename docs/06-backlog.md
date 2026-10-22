@@ -50,7 +50,7 @@ Escolhas tomadas em `docs/07-validacao-e-decisoes.md`. Cada item é um PR e pode
 - [ ] **Seletor de data**: chip "Hoje" e calendário nativo (`@react-native-community/datetimepicker`) nos formulários de abastecimento, manutenção e prazo.
 - [ ] **Reordenar arrastando**: arrastar de verdade em Meus veículos (`react-native-gesture-handler` e `react-native-reanimated`).
 - [x] **API: segurança da conta anônima**: rate limit (`@nestjs/throttler`), `POST /v1/auth/refresh` com rotação do token, job que apaga contas anônimas sem uso por 12 meses.
-- [ ] **App: renovar pelo refresh**: usar `POST /v1/auth/refresh`, tratar 429 como "tentar depois" e reagir à volta da internet (`expo-network`).
+- [x] **App: renovar pelo refresh**: usar `POST /v1/auth/refresh`, tratar 429 como "tentar depois" e reagir à volta da internet (`expo-network`).
 
 ## Como manter
 
