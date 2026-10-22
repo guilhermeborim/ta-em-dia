@@ -1,5 +1,6 @@
-import type { MaintenancePlan } from '@ta-em-dia/shared';
+import { dailyAverageKm, type MaintenancePlan } from '@ta-em-dia/shared';
 import type { Db } from '../db';
+import { listFuelEntries } from '../fuel';
 
 export type PlanRow = {
   id: string;
@@ -42,4 +43,26 @@ export async function listPlans(db: Db, vehicleId: string): Promise<MaintenanceP
     vehicleId,
   );
   return rows.map(toPlan);
+}
+
+/** Maior km entre os serviços do veículo (conta como leitura do hodômetro), ou 0. */
+export async function maxRecordKm(db: Db, vehicleId: string): Promise<number> {
+  const row = await db.getFirstAsync<{ km: number | null }>(
+    'SELECT MAX(km) AS km FROM maintenance_records WHERE vehicle_id = ? AND deleted_at IS NULL',
+    vehicleId,
+  );
+  return row?.km ?? 0;
+}
+
+/** Km atual e média diária do veículo, pelo km inicial e pelos abastecimentos. */
+export async function loadVehicleKm(
+  db: Db,
+  vehicleId: string,
+  initialKm: number,
+): Promise<{ currentKm: number; dailyKm: number }> {
+  const entries = await listFuelEntries(db, vehicleId);
+  return {
+    currentKm: Math.max(initialKm, ...entries.map((e) => e.km), await maxRecordKm(db, vehicleId)),
+    dailyKm: dailyAverageKm(entries.map((e) => ({ km: e.km, readAt: e.date }))),
+  };
 }

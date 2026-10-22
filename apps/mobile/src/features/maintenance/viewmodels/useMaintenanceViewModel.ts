@@ -2,6 +2,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { MAINTENANCE_CATALOG } from '@ta-em-dia/shared';
 import { useDb } from '../../../core/db';
+import { refreshMaintenanceReminders } from '../../../core/maintenance';
 import {
   buildMaintenanceList,
   buildRecordItems,
@@ -48,6 +49,7 @@ export function useMaintenanceViewModel() {
           intervalMonths: item.intervalMonths,
           currentKm: data.currentKm,
         });
+        void refreshMaintenanceReminders(db);
         await reload();
       } finally {
         setBusy(false);

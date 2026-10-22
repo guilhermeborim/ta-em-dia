@@ -1,10 +1,8 @@
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { ensureDefaultChannel } from './channel.impl';
 
 /** `unavailable`: a plataforma não tem o módulo nativo (ver permission.ios.ts). */
 export type NotificationPermission = 'granted' | 'denied' | 'unavailable';
-
-const DEFAULT_CHANNEL = 'default';
 
 /**
  * Pede a permissão de notificações ao sistema. No Android 13+ o pedido só aparece
@@ -13,12 +11,7 @@ const DEFAULT_CHANNEL = 'default';
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   try {
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync(DEFAULT_CHANNEL, {
-        name: 'Alertas',
-        importance: Notifications.AndroidImportance.DEFAULT,
-      });
-    }
+    await ensureDefaultChannel();
 
     const current = await Notifications.getPermissionsAsync();
     if (current.granted) return 'granted';

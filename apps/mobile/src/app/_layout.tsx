@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { DatabaseProvider } from '../core/db';
+import { useReminderLifecycle } from '../core/maintenance';
 import { LoginProvider, useLogin } from '../features/login/LoginProvider';
 import { OnboardingProvider, useOnboarding } from '../features/onboarding/OnboardingProvider';
 import { fontAssets } from '../ui';
@@ -20,6 +21,9 @@ function AppReady() {
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
   }, [ready]);
+
+  // Avisos de manutenção: reagenda ao abrir e ao voltar ao app; tocar num aviso abre o item.
+  useReminderLifecycle(ready && done === true && loginDone === true);
 
   // Se a fonte falhar, o app abre com a fonte do sistema em vez de travar na splash.
   if (!ready) return null;
