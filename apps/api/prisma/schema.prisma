@@ -112,6 +112,7 @@ model Vehicle {
   initialKm          Int
   photoUrl           String?
   archived           Boolean             @default(false)
+  sortOrder          Int                 @default(0)
   createdAt          DateTime
   updatedAt          DateTime
   deletedAt          DateTime?
