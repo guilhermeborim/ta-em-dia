@@ -1,5 +1,6 @@
 import type { Vehicle } from '@ta-em-dia/shared';
 import type { Db } from '../../../core/db';
+import { loadVehicleKm } from '../../../core/maintenance';
 import { findActiveVehicle } from '../../../core/vehicle';
 import type { FuelType } from '../../../core/fuel';
 
@@ -8,7 +9,7 @@ export interface FuelFormContext {
   vehicle: Pick<Vehicle, 'id' | 'name'> | null;
   /** Último combustível usado, ou `null` sem abastecimentos. */
   lastFuelType: FuelType | null;
-  /** Km sugerido: o maior entre o último abastecimento e o km inicial do veículo. */
+  /** Km sugerido: o km atual do veículo (maior entre inicial, abastecimentos, serviços e leituras). */
   suggestedKm: number | null;
 }
 
@@ -25,14 +26,10 @@ export async function loadFuelFormContext(db: Db): Promise<FuelFormContext> {
       LIMIT 1`,
     vehicle.id,
   );
-  const maxKm = await db.getFirstAsync<{ km: number | null }>(
-    'SELECT MAX(km) AS km FROM fuel_entries WHERE vehicle_id = ? AND deleted_at IS NULL',
-    vehicle.id,
-  );
 
   return {
     vehicle: { id: vehicle.id, name: vehicle.name },
     lastFuelType: last?.fuel_type ?? null,
-    suggestedKm: Math.max(vehicle.initial_km, maxKm?.km ?? 0),
+    suggestedKm: (await loadVehicleKm(db, vehicle.id, vehicle.initial_km)).currentKm,
   };
 }

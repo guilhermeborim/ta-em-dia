@@ -147,7 +147,8 @@ describe('ordem e lista de veículos no SQLite', () => {
 
   it('veículos antigos (sem ordem gravada) seguem a ordem de criação', async () => {
     const db = createTestDb();
-    await migrate(db, MIGRATIONS.slice(0, MIGRATIONS.length - 1));
+    // As 4 primeiras migrations: antes da ordem dos veículos (sort_order).
+    await migrate(db, MIGRATIONS.slice(0, 4));
     const insert = (id: string, createdAt: string) =>
       db.runAsync(
         `INSERT INTO vehicles (id, name, type, initial_km, created_at, updated_at)

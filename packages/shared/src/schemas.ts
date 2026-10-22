@@ -60,7 +60,18 @@ export const maintenanceRecordSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
+export const odometerSourceSchema = z.enum(['manual', 'fuel', 'maintenance']);
+
+export const odometerReadingSchema = z.object({
+  id: z.uuid(),
+  vehicleId: z.uuid(),
+  km: z.number().int().nonnegative(),
+  readAt: z.coerce.date(),
+  source: odometerSourceSchema,
+});
+
 export type Vehicle = z.infer<typeof vehicleSchema>;
 export type FuelEntry = z.infer<typeof fuelEntrySchema>;
 export type MaintenancePlan = z.infer<typeof maintenancePlanSchema>;
 export type MaintenanceRecord = z.infer<typeof maintenanceRecordSchema>;
+export type OdometerReadingRecord = z.infer<typeof odometerReadingSchema>;

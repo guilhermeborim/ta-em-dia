@@ -69,6 +69,15 @@ export async function createVehicle(
   return vehicle;
 }
 
+/** Um veículo não excluído (arquivado também), ou `null`. */
+export async function findVehicle(db: Db, id: string): Promise<Vehicle | null> {
+  const row = await db.getFirstAsync<VehicleRow>(
+    `SELECT ${COLUMNS} FROM vehicles WHERE id = ? AND deleted_at IS NULL`,
+    id,
+  );
+  return row ? toVehicle(row) : null;
+}
+
 /** Veículos ativos (não excluídos nem arquivados), na ordem de "Meus veículos". */
 export async function listVehicles(db: Db): Promise<Vehicle[]> {
   const rows = await db.getAllAsync<VehicleRow>(

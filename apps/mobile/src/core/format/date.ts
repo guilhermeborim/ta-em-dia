@@ -66,3 +66,20 @@ export function parseDateInput(
   if (date > endOfToday) return { error: 'A data não pode ser no futuro' };
   return { date };
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** "hoje", "ontem", "há 3 dias", "há 2 meses" ou "há 1 ano": conta os dias do calendário. */
+export function relativeDays(date: Date, today: Date = new Date()): string {
+  const start = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  const days = Math.max(0, Math.round((start(today) - start(date)) / DAY_MS));
+  if (days === 0) return 'hoje';
+  if (days === 1) return 'ontem';
+  if (days < 30) return `há ${days} dias`;
+  if (days < 365) {
+    const months = Math.floor(days / 30);
+    return `há ${months} ${months === 1 ? 'mês' : 'meses'}`;
+  }
+  const years = Math.floor(days / 365);
+  return `há ${years} ${years === 1 ? 'ano' : 'anos'}`;
+}

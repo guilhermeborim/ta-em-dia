@@ -19,7 +19,12 @@ beforeEach(async () => {
 
 describe('loadHomeState', () => {
   it('sem veículo: nada para mostrar', async () => {
-    expect(await loadHomeState(db)).toEqual({ vehicle: null, entries: [], plans: [] });
+    expect(await loadHomeState(db)).toEqual({
+      vehicle: null,
+      entries: [],
+      dailyKm: 30,
+      plans: [],
+    });
   });
 
   it('com veículo e sem abastecimento: estado vazio', async () => {

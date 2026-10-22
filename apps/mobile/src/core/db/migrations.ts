@@ -124,6 +124,23 @@ export const MIGRATIONS: string[] = [
         OR (other.created_at = vehicles.created_at AND other.id < vehicles.id)
   );
   `,
+  `
+  -- Leitura do hodômetro (sincronizável). Espelha OdometerReading no Prisma. Só o app grava
+  -- 'manual' (Atualizar km); abastecimento e manutenção já guardam o próprio km.
+  CREATE TABLE odometer_readings (
+    id          TEXT PRIMARY KEY NOT NULL,
+    user_id     TEXT,
+    vehicle_id  TEXT NOT NULL REFERENCES vehicles(id),
+    km          INTEGER NOT NULL,
+    read_at     TEXT NOT NULL,
+    source      TEXT NOT NULL CHECK (source IN ('manual', 'fuel', 'maintenance')),
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL,
+    deleted_at  TEXT,
+    version     INTEGER
+  );
+  CREATE INDEX idx_odometer_readings_vehicle ON odometer_readings (vehicle_id, read_at);
+  `,
 ];
 
 export async function migrate(db: Db, migrations: string[] = MIGRATIONS): Promise<void> {

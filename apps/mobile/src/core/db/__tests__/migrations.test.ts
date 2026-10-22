@@ -14,6 +14,7 @@ describe('migrate', () => {
       'fuel_entries',
       'maintenance_plans',
       'maintenance_records',
+      'odometer_readings',
       'outbox',
       'sync_state',
       'vehicles',

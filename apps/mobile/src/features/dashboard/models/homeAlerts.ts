@@ -1,4 +1,3 @@
-import { dailyAverageKm } from '@ta-em-dia/shared';
 import { buildAlertCards, type PlanCardView } from '../../../core/maintenance';
 import type { HomeState } from './home.repository';
 
@@ -20,10 +19,9 @@ export function buildHomeAlerts(state: HomeState, today: Date = new Date()): Hom
   const reminders = state.plans.filter(
     (plan) => plan.enabled && (plan.intervalKm || plan.intervalMonths),
   );
-  const dailyKm = dailyAverageKm(state.entries.map((e) => ({ km: e.km, readAt: e.date })));
   const cards = buildAlertCards(
     reminders,
-    { currentKm: state.vehicle?.currentKm ?? 0, dailyKm },
+    { currentKm: state.vehicle?.currentKm ?? 0, dailyKm: state.dailyKm },
     today,
   )
     .filter((card) => card.tone !== 'ok')

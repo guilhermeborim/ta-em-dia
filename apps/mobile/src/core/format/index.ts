@@ -3,6 +3,7 @@ export {
   MONTH_NAMES,
   MONTH_NAMES_SHORT,
   parseDateInput,
+  relativeDays,
   toDateInput,
 } from './date';
 export {
