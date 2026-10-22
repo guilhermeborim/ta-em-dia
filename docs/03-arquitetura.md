@@ -241,7 +241,7 @@ Chave → valor por plano, servidas pela API e com padrão embutido no app; cobr
 2. A API expõe `GET /v1/config` com as flags do plano do usuário (a tabela `feature_flags` sobrescreve o padrão).
 3. O app guarda a última resposta no SQLite; offline usa o cache ou o padrão.
 4. ViewModels perguntam `useFlag('vehicles.max')`; a API também checa a mesma regra (o app pode ser burlado).
-5. No lançamento, o plano `free` tem tudo liberado; a tela Premium mostra "Em breve".
+5. No lançamento, o plano `free` tem tudo liberado, **menos o limite de 1 veículo** (`vehicles.max` = 1, regra `canAddVehicle` em `shared`). No app, `createVehicle` conta os veículos guardados (arquivados contam, excluídos não) e lança `VehicleLimitError` ao passar do limite; "Adicionar veículo" em Meus veículos avisa antes de abrir o formulário ("No plano grátis, o app guarda 1 veículo. Mais veículos virão com o Premium.", com "Ver Premium"). A checagem na API entra com o `sync/push`. A tela Premium mostra "Em breve".
 6. Fase 2: assinatura pela App Store/Google Play (RevenueCat ou `react-native-iap`); um webhook na API muda `users.plan`.
 
 ## Ambientes: dev, staging e produção

@@ -47,6 +47,7 @@ Mais → Meus veículos.
 - [ ] Com um veículo só não há dica nem menu de reordenar.
 - [ ] Leitor de tela (TalkBack): ações "Mover para cima/baixo" no cartão.
 - [ ] Seção "Arquivados" no fim aparece só quando há arquivados e abre o detalhe deles.
+- [ ] **Limite grátis de 1 veículo**: com um veículo, "Adicionar veículo" (botão do topo e cartão tracejado) mostra o alerta "No plano grátis, o app guarda 1 veículo..." com "Ver Premium" (abre a tela Premium) e "Ok"; nenhum formulário abre. Na primeira abertura do app (onboarding) o primeiro veículo ainda cabe. Excluir o veículo libera a vaga. Quem já tinha 2 ou mais veículos mantém todos, mas não adiciona outro (arquivados contam).
 
 ### 2.3 Detalhe do veículo e Atualizar km (tela 17, PR #29)
 

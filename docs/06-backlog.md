@@ -44,7 +44,7 @@ Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
 Escolhas tomadas em `docs/07-validacao-e-decisoes.md`. Cada item é um PR e pode ser feito fora da ordem das fases.
 
 - [ ] **Regras de veículos e prazos**: o texto do "Avise-me quando lançar" não promete mais nada ("Anotado!" sem aviso futuro); prazo cadastrado já dentro da janela avisa uma vez no próximo 9h (igual à manutenção); avisos de documentos de **todos** os veículos ativos; arquivar o único veículo ativo é bloqueado ("Você precisa de outro veículo ativo").
-- [ ] **Limite grátis de 1 veículo**: `vehicles.max` = 1 no plano grátis (`flags.ts`), aplicado em "Adicionar veículo" e no primeiro veículo.
+- [x] **Limite grátis de 1 veículo**: `vehicles.max` = 1 no plano grátis (`flags.ts`), aplicado em "Adicionar veículo" e no primeiro veículo.
 - [ ] **Moto**: tipo `motorcycle` no `shared`, no SQLite (migration só adiciona) e no Prisma, com ícone próprio.
 - [ ] **Prazos por ano**: guardar cada prazo de documento por ano (IPVA 2026, IPVA 2027...), com histórico.
 - [ ] **Seletor de data**: chip "Hoje" e calendário nativo (`@react-native-community/datetimepicker`) nos formulários de abastecimento, manutenção e prazo.
