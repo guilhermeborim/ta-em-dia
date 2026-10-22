@@ -9,6 +9,7 @@ Responda e escreva textos de interface em português (BR). Código, nomes e comm
 - `docs/01-roadmap.md`: o que é MVP, Fase 2 e Futuro. Não implemente algo de Fase 2 ou Futuro sem pedido.
 - `docs/02-telas-e-fluxos.md`: telas e fluxos que o designer recebe.
 - `docs/03-arquitetura.md`: decisões de arquitetura. Mudou uma decisão, atualize o doc no mesmo PR.
+- `docs/05-privacidade-lgpd.md`: dados pessoais e LGPD. Não colete dado novo (CNH, foto de documento, localização) sem decidir ali.
 
 ## Comandos
 
