@@ -1,7 +1,7 @@
 /**
  * Feature flags por plano. A API serve os valores em GET /v1/config;
  * estes padrões ficam embutidos no app para funcionar offline.
- * No lançamento o plano free tem tudo liberado.
+ * No lançamento o plano free tem tudo liberado, menos o limite de 1 veículo.
  */
 
 export type Plan = 'free' | 'premium';
@@ -19,7 +19,7 @@ export type FlagKey = keyof FeatureFlags;
 
 export const DEFAULT_FLAGS: Record<Plan, FeatureFlags> = {
   free: {
-    'vehicles.max': null,
+    'vehicles.max': 1,
     'sync.cloud': true,
     'reports.advanced': true,
     'export.pdf': false,
@@ -38,4 +38,9 @@ export const DEFAULT_FLAGS: Record<Plan, FeatureFlags> = {
 
 export function flagsFor(plan: Plan, overrides: Partial<FeatureFlags> = {}): FeatureFlags {
   return { ...DEFAULT_FLAGS[plan], ...overrides };
+}
+
+/** Cabe mais um veículo? `max` nulo é sem limite; `count` é quantos já existem (arquivados contam). */
+export function canAddVehicle(count: number, max: number | null): boolean {
+  return max === null || count < max;
 }
