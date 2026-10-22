@@ -18,7 +18,7 @@ Se estiver vazio, use o primeiro item sem `[x]` da Fase A (se a Fase A acabou, p
 6. Escreva testes para a lógica (Models e ViewModels).
 7. Se houver emulador aberto, tire screenshot e compare com o Figma. Se não houver, diga isso no PR.
 8. Rode `pnpm turbo run lint typecheck test build` e corrija o que falhar.
-9. Marque o item como `[x]` no `docs/06-backlog.md` e atualize os docs que a feature mudou, no mesmo PR.
+9. Marque o item como `[x]` no `docs/06-backlog.md` e atualize os docs que a feature mudou, no mesmo PR. Acrescente em `docs/07-validacao-e-decisoes.md` o que a feature deixou sem validação no aparelho (seção 2) e as decisões que cabem ao dono do projeto (seção 3), seguindo o formato do arquivo.
 10. Crie o branch a partir da `main` (`feat/...`), faça commits Conventional Commits com escopo (`mobile`, `shared`, `docs`...), faça push e abra o PR com `gh pr create`. Se o `gh` não estiver disponível, faça o push e diga como abrir o PR.
 11. Não faça merge. Ao final, responda em português: o que foi feito, o que ficou de fora, o que conferir no aparelho e qual é o próximo item do backlog.
 

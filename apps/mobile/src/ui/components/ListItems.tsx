@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { colors, radius } from '../theme/tokens';
 import { StatusPill, type StatusTone } from './Badges';
@@ -208,6 +209,41 @@ export function DocumentItem({
   );
 }
 
+interface FeatureItemProps {
+  icon: IconName;
+  /** Ex.: "Veículos ilimitados". */
+  title: string;
+  /** Ex.: "Carro, moto e da família". */
+  subtitle: string;
+  /** Sem cantos arredondados: para itens empilhados dentro de um grupo arredondado. */
+  flat?: boolean;
+}
+
+/** Recurso listado (ex.: Premium em breve): ícone lima, título e descrição. Só informa, não toca. */
+export function FeatureItem({ icon, title, subtitle, flat }: FeatureItemProps) {
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${title}. ${subtitle}`}
+      style={[styles.row, styles.feature, flat && styles.flat]}
+    >
+      <IconAvatar
+        icon={icon}
+        size={40}
+        iconSize={20}
+        background={colors.accent}
+        color={colors.onAccent}
+      />
+      <View style={styles.main}>
+        <Text variant="bodyStrong">{title}</Text>
+        <Text variant="small" color="text2">
+          {subtitle}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 interface MenuItemProps {
   icon: IconName;
   label: string;
@@ -215,11 +251,13 @@ interface MenuItemProps {
   value?: string;
   /** Cor do valor (ex.: "1 vencido" em vermelho). Padrão: cinza. */
   valueTone?: 'warning' | 'danger';
+  /** Elemento à direita no lugar do valor (ex.: selo Premium). */
+  right?: ReactNode;
   onPress?: () => void;
 }
 
 /** Linha de menu (aba Mais): ícone, rótulo, valor opcional e seta. */
-export function MenuItem({ icon, label, value, valueTone, onPress }: MenuItemProps) {
+export function MenuItem({ icon, label, value, valueTone, right, onPress }: MenuItemProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -237,6 +275,7 @@ export function MenuItem({ icon, label, value, valueTone, onPress }: MenuItemPro
       <Text variant="bodyStrong" style={styles.main}>
         {label}
       </Text>
+      {right}
       {value ? (
         <Text variant="small" color={valueTone ?? 'text3'}>
           {value}
@@ -285,6 +324,7 @@ const styles = StyleSheet.create({
   fuel: { gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderRadius: radius.button },
   flat: { borderRadius: 0 },
   suggestion: { gap: 12, paddingLeft: 16, paddingRight: 12, paddingVertical: 12 },
+  feature: { gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   document: { gap: 12, paddingLeft: 16, paddingRight: 14, paddingVertical: 14 },
   menu: { gap: 14, paddingHorizontal: 16, paddingVertical: 14 },
   main: { flex: 1, gap: 2 },

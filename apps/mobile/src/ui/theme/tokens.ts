@@ -82,6 +82,12 @@ export const typography = {
     lineHeight: 36,
     letterSpacing: -1,
   },
+  displayTitle: {
+    fontFamily: fontFamily.display,
+    fontSize: 32,
+    lineHeight: 38,
+    letterSpacing: -0.5,
+  },
   h1: { fontFamily: fontFamily.extraBold, fontSize: 26, lineHeight: 32, letterSpacing: -0.3 },
   h2: { fontFamily: fontFamily.bold, fontSize: 20, lineHeight: 26, letterSpacing: -0.2 },
   h3: { fontFamily: fontFamily.bold, fontSize: 16, lineHeight: 22, letterSpacing: 0 },
