@@ -1,4 +1,4 @@
-import { clearInstallationCredentials, type SecretStore } from '../../../core/auth';
+import { clearInstallationCredentials, clearSession, type SecretStore } from '../../../core/auth';
 import type { Db } from '../../../core/db';
 
 /**
@@ -22,4 +22,5 @@ export async function resetApp(db: Db, store?: SecretStore): Promise<void> {
     }
   });
   await clearInstallationCredentials(store);
+  await clearSession(store);
 }

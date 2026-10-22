@@ -13,6 +13,7 @@ export function StatusView() {
         <Text style={styles.line}>{vm.apiUrlLabel}</Text>
         <Text style={styles.status}>{vm.apiLabel}</Text>
         {vm.apiEnvLabel && <Text style={styles.line}>{vm.apiEnvLabel}</Text>}
+        {vm.sessionLabel ? <Text style={styles.line}>{vm.sessionLabel}</Text> : null}
         {vm.versionLabel && <Text style={styles.line}>{vm.versionLabel}</Text>}
         <Button title="Testar de novo" onPress={vm.refresh} disabled={vm.loading} />
         {vm.canReset && <Button title="Reiniciar App" color="#E5484D" onPress={vm.reset} />}

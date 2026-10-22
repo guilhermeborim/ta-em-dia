@@ -23,3 +23,11 @@ export async function fetchApiStatus(apiUrl: string): Promise<ApiStatus> {
     clearTimeout(timer);
   }
 }
+
+/** Texto da situação do usuário anônimo na API (diagnóstico; nunca mostra token nem id). */
+export function sessionLabel(session: { expiresAt: number } | null, now: Date): string {
+  if (!session) return 'Usuário anônimo na API: ainda não criado';
+  return session.expiresAt > now.getTime()
+    ? 'Usuário anônimo na API: criado, acesso válido'
+    : 'Usuário anônimo na API: criado, acesso expirado (renova ao abrir o app)';
+}
