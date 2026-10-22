@@ -150,6 +150,16 @@ Precisa da API de staging no ar (PR #36 aplicado) e de um build novo do app apon
 - [ ] "Reiniciar App" (Status) apaga a sessão e, ao refazer o login, cria um usuário novo.
 - [ ] Nenhum token, segredo ou id de aparelho aparece em `adb logcat`.
 
+### 2.15 Seletor de data
+
+Exige um **development build novo** (`@react-native-community/datetimepicker` é módulo nativo). No iOS, só quando houver build.
+
+- [ ] Novo abastecimento: o chip de data mostra "Hoje, 21 out"; tocar abre o calendário (diálogo no Android, folha no iOS) sem datas futuras; escolher outro dia troca o chip ("18 out", com o ano se for outro) e o abastecimento aparece nesse dia na lista e no Histórico. Escolher "hoje" de novo volta a "Hoje".
+- [ ] Registrar manutenção (Data) e Documentos (Vencimento): o ícone de calendário no campo abre o seletor já no dia digitado (ou hoje); o dia escolhido preenche o campo e tira o erro. Digitar continua funcionando. O ícone tem toque confortável e o TalkBack lê "Abrir calendário".
+- [ ] Manutenção não deixa escolher o futuro; o prazo deixa (até 2100).
+- [ ] iOS: a folha abre por baixo, em português, com a cor do app; tocar fora fecha sem mudar nada.
+- [ ] Fonte grande do sistema: o campo com ícone não corta o texto.
+
 ### 2.11 Transversal
 
 - [ ] Todo formulário obrigatório mostra `*` vermelho e a mensagem de erro abaixo do campo (Veículo, Atualizar km, Prazo).
@@ -195,7 +205,7 @@ Cada item traz minha recomendação. As decisões já tomadas saíram daqui e es
 
 ### 3.11 Telas sem frame no Figma
 
-Pedir ao designer, ou aprovar o que foi feito seguindo os formulários do app: **Atualizar km**, **Editar veículo** (com Arquivar e Excluir), **Adicionar/editar prazo** (com antecedências), **Antecedência** (Configurações, modal) e os textos de confirmação de exclusão.
+Pedir ao designer, ou aprovar o que foi feito seguindo os formulários do app: **Atualizar km**, **Editar veículo** (com Arquivar e Excluir), **Adicionar/editar prazo** (com antecedências), **Antecedência** (Configurações, modal) os textos de confirmação de exclusão e o **seletor de data** (ícone de calendário nos campos de data; no iOS, uma folha com o calendário; no Android, o diálogo do sistema).
 
 ### 3.12 Textos para revisar
 
