@@ -13,6 +13,7 @@ import {
 import {
   deleteVehicle,
   findVehicle,
+  LAST_ACTIVE_MESSAGE,
   setVehicleArchived,
   updateVehicle,
 } from '../models/vehicles.repository';
@@ -82,7 +83,11 @@ export function useEditVehicleViewModel() {
   const toggleArchive = useCallback(
     () =>
       run(async () => {
-        await setVehicleArchived(db, id, !vehicle?.archived);
+        const result = await setVehicleArchived(db, id, !vehicle?.archived);
+        if (result === 'last_active') {
+          Alert.alert('Não dá para arquivar', LAST_ACTIVE_MESSAGE);
+          return;
+        }
         // O veículo ativo pode ter mudado: os avisos seguem o ativo.
         void refreshReminders(db);
         leave();
