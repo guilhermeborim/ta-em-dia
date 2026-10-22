@@ -1,4 +1,12 @@
-import { formatDateInput, parseDateInput, relativeDays, toDateInput } from '../date';
+import {
+  atNoon,
+  dateFromInput,
+  formatDateInput,
+  parseDateInput,
+  relativeDays,
+  sameDay,
+  toDateInput,
+} from '../date';
 
 const TODAY = new Date(2026, 9, 21, 15);
 
@@ -58,5 +66,31 @@ describe('relativeDays', () => {
 
   it('data futura vira hoje', () => {
     expect(relativeDays(new Date(2026, 9, 25), TODAY)).toBe('hoje');
+  });
+});
+
+describe('dateFromInput', () => {
+  it('lê o dia digitado ao meio-dia, sem regra de passado ou futuro', () => {
+    expect(dateFromInput('21/10/2026')).toEqual(new Date(2026, 9, 21, 12));
+    expect(dateFromInput('20/12/2030')).toEqual(new Date(2030, 11, 20, 12));
+  });
+
+  it('incompleta ou inexistente: nulo', () => {
+    expect(dateFromInput('21/10/20')).toBeNull();
+    expect(dateFromInput('30/02/2026')).toBeNull();
+    expect(dateFromInput('')).toBeNull();
+  });
+});
+
+describe('atNoon e sameDay', () => {
+  it('o dia escolhido no calendário vira meio-dia', () => {
+    expect(atNoon(new Date(2026, 9, 21, 0, 5))).toEqual(new Date(2026, 9, 21, 12));
+    expect(atNoon(new Date(2026, 9, 21, 23, 59))).toEqual(new Date(2026, 9, 21, 12));
+  });
+
+  it('compara só o dia do calendário', () => {
+    expect(sameDay(new Date(2026, 9, 21, 1), new Date(2026, 9, 21, 23))).toBe(true);
+    expect(sameDay(new Date(2026, 9, 21), new Date(2026, 9, 22))).toBe(false);
+    expect(sameDay(new Date(2025, 9, 21), new Date(2026, 9, 21))).toBe(false);
   });
 });

@@ -2,7 +2,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDb } from '../../../core/db';
 import { refreshReminders } from '../../../core/reminders';
-import { formatDateInput, formatKm, sanitizeDecimal, toDateInput } from '../../../core/format';
+import {
+  dateFromInput,
+  formatDateInput,
+  formatKm,
+  sanitizeDecimal,
+  toDateInput,
+} from '../../../core/format';
 import {
   buildRegisterInput,
   buildTypeOptions,
@@ -34,6 +40,7 @@ export function useRegisterMaintenanceViewModel() {
   const [form, setForm] = useState<RegisterForm>(initialForm);
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [busy, setBusy] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -93,6 +100,14 @@ export function useRegisterMaintenanceViewModel() {
     selectType: (key: string) => set('typeKey', key, 'type'),
     setCustomName: (text: string) => set('customName', text, 'customName'),
     setDate: (text: string) => set('date', formatDateInput(text), 'date'),
+    pickerOpen,
+    /** Calendário abre no dia já digitado, ou em hoje. */
+    pickerValue: dateFromInput(form.date) ?? new Date(),
+    pickerMin: new Date(1990, 0, 1),
+    pickerMax: new Date(),
+    openDatePicker: () => setPickerOpen(true),
+    closeDatePicker: () => setPickerOpen(false),
+    pickDate: (date: Date) => set('date', toDateInput(date), 'date'),
     setKm: (text: string) => set('km', formatKm(text), 'km'),
     setCost: (text: string) => set('cost', sanitizeDecimal(text, 2)),
     setShop: (text: string) => set('shop', text),

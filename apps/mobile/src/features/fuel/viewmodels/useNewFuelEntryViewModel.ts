@@ -10,6 +10,7 @@ import {
   buildFuelEntryInput,
   deriveAmounts,
   emptyFuelForm,
+  entryDateFor,
   formatEntryDate,
   fuelTypeOptions,
   maxDecimals,
@@ -29,8 +30,9 @@ export function useNewFuelEntryViewModel() {
   const [kmTouched, setKmTouched] = useState(false);
   const [errors, setErrors] = useState<FuelFormErrors>({});
   const [busy, setBusy] = useState(false);
-  // Data fixa na abertura da tela: é "hoje" até haver seletor de data.
-  const [date] = useState(() => new Date());
+  // `null` = hoje (a data de agora, na hora de salvar); a pessoa troca pelo calendário.
+  const [pickedDate, setPickedDate] = useState<Date | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -61,7 +63,10 @@ export function useNewFuelEntryViewModel() {
 
   const save = useCallback(async () => {
     if (!context?.vehicle) return;
-    const result = buildFuelEntryInput(form, { vehicleId: context.vehicle.id, date: new Date() });
+    const result = buildFuelEntryInput(form, {
+      vehicleId: context.vehicle.id,
+      date: entryDateFor(pickedDate),
+    });
     if (result.errors) {
       setErrors(result.errors);
       return;
@@ -75,12 +80,21 @@ export function useNewFuelEntryViewModel() {
     } finally {
       setBusy(false);
     }
-  }, [context, db, form, router]);
+  }, [context, db, form, pickedDate, router]);
 
   return {
     loading: context === null,
     vehicle: context?.vehicle ?? null,
-    dateLabel: formatEntryDate(date),
+    dateLabel: formatEntryDate(pickedDate ?? new Date()),
+    pickerOpen,
+    /** Data mostrada ao abrir o calendário. */
+    pickerValue: pickedDate ?? new Date(),
+    /** Abastecimento no futuro não faz sentido; antes de 1990, também não. */
+    pickerMin: new Date(1990, 0, 1),
+    pickerMax: new Date(),
+    openDatePicker: () => setPickerOpen(true),
+    closeDatePicker: () => setPickerOpen(false),
+    pickDate: setPickedDate,
     form,
     amounts,
     errors,

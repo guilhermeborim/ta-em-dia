@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useDb } from '../../../core/db';
+import { dateFromInput, toDateInput } from '../../../core/format';
 import { refreshReminders } from '../../../core/reminders';
 import { loadSettings } from '../../../core/settings';
 import { addDocument, deleteDocument, findDocument, updateDocument } from '../../../core/documents';
@@ -35,6 +36,7 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
   const [form, setForm] = useState<DocumentForm>(emptyDocumentForm);
   const [errors, setErrors] = useState<DocumentErrors>({});
   const [busy, setBusy] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -138,6 +140,18 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
       setForm((prev) => ({ ...prev, notifyDays: toggleNotifyDay(prev.notifyDays, days) })),
     setDueDate: (value: string) => {
       setForm((prev) => ({ ...prev, dueDate: formatDateInput(value) }));
+      setErrors((prev) => ({ ...prev, dueDate: undefined }));
+    },
+    pickerOpen,
+    /** Calendário abre no dia já digitado, ou em hoje. */
+    pickerValue: dateFromInput(form.dueDate) ?? new Date(),
+    // Prazo pode ser passado (já vencido) ou daqui a anos; o mesmo limite do campo digitado.
+    pickerMin: new Date(2000, 0, 1),
+    pickerMax: new Date(2100, 11, 31),
+    openDatePicker: () => setPickerOpen(true),
+    closeDatePicker: () => setPickerOpen(false),
+    pickDueDate: (date: Date) => {
+      setForm((prev) => ({ ...prev, dueDate: toDateInput(date) }));
       setErrors((prev) => ({ ...prev, dueDate: undefined }));
     },
     save,

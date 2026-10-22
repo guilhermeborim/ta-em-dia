@@ -2,6 +2,7 @@ import {
   buildFuelEntryInput,
   deriveAmounts,
   emptyFuelForm,
+  entryDateFor,
   formatDecimal,
   formatEntryDate,
   parseDecimal,
@@ -103,6 +104,24 @@ describe('formatEntryDate', () => {
     const today = new Date(2026, 9, 21, 15);
     expect(formatEntryDate(new Date(2026, 9, 21, 9), today)).toBe('Hoje, 21 out');
     expect(formatEntryDate(new Date(2026, 9, 20), today)).toBe('20 out');
+  });
+
+  it('mostra o ano quando não é o atual', () => {
+    const today = new Date(2026, 9, 21, 15);
+    expect(formatEntryDate(new Date(2025, 11, 30), today)).toBe('30 dez 2025');
+  });
+});
+
+describe('entryDateFor', () => {
+  const now = new Date(2026, 9, 21, 15, 30);
+
+  it('sem escolha, ou escolhendo hoje: o instante de agora (a ordem do dia segue a hora)', () => {
+    expect(entryDateFor(null, now)).toBe(now);
+    expect(entryDateFor(new Date(2026, 9, 21, 0, 0), now)).toBe(now);
+  });
+
+  it('outro dia: ao meio-dia', () => {
+    expect(entryDateFor(new Date(2026, 9, 18, 0, 5), now)).toEqual(new Date(2026, 9, 18, 12));
   });
 });
 
