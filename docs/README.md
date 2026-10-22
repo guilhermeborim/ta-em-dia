@@ -7,6 +7,7 @@
 | [03-arquitetura.md](03-arquitetura.md)           | API, app, monorepo, sync, login, ambientes, branches e CI/CD       |
 | [04-staging.md](04-staging.md)                   | Passo a passo para montar e testar o staging da API e do app       |
 | [05-privacidade-lgpd.md](05-privacidade-lgpd.md) | Dados pessoais, segurança, LGPD e checklist das lojas              |
+| [06-backlog.md](06-backlog.md)                   | Ordem das features do MVP, com links do Figma                      |
 
 Estes arquivos são a versão de referência: mudou uma decisão, atualize o documento no mesmo PR do código.
 Decisões novas de arquitetura entram como ADR em `docs/adr/NNNN-titulo.md`.
