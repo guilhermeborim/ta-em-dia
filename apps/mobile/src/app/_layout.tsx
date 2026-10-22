@@ -39,6 +39,9 @@ function AppReady() {
       <Stack.Protected guard={done === true}>
         <Stack.Screen name="primeiro-veiculo" />
       </Stack.Protected>
+      <Stack.Protected guard={done === true}>
+        <Stack.Screen name="permissao-notificacoes" />
+      </Stack.Protected>
       <Stack.Protected guard={done === true && loginDone === true}>
         <Stack.Screen name="(tabs)" />
       </Stack.Protected>

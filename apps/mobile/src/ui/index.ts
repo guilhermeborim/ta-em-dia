@@ -20,6 +20,7 @@ export { Icon, iconNames, type IconName } from './components/Icon';
 export { IconAvatar } from './components/IconAvatar';
 export { FuelItem, MenuItem } from './components/ListItems';
 export { BrandSymbol, Logo } from './components/Logo';
+export { NotificationPreview } from './components/NotificationPreview';
 export { NumberField } from './components/NumberField';
 export { SocialButton } from './components/SocialButton';
 export { SummaryCard } from './components/SummaryCard';
