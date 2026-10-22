@@ -28,7 +28,12 @@ export function useReminderLifecycle(enabled: boolean): void {
       if (typeof planId === 'string') {
         router.push({ pathname: '/plano-manutencao/[id]', params: { id: planId } });
       } else if (typeof documentId === 'string') {
-        router.push('/documentos');
+        // Abre a lista do veículo do aviso (com mais de um veículo ativo, pode não ser o do Início).
+        router.push(
+          typeof vehicleId === 'string'
+            ? { pathname: '/documentos', params: { vehicleId } }
+            : '/documentos',
+        );
       } else if (typeof vehicleId === 'string') {
         router.push({ pathname: '/veiculo/[id]/atualizar-km', params: { id: vehicleId } });
       }

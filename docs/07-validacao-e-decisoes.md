@@ -66,7 +66,7 @@ Lápis no topo do detalhe.
 
 - [ ] Editar marca, modelo, ano, apelido e placa. Placa inválida ("12") dá erro; "bra2e19" vira "BRA2E19"; vazia remove.
 - [ ] **Arquivar**: o veículo some das listas e do Início; vira o ativo o próximo da ordem; aparece em "Arquivados". **Restaurar** devolve ao fim da ordem.
-- [ ] Arquivar o **único** veículo: o app fica sem veículo ativo (telas mostram "Cadastre seu veículo").
+- [ ] Arquivar o **único** veículo ativo é bloqueado: aparece o alerta "Você precisa de outro veículo ativo para arquivar este." e nada muda. Com outro veículo ativo, arquiva normalmente (PR de regras de veículos e prazos).
 - [ ] **Excluir**: alerta de confirmação; depois some tudo dele (abastecimentos, manutenções, prazos do veículo, leituras de km) e os avisos agendados dele. A CNH continua.
 - [ ] Depois de arquivar ou excluir, o app volta direto para Meus veículos (não para um detalhe que não existe mais).
 - [ ] Tocar numa notificação antiga de um veículo/plano excluído não trava o app.
@@ -83,7 +83,8 @@ Mais → Documentos e prazos.
 - [ ] Chips "Avisar antes" (30, 15, 7, 3, 1 dia); sem nenhum, a tela mostra "Os prazos estão sem aviso".
 - [ ] Banner de pé: "Avisamos 30 e 7 dias antes de cada vencimento." muda quando os prazos usam dias diferentes.
 - [ ] **Notificações** (só Android com development build e permissão dada): cadastre um prazo para daqui a 8 dias e confirme o aviso "IPVA do Gol vence em 7 dias" às 9h do dia certo; "Sua CNH vence em 30 dias" para a CNH. Tocar no aviso abre Documentos e prazos.
-- [ ] Prazo cadastrado já dentro da janela (ex.: faltam 10 dias) **não** dispara o aviso de 30 dias de forma retroativa.
+- [ ] Prazo cadastrado já dentro da janela (ex.: faltam 10 dias, aviso de 30): chega **um** aviso no próximo 9h ("IPVA do Gol vence em 9 dias"), e o aviso de 7 dias continua agendado. Não repete no dia seguinte. Mudar a data ou os dias de aviso libera um novo aviso.
+- [ ] Com dois veículos ativos (um deles só em Premium no futuro; hoje é possível com dados antigos), os dois avisam; tocar no aviso do segundo abre a lista dele. Arquivar um veículo cala os avisos dele.
 - [ ] Prazo vencido não avisa mais.
 - [ ] Início: prazo vencido ou perto de vencer aparece em "Próximos alertas" junto com a manutenção (máximo 2 no total, vencidos primeiro); tocar abre Documentos e prazos.
 - [ ] Mais → "Documentos e prazos" mostra "1 vencido" em vermelho (ou "N perto de vencer" em âmbar).
@@ -108,7 +109,7 @@ Aba Relatórios.
 - [ ] Grupos de itens iguais ao Figma; número de veículos ao lado de Meus veículos; selo PREMIUM em Premium.
 - [ ] Conta e Ajuda e contato mostram "Em breve" (o aviso aparece **acima** do botão flutuante).
 - [ ] Botão flutuante "Abastecer" abre o formulário e não cobre o último item da lista.
-- [ ] Premium abre em modal: título, 5 recursos, "Avise-me quando lançar". Depois de tocar, o botão some e aparece "Anotado! Avisamos você quando o Premium sair." e isso continua ao reabrir o app.
+- [ ] Premium abre em modal: título, 5 recursos, "Tenho interesse". Depois de tocar, o botão some e aparece "Anotado! Obrigado pelo interesse." e isso continua ao reabrir o app.
 - [ ] Em produção (`APP_ENV=production`) os atalhos "Status do app" e "Catálogo de componentes" não aparecem.
 
 ### 2.8 Configurações (tela 20, PR #35)
@@ -199,7 +200,7 @@ Pedir ao designer, ou aprovar o que foi feito seguindo os formulários do app: *
 
 ### 3.12 Textos para revisar
 
-Escritos por mim, sem revisão de redação: alerta "Excluir veículo?" e "Excluir prazo?", avisos de arquivar/restaurar, "Anotado! Avisamos você...", mensagens de erro ("O km não pode ser menor que o atual (N km)", "Placa inválida (ex.: ABC1D23)"), estados vazios, mensagens do banner de prazos, e em Configurações "Notificações desativadas / Ative nos ajustes do aparelho para receber os avisos.", "Marque ao menos um dia" e o texto "Às 9h do dia marcado. Vale para os prazos novos; os que já existem mantêm os próprios dias.".
+Escritos por mim, sem revisão de redação: alerta "Excluir veículo?" e "Excluir prazo?", avisos de arquivar/restaurar, "Anotado! Obrigado pelo interesse.", "Você precisa de outro veículo ativo para arquivar este.", mensagens de erro ("O km não pode ser menor que o atual (N km)", "Placa inválida (ex.: ABC1D23)"), estados vazios, mensagens do banner de prazos, e em Configurações "Notificações desativadas / Ative nos ajustes do aparelho para receber os avisos.", "Marque ao menos um dia" e o texto "Às 9h do dia marcado. Vale para os prazos novos; os que já existem mantêm os próprios dias.".
 
 ### 3.15 Ajuda e contato, Termos e Privacidade
 

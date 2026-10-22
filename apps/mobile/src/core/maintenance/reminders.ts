@@ -4,7 +4,7 @@ import {
   maintenanceLabel,
   maintenanceReminders,
   maintenanceStatus,
-  REMINDER_HOUR,
+  nextReminderTime,
   type MaintenancePlan,
   type MaintenanceStatus,
 } from '@ta-em-dia/shared';
@@ -41,14 +41,6 @@ async function readNotified(
     sameCycle: stored.slice(0, at) === cycleKey(plan),
     fireAt: new Date(stored.slice(at + 1)),
   };
-}
-
-/** Próximo 9h: hoje, se ainda não deu a hora; senão amanhã. */
-function nextReminderTime(now: Date): Date {
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), REMINDER_HOUR);
-  return today > now
-    ? today
-    : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, REMINDER_HOUR);
 }
 
 /** "Troca de óleo do Gol em ~500 km" / "Alinhamento do Gol vence em 7 dias" (docs/02-telas-e-fluxos.md). */
