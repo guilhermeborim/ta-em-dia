@@ -63,7 +63,7 @@ export function intervalText(intervalKm?: number, intervalMonths?: number): stri
   return 'Sem intervalo';
 }
 
-function statusLabel(status: MaintenanceStatus): string {
+export function statusLabel(status: MaintenanceStatus): string {
   const days = status.remainingDays ?? 0;
   if (status.tone === 'overdue') return 'Vencido';
   if (status.tone === 'soon')
@@ -96,7 +96,8 @@ function hintLabel(status: MaintenanceStatus): string {
   return `≈ ${plural(Math.max(days ?? 0, 0), 'dia', 'dias')}`;
 }
 
-const toneByStatus = { ok: 'ok', soon: 'warning', overdue: 'danger' } as const;
+/** Estado do `shared` → tom do cartão (UI). */
+export const tones = { ok: 'ok', soon: 'warning', overdue: 'danger' } as const;
 
 /** Monta as telas "Próximas" e "Sugeridas": cartões ordenados pelo que vence primeiro. */
 export function buildMaintenanceList(
@@ -126,7 +127,7 @@ export function buildMaintenanceList(
         id: plan.id,
         title,
         subtitle: intervalText(plan.intervalKm, plan.intervalMonths),
-        tone: toneByStatus[status.tone],
+        tone: tones[status.tone],
         status: statusLabel(status),
         progress: Math.max(0, status.progress ?? 0),
         progressLabel: progressLabel(plan, status),

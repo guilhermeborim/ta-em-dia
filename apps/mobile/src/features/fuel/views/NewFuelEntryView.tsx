@@ -13,6 +13,7 @@ import {
   colors,
   EmptyState,
   Icon,
+  InfoBanner,
   NumberField,
   size,
   spacing,
@@ -71,12 +72,7 @@ export function NewFuelEntryView() {
                 ))}
               </View>
 
-              <View style={styles.tip}>
-                <Icon name="sparkles" size={18} color={colors.primary} />
-                <Text variant="small" color="primary" style={styles.flex}>
-                  Preencha 2 valores, a gente calcula o terceiro.
-                </Text>
-              </View>
+              <InfoBanner icon="sparkles" text="Preencha 2 valores, a gente calcula o terceiro." />
 
               <View style={styles.pair}>
                 <View style={styles.flex}>
@@ -180,15 +176,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  tip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: colors.primarySoft,
-  },
   pair: { flexDirection: 'row', gap: spacing.md },
   footer: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm },
 });

@@ -64,6 +64,7 @@ export function MaintenanceListView() {
                 progress={card.progress}
                 progressLabel={card.progressLabel}
                 hint={card.hint}
+                onPress={() => vm.openPlan(card.id)}
               />
             ))}
             {vm.noInterval.map((card) => (
@@ -72,6 +73,8 @@ export function MaintenanceListView() {
                 title={card.title}
                 own={card.own}
                 lastDone={card.lastDone}
+                onPress={() => vm.openPlan(card.id)}
+                onDefineInterval={() => vm.defineInterval(card.id)}
               />
             ))}
 

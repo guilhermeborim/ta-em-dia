@@ -14,12 +14,15 @@ import {
   FuelItem,
   Icon,
   IconAvatar,
+  InfoBanner,
+  InfoCard,
   iconNames,
   Logo,
   MenuItem,
   NoIntervalCard,
   NotificationPreview,
   NumberField,
+  ProgressRing,
   OwnBadge,
   PremiumBadge,
   SocialButton,
@@ -183,6 +186,29 @@ export function ComponentsView() {
             value={segment}
             onChange={setSegment}
           />
+        </Section>
+
+        <Section title="Anel de progresso">
+          <View style={styles.row}>
+            <ProgressRing progress={0.86} color={colors.warning}>
+              <Text variant="display">~500</Text>
+              <Text variant="small" color="text2">
+                km restantes
+              </Text>
+            </ProgressRing>
+            <ProgressRing progress={0.35} color={colors.success} size={100} strokeWidth={12} />
+          </View>
+        </Section>
+
+        <Section title="Dados em linhas e dica">
+          <InfoCard
+            rows={[
+              { label: 'Intervalo', value: '10.000 km ou 12 meses' },
+              { label: 'Última vez', value: '12 jan 2026 · 40.320 km' },
+              { label: 'Próxima prevista', value: '02 nov · 50.320 km', tone: 'warning' },
+            ]}
+          />
+          <InfoBanner icon="bell" text="Vale o que vencer primeiro." />
         </Section>
 
         <Section title="Avatar de ícone">
