@@ -64,7 +64,7 @@ O melhor jeito de proteger um dado é não ter o dado. O MVP **não guarda** nú
 
 **Retenção.**
 
-- Conta anônima sem uso por 12 meses é apagada por job (já previsto em `docs/03-arquitetura.md`).
+- Conta anônima sem uso por 12 meses é apagada por job semanal (`api-cleanup.yml`; ver `docs/03-arquitetura.md`). "Uso" é o aparelho abrir ou renovar a sessão (ou sincronizar).
 - Registros com `deleted_at` são removidos de vez do servidor depois de 30 dias.
 - Logs da API: no máximo 30 dias.
 

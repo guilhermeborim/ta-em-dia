@@ -270,6 +270,7 @@ export function ComponentsView() {
 
         <Section title="Seletor de veículo">
           <VehicleSelector name="Onix 2019" details="ABC-1D23 · Flex" />
+          <VehicleSelector name="CG 160" icon="motorbike" details="Honda CG 160 · 2022" />
         </Section>
 
         <Section title="Resumo">
@@ -510,6 +511,7 @@ export function ComponentsView() {
           />
           <VehicleCard
             accent="oil"
+            icon="motorbike"
             name="Moto do trampo"
             details="Honda CG 160 · 2022 · 21.300 km"
             status={{ tone: 'ok', label: 'Tudo em dia' }}

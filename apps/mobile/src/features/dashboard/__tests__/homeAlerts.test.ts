@@ -20,7 +20,7 @@ const plan = (patch: Partial<MaintenancePlan>): MaintenancePlan => ({
 });
 
 const state = (plans: MaintenancePlan[], currentKm = 48600): HomeState => ({
-  vehicle: { id: VEHICLE_ID, name: 'Gol', initialKm: 40000, currentKm },
+  vehicle: { id: VEHICLE_ID, name: 'Gol', type: 'flex', initialKm: 40000, currentKm },
   entries: [] as FuelEntry[],
   dailyKm: 30,
   plans,

@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { colors } from '../theme/tokens';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 import { IconAvatar } from './IconAvatar';
 import { Text } from './Text';
 
@@ -8,11 +8,13 @@ interface VehicleSelectorProps {
   name: string;
   /** Ex.: "VW Gol 1.0 · 2019 · 48.320 km". */
   details: string;
+  /** Ícone do tipo de veículo: `car` (padrão) ou `motorbike`. */
+  icon?: IconName;
   onPress?: () => void;
 }
 
 /** Veículo selecionado, no topo das telas. Toque abre a troca de veículo. */
-export function VehicleSelector({ name, details, onPress }: VehicleSelectorProps) {
+export function VehicleSelector({ name, details, icon = 'car', onPress }: VehicleSelectorProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -21,7 +23,7 @@ export function VehicleSelector({ name, details, onPress }: VehicleSelectorProps
       style={styles.row}
     >
       <IconAvatar
-        icon="car"
+        icon={icon}
         size={44}
         iconSize={22}
         background={colors.primary}

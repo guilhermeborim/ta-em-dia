@@ -6,6 +6,16 @@ export const RETRY_DELAYS_MS = [15_000, 30_000, 60_000, 120_000, 300_000];
 export const retryDelay = (attempt: number): number =>
   RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]!;
 
+/** O que importa de uma mudança do estado da rede (`expo-network`). */
+export interface NetworkSnapshot {
+  isConnected?: boolean;
+  isInternetReachable?: boolean;
+}
+
+/** Vale tentar agora: há conexão e o sistema não diz que a internet está fora (`undefined` = não sabe). */
+export const shouldRetryOnNetwork = (state: NetworkSnapshot): boolean =>
+  state.isConnected === true && state.isInternetReachable !== false;
+
 export interface SessionKeeper {
   /** Tenta agora (ao abrir o app e ao voltar a ele). Ignorado se já há uma tentativa em curso. */
   check: () => void;

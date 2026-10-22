@@ -1,9 +1,15 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AnonymousAuthRequest, AuthTokens, uuidv7 } from '@ta-em-dia/shared';
+import { AnonymousAuthRequest, AuthTokens, RefreshRequest, uuidv7 } from '@ta-em-dia/shared';
 import { randomBytes } from 'node:crypto';
 import { AnonymousIdentity, AuthRepository, AuthUser } from './auth.repository';
 import { ACCESS_TOKEN_SECONDS, newRefreshToken, sameHash, sha256 } from './tokens';
+
+const invalidRefreshToken = () =>
+  new UnauthorizedException({
+    code: 'INVALID_REFRESH_TOKEN',
+    message: 'Sessão expirada. Entre de novo.',
+  });
 
 @Injectable()
 export class AuthService {
@@ -24,6 +30,7 @@ export class AuthService {
       platform: request.platform,
       refreshTokenHash: refresh.tokenHash,
       refreshExpiresAt: refresh.expiresAt,
+      now,
     };
 
     let user = await this.existingUser(request.installationId, secretHash);
@@ -45,6 +52,42 @@ export class AuthService {
       expiresIn: ACCESS_TOKEN_SECONDS,
       refreshToken: refresh.token,
       user,
+    };
+  }
+
+  /**
+   * Troca o refresh token por um par novo e invalida o antigo (rotação). Token desconhecido, vencido
+   * ou já trocado é 401 `INVALID_REFRESH_TOKEN`. Um token já trocado que aparece de novo foi
+   * reaproveitado (copiado ou repetido): todas as sessões do aparelho são encerradas, e o app
+   * volta a entrar pelo segredo do aparelho (`/auth/anonymous`).
+   */
+  async refresh(request: RefreshRequest, now: Date = new Date()): Promise<AuthTokens> {
+    const stored = await this.repository.findRefreshToken(sha256(request.refreshToken));
+    if (!stored) throw invalidRefreshToken();
+    if (stored.revokedAt) {
+      await this.repository.revokeDeviceTokens(stored.deviceId, now);
+      throw invalidRefreshToken();
+    }
+    if (stored.expiresAt <= now) throw invalidRefreshToken();
+
+    const next = newRefreshToken(now);
+    const rotated = await this.repository.rotateRefreshToken({
+      tokenId: stored.id,
+      deviceId: stored.deviceId,
+      tokenHash: next.tokenHash,
+      expiresAt: next.expiresAt,
+      now,
+    });
+    if (!rotated) throw invalidRefreshToken();
+
+    return {
+      accessToken: await this.jwt.signAsync(
+        { sub: stored.user.id },
+        { expiresIn: ACCESS_TOKEN_SECONDS },
+      ),
+      expiresIn: ACCESS_TOKEN_SECONDS,
+      refreshToken: next.token,
+      user: stored.user,
     };
   }
 

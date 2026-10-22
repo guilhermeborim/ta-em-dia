@@ -1,9 +1,9 @@
 /** Resultado de uma chamada à API. Nunca lança: o app funciona sem a API. */
 export type ApiResult =
   | { kind: 'ok'; body: unknown }
-  /** A API respondeu que o pedido está errado (4xx). Tentar de novo igual não adianta. */
+  /** A API respondeu que o pedido está errado (4xx, menos 429). Tentar de novo igual não adianta. */
   | { kind: 'rejected'; status: number; code?: string }
-  /** Sem internet, timeout ou erro do servidor (5xx). Vale tentar de novo mais tarde. */
+  /** Sem internet, timeout, erro do servidor (5xx) ou limite de chamadas (429). Tentar mais tarde. */
   | { kind: 'unreachable' };
 
 /** O serviço grátis da API dorme sem uso e leva cerca de 1 minuto para acordar. */
@@ -28,7 +28,8 @@ export async function postJson(
       signal: controller.signal,
     });
     if (res.ok) return { kind: 'ok', body: await res.json() };
-    if (res.status >= 500) return { kind: 'unreachable' };
+    // 429 é o rate limit da API: passa se esperar, então não é recusa definitiva.
+    if (res.status >= 500 || res.status === 429) return { kind: 'unreachable' };
     const error = (await res.json().catch(() => null)) as { code?: unknown } | null;
     return {
       kind: 'rejected',

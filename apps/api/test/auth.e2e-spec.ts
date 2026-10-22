@@ -15,6 +15,7 @@ const body = {
 
 /** Banco em memória: só o que a rota usa. O Postgres de verdade fica de fora do CI. */
 const identities = new Map<string, { secretHash: string; user: { id: string } }>();
+const tokens = new Map<string, { revoked: boolean; expiresAt: Date }>();
 const fakeRepository = {
   async findAnonymousIdentity(installationId: string) {
     const found = identities.get(installationId);
@@ -22,14 +23,44 @@ const fakeRepository = {
       ? { secretHash: found.secretHash, user: { ...found.user, isAnonymous: true, plan: 'free' } }
       : null;
   },
-  async createAnonymousUser(input: { installationId: string; userId: string; secretHash: string }) {
+  async createAnonymousUser(input: {
+    installationId: string;
+    userId: string;
+    secretHash: string;
+    refreshTokenHash: string;
+    refreshExpiresAt: Date;
+  }) {
+    tokens.set(input.refreshTokenHash, { revoked: false, expiresAt: input.refreshExpiresAt });
     identities.set(input.installationId, {
       secretHash: input.secretHash,
       user: { id: input.userId },
     });
     return { id: input.userId, isAnonymous: true, plan: 'free' };
   },
-  async openSession() {},
+  async openSession(_userId: string, input: { refreshTokenHash: string; refreshExpiresAt: Date }) {
+    tokens.set(input.refreshTokenHash, { revoked: false, expiresAt: input.refreshExpiresAt });
+  },
+  async findRefreshToken(hash: string) {
+    const found = tokens.get(hash);
+    if (!found) return null;
+    return {
+      id: hash,
+      deviceId: 'device-1',
+      expiresAt: found.expiresAt,
+      revokedAt: found.revoked ? new Date() : null,
+      user: { id: [...identities.values()][0].user.id, isAnonymous: true, plan: 'free' },
+    };
+  },
+  async rotateRefreshToken(input: { tokenId: string; tokenHash: string; expiresAt: Date }) {
+    const old = tokens.get(input.tokenId)!;
+    if (old.revoked) return false;
+    old.revoked = true;
+    tokens.set(input.tokenHash, { revoked: false, expiresAt: input.expiresAt });
+    return true;
+  },
+  async revokeDeviceTokens() {
+    for (const token of tokens.values()) token.revoked = true;
+  },
 };
 
 /** Rota protegida só para o teste: devolve o userId que o guard tirou do token. */
@@ -57,7 +88,10 @@ describe('POST /v1/auth/anonymous (e2e)', () => {
     await app.init();
   });
 
-  beforeEach(() => identities.clear());
+  beforeEach(() => {
+    identities.clear();
+    tokens.clear();
+  });
   afterAll(() => app.close());
 
   const post = (payload: unknown) =>
@@ -106,5 +140,40 @@ describe('POST /v1/auth/anonymous (e2e)', () => {
       .set('Authorization', `Bearer ${tokens.accessToken}`)
       .expect(200);
     expect(ok.body.userId).toBe(tokens.user.id);
+  });
+
+  describe('POST /v1/auth/refresh', () => {
+    const refresh = (payload: unknown) =>
+      request(app.getHttpServer())
+        .post('/v1/auth/refresh')
+        .send(payload as object);
+
+    it('troca o refresh token por um par novo que cumpre o contrato', async () => {
+      const first = (await post(body).expect(200)).body;
+      const res = await refresh({ refreshToken: first.refreshToken }).expect(200);
+
+      expect(authTokensSchema.safeParse(res.body).success).toBe(true);
+      expect(res.body.user.id).toBe(first.user.id);
+      expect(res.body.refreshToken).not.toBe(first.refreshToken);
+      // O access token novo abre rotas protegidas.
+      await request(app.getHttpServer())
+        .get('/v1/probe')
+        .set('Authorization', `Bearer ${res.body.accessToken}`)
+        .expect(200);
+    });
+
+    it('reusar o token antigo: 401 com código estável', async () => {
+      const first = (await post(body).expect(200)).body;
+      await refresh({ refreshToken: first.refreshToken }).expect(200);
+      const res = await refresh({ refreshToken: first.refreshToken }).expect(401);
+      expect(res.body.code).toBe('INVALID_REFRESH_TOKEN');
+    });
+
+    it('token desconhecido: 401; corpo inválido: 400 sem devolver o token', async () => {
+      await refresh({ refreshToken: 'x'.repeat(40) }).expect(401);
+      const res = await refresh({ refreshToken: '' }).expect(400);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+      expect(res.body.fields).toEqual(['refreshToken']);
+    });
   });
 });

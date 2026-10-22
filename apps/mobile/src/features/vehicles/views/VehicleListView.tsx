@@ -43,6 +43,7 @@ export function VehicleListView() {
                 <VehicleCard
                   key={card.id}
                   name={card.name}
+                  icon={card.icon}
                   details={card.details}
                   accent={accents[index % accents.length]}
                   status={card.status}

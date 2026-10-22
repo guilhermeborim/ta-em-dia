@@ -15,7 +15,7 @@ export const premiumFeatures: PremiumFeature[] = [
     title: 'Lembrete ao chegar no posto',
     subtitle: 'Avisa para registrar o abastecimento',
   },
-  { icon: 'car', title: 'Veículos ilimitados', subtitle: 'Carro, moto e da família' },
+  { icon: 'car', title: 'Mais veículos', subtitle: 'Carro, moto e da família' },
   {
     icon: 'file',
     title: 'Relatório em PDF',
@@ -26,7 +26,7 @@ export const premiumFeatures: PremiumFeature[] = [
 
 const WAITLIST_KEY = 'premium.waitlist';
 
-/** A pessoa já tocou em "Avise-me quando lançar"? Fica só no aparelho (não sincroniza). */
+/** A pessoa já tocou em "Tenho interesse"? Fica só no aparelho (não sincroniza). */
 export async function isOnWaitlist(db: Db): Promise<boolean> {
   return (await getSetting(db, WAITLIST_KEY)) === '1';
 }

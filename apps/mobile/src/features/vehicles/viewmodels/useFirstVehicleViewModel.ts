@@ -1,6 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { Alert } from 'react-native';
 import { useDb } from '../../../core/db';
+import { useFlag } from '../../../core/flags/useFlag';
 import {
   buildVehicleInput,
   emptyFirstVehicleForm,
@@ -9,7 +11,8 @@ import {
   type FirstVehicleForm,
   type VehicleKind,
 } from '../models/firstVehicle';
-import { createVehicle } from '../models/vehicles.repository';
+import { createVehicle, VehicleLimitError } from '../models/vehicles.repository';
+import { vehicleLimitMessage } from '../models/vehicleLimit';
 
 /**
  * ViewModel: estado do formulário, validação, gravação local e saída. No primeiro uso
@@ -18,6 +21,7 @@ import { createVehicle } from '../models/vehicles.repository';
 export function useFirstVehicleViewModel(mode: 'first' | 'add' = 'first') {
   const db = useDb();
   const router = useRouter();
+  const max = useFlag('vehicles.max');
   const [form, setForm] = useState<FirstVehicleForm>(emptyFirstVehicleForm);
   const [errors, setErrors] = useState<FirstVehicleErrors>({});
   const [busy, setBusy] = useState(false);
@@ -43,12 +47,16 @@ export function useFirstVehicleViewModel(mode: 'first' | 'add' = 'first') {
     }
     setBusy(true);
     try {
-      await createVehicle(db, result.value);
+      await createVehicle(db, result.value, { max });
       next();
+    } catch (error) {
+      // Outro aparelho ou outra tela pode ter enchido o limite entre abrir e salvar.
+      if (!(error instanceof VehicleLimitError)) throw error;
+      Alert.alert('Limite de veículos', vehicleLimitMessage(error.max));
     } finally {
       setBusy(false);
     }
-  }, [db, form, next]);
+  }, [db, form, max, next]);
 
   return {
     step: mode === 'add' ? undefined : 'Passo 1 de 2',

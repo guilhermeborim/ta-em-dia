@@ -1,15 +1,23 @@
 import type { Db } from './types';
 
 /**
+ * Um passo de migration. `foreignKeysOff` é para recriar uma tabela (o SQLite não altera CHECK):
+ * o PRAGMA não vale dentro de transação, então `migrate` desliga as chaves estrangeiras antes,
+ * confere `foreign_key_check` antes de confirmar e liga de novo no fim.
+ */
+export type Migration = string | { sql: string; foreignKeysOff?: boolean };
+
+/**
  * Migrations do SQLite local, em ordem. A versão aplicada fica em PRAGMA user_version.
  * Regra: nunca editar uma migration já publicada; crie a próxima. Só adicione
- * (colunas, tabelas, índices) para o app novo e o antigo conviverem.
+ * (colunas, tabelas, índices) para o app novo e o antigo conviverem; a única exceção é recriar
+ * uma tabela para mudar um CHECK (ver `foreignKeysOff`).
  *
  * Tabelas sincronizáveis (vehicles, fuel_entries, maintenance_plans, maintenance_records): id UUID v7 gerado no app,
  * datas em ISO 8601 UTC, exclusão lógica (deleted_at) e version (número do
  * servidor, nulo até sincronizar). Espelham apps/api/prisma/schema.prisma.
  */
-export const MIGRATIONS: string[] = [
+export const MIGRATIONS: Migration[] = [
   `
   CREATE TABLE vehicles (
     id          TEXT PRIMARY KEY NOT NULL,
@@ -160,18 +168,66 @@ export const MIGRATIONS: string[] = [
   );
   CREATE INDEX idx_documents_vehicle ON documents (vehicle_id);
   `,
+  {
+    foreignKeysOff: true,
+    sql: `
+  -- Tipo 'motorcycle' em vehicles.type. O SQLite não altera um CHECK, então a tabela é recriada
+  -- com os mesmos dados (receita de 12 passos da documentação do SQLite). Até aqui o app gravava
+  -- moto como 'combustion' (e carro como 'flex'), então 'combustion' vira 'motorcycle'.
+  CREATE TABLE vehicles_new (
+    id          TEXT PRIMARY KEY NOT NULL,
+    user_id     TEXT,
+    name        TEXT NOT NULL,
+    type        TEXT NOT NULL CHECK (type IN ('combustion', 'flex', 'electric', 'motorcycle')),
+    brand       TEXT,
+    model       TEXT,
+    year        INTEGER,
+    plate       TEXT,
+    initial_km  INTEGER NOT NULL,
+    photo_url   TEXT,
+    archived    INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL,
+    deleted_at  TEXT,
+    version     INTEGER,
+    sort_order  INTEGER NOT NULL DEFAULT 0
+  );
+  INSERT INTO vehicles_new
+    (id, user_id, name, type, brand, model, year, plate, initial_km, photo_url, archived,
+     created_at, updated_at, deleted_at, version, sort_order)
+  SELECT id, user_id, name,
+         CASE type WHEN 'combustion' THEN 'motorcycle' ELSE type END,
+         brand, model, year, plate, initial_km, photo_url, archived,
+         created_at, updated_at, deleted_at, version, sort_order
+    FROM vehicles;
+  DROP TABLE vehicles;
+  ALTER TABLE vehicles_new RENAME TO vehicles;
+  `,
+  },
 ];
 
-export async function migrate(db: Db, migrations: string[] = MIGRATIONS): Promise<void> {
+export async function migrate(db: Db, migrations: Migration[] = MIGRATIONS): Promise<void> {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
 
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   const current = row?.user_version ?? 0;
 
   for (let version = current; version < migrations.length; version++) {
-    await db.withTransactionAsync(async () => {
-      await db.execAsync(migrations[version]!);
-      await db.execAsync(`PRAGMA user_version = ${version + 1}`);
-    });
+    const step = migrations[version]!;
+    const { sql, foreignKeysOff } = typeof step === 'string' ? { sql: step } : step;
+
+    if (foreignKeysOff) await db.execAsync('PRAGMA foreign_keys = OFF');
+    try {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(sql);
+        if (foreignKeysOff) {
+          const broken = await db.getAllAsync('PRAGMA foreign_key_check');
+          if (broken.length > 0) throw new Error('A migration quebrou chaves estrangeiras');
+        }
+        await db.execAsync(`PRAGMA user_version = ${version + 1}`);
+      });
+    } finally {
+      if (foreignKeysOff) await db.execAsync('PRAGMA foreign_keys = ON');
+    }
   }
 }
