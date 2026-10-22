@@ -167,3 +167,79 @@ export function maintenanceStatus(
     remainingDays: days.length ? Math.ceil(Math.min(...days)) : null,
   };
 }
+
+/** Hora do dia (fuso do aparelho) em que os avisos de manutenção chegam. */
+export const REMINDER_HOUR = 9;
+
+export interface MaintenanceReminderInput extends MaintenancePlanInput {
+  id: string;
+  enabled: boolean;
+  /** Avisar quando faltarem tantos km (padrão: `DEFAULT_NOTIFY_BEFORE_KM`). */
+  notifyBeforeKm?: number | null;
+  /** Avisar quando faltarem tantos dias (padrão: `DEFAULT_NOTIFY_BEFORE_DAYS`). */
+  notifyBeforeDays?: number | null;
+}
+
+export interface MaintenanceReminder {
+  planId: string;
+  /**
+   * Quando o limite de aviso é cruzado, às 9h. Se `crossed`, é só o 9h de hoje (a data real
+   * do cruzamento não é conhecida) e não deve ser usado como hora do aviso.
+   */
+  fireAt: Date;
+  /**
+   * O item por km já está dentro do limite de aviso. Muda a cada dia só porque "hoje" muda:
+   * quem agenda precisa avisar uma vez por ciclo, não a cada reagendamento.
+   */
+  crossed: boolean;
+  /** O que cruza primeiro: os km (pela média diária) ou o tempo. */
+  kind: 'km' | 'time';
+}
+
+const atReminderHour = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate(), REMINDER_HOUR);
+
+/**
+ * Quando avisar cada item do plano: o primeiro entre "faltam `notifyBeforeKm` km" (data
+ * estimada pela média diária) e "faltam `notifyBeforeDays` dias para a data limite". Só itens
+ * ativos com intervalo. Se a média diária for 0, os km só avisam quando já estão dentro do limite.
+ * Do aviso mais cedo para o mais tarde.
+ */
+export function maintenanceReminders(
+  plans: MaintenanceReminderInput[],
+  currentKm: number,
+  dailyKm: number,
+  today: Date = new Date(),
+): MaintenanceReminder[] {
+  const reminders: MaintenanceReminder[] = [];
+
+  for (const plan of plans) {
+    if (!plan.enabled || (!plan.intervalKm && !plan.intervalMonths)) continue;
+    const candidates: { fireAt: Date; kind: 'km' | 'time'; crossed: boolean }[] = [];
+
+    if (plan.intervalKm) {
+      const remaining = plan.lastDoneKm + plan.intervalKm - currentKm;
+      const excess = remaining - (plan.notifyBeforeKm ?? DEFAULT_NOTIFY_BEFORE_KM);
+      if (excess <= 0) {
+        candidates.push({ fireAt: atReminderHour(today), kind: 'km', crossed: true });
+      } else if (dailyKm > 0) {
+        const days = Math.ceil(excess / dailyKm);
+        const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + days);
+        candidates.push({ fireAt: atReminderHour(date), kind: 'km', crossed: false });
+      }
+    }
+
+    if (plan.intervalMonths) {
+      const due = addMonths(plan.lastDoneAt, plan.intervalMonths);
+      const before = plan.notifyBeforeDays ?? DEFAULT_NOTIFY_BEFORE_DAYS;
+      const date = new Date(due.getFullYear(), due.getMonth(), due.getDate() - before);
+      candidates.push({ fireAt: atReminderHour(date), kind: 'time', crossed: false });
+    }
+
+    if (candidates.length === 0) continue;
+    const first = candidates.reduce((a, b) => (b.fireAt < a.fireAt ? b : a));
+    reminders.push({ planId: plan.id, ...first });
+  }
+
+  return reminders.sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime());
+}
