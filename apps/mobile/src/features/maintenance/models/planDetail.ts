@@ -5,7 +5,7 @@ import {
   nextMaintenance,
 } from '@ta-em-dia/shared';
 import { formatNumber, MONTH_NAMES_SHORT } from '../../../core/format';
-import { intervalText, statusLabel, tones } from './maintenanceList';
+import { intervalText, statusLabel, tones } from '../../../core/maintenance';
 import type { PlanDetailData } from './plans.repository';
 
 export interface PlanDetailRow {
