@@ -1,4 +1,4 @@
-import { vehicleSchema, type Vehicle } from '@ta-em-dia/shared';
+import { canAddVehicle, vehicleSchema, type Vehicle } from '@ta-em-dia/shared';
 import { enqueue, newId, type Db } from '../../../core/db';
 
 type VehicleRow = {
@@ -33,17 +33,40 @@ function toVehicle(row: VehicleRow): Vehicle {
   };
 }
 
-/** Valida, grava no SQLite e enfileira para o sync, tudo na mesma transação. */
+/** O plano não deixa cadastrar mais um veículo (flag `vehicles.max`). */
+export class VehicleLimitError extends Error {
+  constructor(readonly max: number) {
+    super(`Limite de ${max} veículo(s) do plano`);
+    this.name = 'VehicleLimitError';
+  }
+}
+
+/** Quantos veículos existem (os arquivados contam; os excluídos não). */
+export async function countVehicles(db: Db): Promise<number> {
+  const row = await db.getFirstAsync<{ total: number }>(
+    'SELECT COUNT(*) AS total FROM vehicles WHERE deleted_at IS NULL',
+  );
+  return row?.total ?? 0;
+}
+
+/**
+ * Valida, grava no SQLite e enfileira para o sync, tudo na mesma transação. `max` é o limite do
+ * plano (`vehicles.max`; nulo ou ausente = sem limite): passando dele, lança `VehicleLimitError`.
+ */
 export async function createVehicle(
   db: Db,
   input: NewVehicle,
-  ctx: { id?: string; now?: Date } = {},
+  ctx: { id?: string; now?: Date; max?: number | null } = {},
 ): Promise<Vehicle> {
   const base = vehicleSchema.parse({ ...input, id: ctx.id ?? newId() });
   const now = (ctx.now ?? new Date()).toISOString();
   let vehicle: Vehicle = base;
 
   await db.withTransactionAsync(async () => {
+    const max = ctx.max ?? null;
+    if (max !== null && !canAddVehicle(await countVehicles(db), max)) {
+      throw new VehicleLimitError(max);
+    }
     // O veículo novo vai para o fim de "Meus veículos".
     const last = await db.getFirstAsync<{ next: number }>(
       'SELECT COALESCE(MAX(sort_order) + 1, 0) AS next FROM vehicles WHERE deleted_at IS NULL',

@@ -15,7 +15,7 @@ export const premiumFeatures: PremiumFeature[] = [
     title: 'Lembrete ao chegar no posto',
     subtitle: 'Avisa para registrar o abastecimento',
   },
-  { icon: 'car', title: 'Veículos ilimitados', subtitle: 'Carro, moto e da família' },
+  { icon: 'car', title: 'Mais veículos', subtitle: 'Carro, moto e da família' },
   {
     icon: 'file',
     title: 'Relatório em PDF',
