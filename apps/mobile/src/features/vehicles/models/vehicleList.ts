@@ -80,12 +80,17 @@ export function buildVehicleCards(
   }));
 }
 
+/** A mesma lista com o item de `from` movido para `to`. Fora dos limites, não muda. */
+export function moveItem<T>(list: T[], from: number, to: number): T[] {
+  if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) return list;
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item!);
+  return next;
+}
+
 /** Move o id uma posição para cima (`-1`) ou para baixo (`1`). Fora dos limites, não muda. */
 export function moveId(ids: string[], id: string, direction: -1 | 1): string[] {
   const from = ids.indexOf(id);
-  const to = from + direction;
-  if (from < 0 || to < 0 || to >= ids.length) return ids;
-  const next = [...ids];
-  [next[from], next[to]] = [next[to]!, next[from]!];
-  return next;
+  return moveItem(ids, from, from + direction);
 }

@@ -43,8 +43,9 @@ Mais → Meus veículos.
 - [ ] Cartões com faixa colorida alternando roxo e laranja, apelido, "VW Gol 1.0 · 2019 · 48.910 km" e selo (N vencidos, N perto de vencer, Tudo em dia ou nada).
 - [ ] O selo soma manutenção **e** prazos de documentos do veículo (a CNH não entra).
 - [ ] "Adicionar veículo" (botão do topo e cartão tracejado) abre o formulário em modal e volta ao salvar. Em modo adicionar não aparece "Passo 1 de 2" nem "Pular", e sim "Cancelar".
-- [ ] **Segurar** o cartão abre "Mover para cima / Mover para baixo". O primeiro da lista vira o veículo ativo: confira Início, Abastecer, Manutenção, Histórico, Relatórios e Documentos mudando.
-- [ ] Com um veículo só não há dica nem menu de reordenar.
+- [ ] **Segurar e arrastar** o cartão (com 2 ou mais veículos; hoje só com dados antigos ou depois do Premium, porque o grátis tem 1): os outros abrem espaço enquanto o dedo anda, o cartão levantado acompanha o dedo e, ao soltar, a ordem fica. Rolar a tela com o dedo (sem segurar) continua rolando, no Android e no iOS. O primeiro da lista vira o veículo ativo: confira Início, Abastecer, Manutenção, Histórico, Relatórios e Documentos mudando, e os avisos reagendados. Soltar no mesmo lugar não muda nada.
+- [ ] Com um veículo só não há dica e segurar o cartão não faz nada.
+- [ ] Lista de cartões que passa da tela: arrastar até a borda não rola sozinho (limitação conhecida); se incomodar, o auto-scroll entra depois.
 - [ ] Leitor de tela (TalkBack): ações "Mover para cima/baixo" no cartão.
 - [ ] Seção "Arquivados" no fim aparece só quando há arquivados e abre o detalhe deles.
 - [ ] **Limite grátis de 1 veículo**: com um veículo, "Adicionar veículo" (botão do topo e cartão tracejado) mostra o alerta "No plano grátis, o app guarda 1 veículo..." com "Ver Premium" (abre a tela Premium) e "Ok"; nenhum formulário abre. Na primeira abertura do app (onboarding) o primeiro veículo ainda cabe. Excluir o veículo libera a vaga. Quem já tinha 2 ou mais veículos mantém todos, mas não adiciona outro (arquivados contam).

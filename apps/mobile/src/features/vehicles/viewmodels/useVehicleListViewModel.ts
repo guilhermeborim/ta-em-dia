@@ -1,7 +1,8 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert } from 'react-native';
 import { useDb } from '../../../core/db';
+import { refreshReminders } from '../../../core/reminders';
+import { buildVehicleCards, moveItem, type VehicleListEntry } from '../models/vehicleList';
 import { useFlag } from '../../../core/flags/useFlag';
 import { addVehicleBlock } from '../models/vehicleLimit';
 import { buildVehicleCards, moveId, type VehicleListEntry } from '../models/vehicleList';
@@ -35,29 +36,32 @@ export function useVehicleListViewModel() {
 
   const cards = useMemo(() => (entries ? buildVehicleCards(entries) : []), [entries]);
 
-  const move = useCallback(
-    async (id: string, direction: -1 | 1) => {
-      const ids = cards.map((card) => card.id);
-      await reorderVehicles(db, moveId(ids, id, direction));
+  /** Solta o veículo de `from` na posição `to`: a tela já mostra a ordem nova e depois grava. */
+  const reorder = useCallback(
+    async (from: number, to: number) => {
+      const ids = moveItem(
+        cards.map((card) => card.id),
+        from,
+        to,
+      );
+      setEntries((prev) =>
+        prev ? ids.map((id) => prev.find((entry) => entry.vehicle.id === id)!) : prev,
+      );
+      await reorderVehicles(db, ids);
       await load();
+      // O veículo ativo pode ter mudado: os avisos de manutenção e de km seguem o ativo.
+      void refreshReminders(db);
     },
     [cards, db, load],
   );
 
-  /** Segurar o cartão abre as opções de mover (sem biblioteca de arrastar). */
-  const openMoveMenu = useCallback(
-    (id: string) => {
-      const card = cards.find((item) => item.id === id);
-      if (!card || (!card.canMoveUp && !card.canMoveDown)) return;
-      Alert.alert(card.name, 'Mudar a ordem. O primeiro veículo é o que aparece no Início.', [
-        ...(card.canMoveUp ? [{ text: 'Mover para cima', onPress: () => void move(id, -1) }] : []),
-        ...(card.canMoveDown
-          ? [{ text: 'Mover para baixo', onPress: () => void move(id, 1) }]
-          : []),
-        { text: 'Cancelar', style: 'cancel' as const },
-      ]);
+  /** Mover por botão (leitor de tela): uma posição para cima (`-1`) ou para baixo (`1`). */
+  const move = useCallback(
+    (id: string, direction: -1 | 1) => {
+      const from = cards.findIndex((card) => card.id === id);
+      return from < 0 ? Promise.resolve() : reorder(from, from + direction);
     },
-    [cards, move],
+    [cards, reorder],
   );
 
   return {
@@ -69,7 +73,7 @@ export function useVehicleListViewModel() {
     /** Com um veículo só, não há o que reordenar. */
     canReorder: cards.length > 1,
     openVehicle: (id: string) => router.push({ pathname: '/veiculo/[id]', params: { id } }),
-    openMoveMenu,
+    reorder,
     moveUp: (id: string) => move(id, -1),
     moveDown: (id: string) => move(id, 1),
     back: () => router.back(),

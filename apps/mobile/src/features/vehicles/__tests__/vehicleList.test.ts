@@ -3,7 +3,7 @@ import { MIGRATIONS, migrate } from '../../../core/db/migrations';
 import { createTestDb } from '../../../core/db/testing/testDb';
 import { addFuelEntry } from '../../../core/fuel';
 import { findActiveVehicle } from '../../../core/vehicle';
-import { buildVehicleCards, moveId, vehicleStatus } from '../models/vehicleList';
+import { buildVehicleCards, moveId, moveItem, vehicleStatus } from '../models/vehicleList';
 import { loadVehicleList } from '../models/vehicleList.repository';
 import { createVehicle, reorderVehicles } from '../models/vehicles.repository';
 
@@ -218,5 +218,20 @@ describe('ordem e lista de veículos no SQLite', () => {
     const list = await loadVehicleList(db);
     expect(list.map((e) => e.currentKm)).toEqual([1000, 1500, 1000]);
     expect(list[0].plans).toEqual([]);
+  });
+});
+
+describe('moveItem', () => {
+  it('leva o item de uma posição para outra', () => {
+    expect(moveItem(['a', 'b', 'c'], 0, 2)).toEqual(['b', 'c', 'a']);
+    expect(moveItem(['a', 'b', 'c'], 2, 0)).toEqual(['c', 'a', 'b']);
+    expect(moveItem(['a', 'b', 'c'], 1, 2)).toEqual(['a', 'c', 'b']);
+  });
+
+  it('fora dos limites ou no mesmo lugar, não muda', () => {
+    const list = ['a', 'b'];
+    expect(moveItem(list, 0, 0)).toBe(list);
+    expect(moveItem(list, 0, 2)).toBe(list);
+    expect(moveItem(list, -1, 1)).toBe(list);
   });
 });

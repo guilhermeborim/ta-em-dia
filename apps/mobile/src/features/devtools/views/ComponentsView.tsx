@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   AccountCard,
@@ -30,6 +31,7 @@ import {
   NotificationPreview,
   NumberField,
   ProgressRing,
+  ReorderableList,
   RecordItem,
   OwnBadge,
   PremiumBadge,
@@ -78,6 +80,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export function ComponentsView() {
   const [tab, setTab] = useState('home');
   const [chip, setChip] = useState('Todos');
+  const [order, setOrder] = useState(['Golzinho', 'Moto do trampo', 'Uno da família']);
   const [pickedDate, setPickedDate] = useState(() => new Date());
   const [pickerOpen, setPickerOpen] = useState(false);
   const [fullTank, setFullTank] = useState(false);
@@ -501,6 +504,28 @@ export function ComponentsView() {
               action={{ icon: 'plus', label: 'Adicionar', onPress: () => {} }}
             />
           </View>
+        </Section>
+
+        <Section title="Lista reordenável (segure e arraste)">
+          <ReorderableList
+            data={order}
+            keyOf={(name) => name}
+            gap={14}
+            onReorder={(from, to) =>
+              setOrder((prev) => {
+                const next = [...prev];
+                next.splice(to, 0, next.splice(from, 1)[0]!);
+                return next;
+              })
+            }
+            renderItem={(name, index) => (
+              <VehicleCard
+                name={name}
+                accent={index % 2 === 0 ? 'primary' : 'oil'}
+                details="Segure e arraste para mudar a ordem"
+              />
+            )}
+          />
         </Section>
 
         <Section title="Cartão de veículo">

@@ -48,6 +48,7 @@ export { NotificationPreview } from './components/NotificationPreview';
 export { NumberField } from './components/NumberField';
 export { SegmentedControl } from './components/SegmentedControl';
 export { ProgressRing } from './components/ProgressRing';
+export { ReorderableList } from './components/ReorderableList';
 export { SocialButton } from './components/SocialButton';
 export { StatTile } from './components/StatTile';
 export { SummaryCard } from './components/SummaryCard';
