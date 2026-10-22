@@ -69,6 +69,8 @@ model AuthIdentity {
   provider        AuthProvider
   providerSubject String
   email           String?
+  // Só no provider `anonymous`: SHA-256 do segredo do aparelho (o segredo em si nunca é guardado).
+  secretHash      String?
   createdAt       DateTime     @default(now())
   user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
