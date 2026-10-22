@@ -8,12 +8,14 @@ interface SwitchRowProps {
   hint?: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
+  /** Sem cantos arredondados: para itens empilhados dentro de um grupo arredondado. */
+  flat?: boolean;
 }
 
 /** Cartão com rótulo e interruptor (ex.: "Tanque cheio"). */
-export function SwitchRow({ label, hint, value, onValueChange }: SwitchRowProps) {
+export function SwitchRow({ label, hint, value, onValueChange, flat }: SwitchRowProps) {
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, flat && styles.flat]}>
       <View style={styles.texts}>
         <Text variant="bodyStrong">{label}</Text>
         {hint ? (
@@ -44,5 +46,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: colors.surface,
   },
+  flat: { borderRadius: 0 },
   texts: { flex: 1, gap: 2 },
 });

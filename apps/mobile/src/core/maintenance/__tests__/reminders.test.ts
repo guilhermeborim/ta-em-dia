@@ -3,6 +3,7 @@ import { createTestDb } from '../../db/testing/testDb';
 import type { Db } from '../../db';
 import { getSetting } from '../../db';
 import type { ReminderNotification, ReminderScheduler } from '../../notifications';
+import { saveToggle } from '../../settings';
 import { refreshMaintenanceReminders, REMINDER_PREFIX } from '../reminders';
 
 // Sem o módulo nativo: o agendador de verdade nunca roda nestes testes.
@@ -69,6 +70,17 @@ beforeEach(async () => {
 });
 
 describe('refreshMaintenanceReminders', () => {
+  it('desligado em Configurações: não agenda nada e cancela os avisos antigos', async () => {
+    await addVehicle(48600);
+    await addPlan(OIL_ID, 'oil', { intervalKm: 10000 });
+    await saveToggle(db, 'notifyMaintenance', false);
+    await refresh();
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].prefix).toBe(REMINDER_PREFIX);
+    expect(last()).toEqual([]);
+  });
+
   it('km: agenda para o dia em que faltarem 500 km, com o texto do doc', async () => {
     await addVehicle(48600);
     await addPlan(OIL_ID, 'oil', { intervalKm: 10000 });

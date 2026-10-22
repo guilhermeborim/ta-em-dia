@@ -16,6 +16,7 @@ import {
   type ReminderScheduler,
 } from '../notifications';
 import { findActiveVehicle } from '../vehicle';
+import { loadSettings } from '../settings';
 import { listPlans, loadVehicleKm } from './plansRead';
 
 /** Prefixo dos ids dos avisos de manutenção (`maintenance:<planId>`). */
@@ -79,6 +80,7 @@ function lateBody(plan: MaintenancePlan, vehicle: string, status: MaintenanceSta
  *   não cancelar esse aviso no próximo reagendamento). Quando o serviço é registrado de novo,
  *   o ciclo muda e o item volta a poder avisar.
  * - Troca todos os avisos antigos pelos novos. Sem permissão não agenda nada (e não pede).
+ *   Com os avisos de manutenção desligados em Configurações, só cancela os antigos.
  * - Nunca lança erro.
  */
 export async function refreshMaintenanceReminders(
@@ -92,7 +94,9 @@ export async function refreshMaintenanceReminders(
     const items: ReminderNotification[] = [];
     const sent: { plan: MaintenancePlan; fireAt: Date }[] = [];
 
-    const vehicle = await findActiveVehicle(db);
+    // Desligado em Configurações: nada agendado (e o que havia é cancelado).
+    const { notifyMaintenance } = await loadSettings(db);
+    const vehicle = notifyMaintenance ? await findActiveVehicle(db) : null;
     if (vehicle) {
       const plans = await listPlans(db, vehicle.id);
       const { currentKm, dailyKm } = await loadVehicleKm(db, vehicle.id, vehicle.initial_km);
