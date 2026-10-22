@@ -60,11 +60,13 @@ Cada domínio é um módulo com controller fino, service com a regra e repositor
 apps/api/src/
 ├─ main.ts  app.module.ts
 ├─ config/            # validação Zod das variáveis de ambiente
-├─ common/            # (a criar) guards, interceptors, filtros de erro, logger
+├─ prisma/            # PrismaService (adapter pg); só os repositories o usam
+├─ common/            # auth (guard JWT global, @Public, @CurrentUserId); a criar: interceptors, filtros de erro, logger
 └─ modules/
+   ├─ auth/           # POST /v1/auth/anonymous (Google, Apple e link: a criar)
    ├─ health/         # GET /health
    ├─ config/         # GET /v1/config (feature flags por plano)
-   └─ (a criar) auth, users, vehicles, odometer, fuel, maintenance,
+   └─ (a criar) users, vehicles, odometer, fuel, maintenance,
       documents, reports, sync; Fase 2: fipe, fines, billing, places
 ```
 
@@ -212,6 +214,13 @@ Todo usuário tem conta na API desde o primeiro uso: quem toca "Continuar sem lo
 2. `POST /v1/auth/link` com o token anônimo + `id_token`.
 3. Se o `sub` ainda não tem conta: adiciona a identidade ao usuário atual e `is_anonymous=false`.
 4. Se já tem conta (outro celular): o app pergunta "Juntar dados" (move veículos e registros do anônimo para a conta existente) ou "Usar só os da conta" (descarta os locais). Depois faz pull completo.
+
+**Como está hoje (só o anônimo)**
+
+- `POST /v1/auth/anonymous` (público) valida `{ installationId, secret, platform }` com `anonymousAuthSchema` (`shared`). Aparelho novo: cria `users` (UUID v7, `is_anonymous`), `auth_identities` (`provider=anonymous`, `provider_subject=installationId`, `secretHash`), `devices` e um `refresh_tokens` numa transação. Aparelho conhecido: compara o hash do segredo (tempo constante) e devolve tokens novos para o mesmo usuário (idempotente); segredo errado é `401 INVALID_CREDENTIALS`. Duas primeiras chamadas ao mesmo tempo: a que perde a corrida segue com o usuário criado pela outra.
+- Resposta: `{ accessToken, expiresIn: 900, refreshToken, user: { id, isAnonymous, plan } }`. O access token é um JWT HS256 (`JWT_SECRET`, `sub` = `userId`, 15 min). O refresh token é opaco (256 bits, 90 dias) e só o SHA-256 dele vai para o banco. O segredo do aparelho também só existe como SHA-256.
+- Guard JWT global (`JwtAuthGuard`): toda rota exige `Authorization: Bearer`, exceto as marcadas `@Public()` (`/health`, `/v1/config`, `/v1/auth/anonymous`). `@CurrentUserId()` entrega o `userId` do token. Ainda não há `POST /v1/auth/refresh`: o app renova chamando o anônimo de novo (ver `07-validacao-e-decisoes.md`).
+- Banco: Prisma 7 com `@prisma/adapter-pg`. O cliente é gerado em `src/generated/` (fora do git) pelo `postinstall` da API. A migration `init` cria todas as tabelas do schema e roda no workflow de deploy (`db:deploy`).
 
 **Regras**
 

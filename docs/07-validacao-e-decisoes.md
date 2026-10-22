@@ -2,7 +2,7 @@
 
 Tudo o que foi implementado sem poder rodar no aparelho (nenhum PR foi testado em emulador nem comparado com o Figma) e tudo o que ainda precisa de uma decisão do dono do projeto. Marque `[x]` à medida que validar e apague as decisões já tomadas (registre o resultado no doc de referência, como `03-arquitetura.md`).
 
-Cobre os PRs #27 a #35 (Histórico até Configurações). O que veio antes (Boas-vindas até o alerta de manutenção) também não foi validado no aparelho por quem escreveu este documento; veja a seção 2.10.
+Cobre os PRs #27 a #36 (Histórico até API: usuário anônimo). O que veio antes (Boas-vindas até o alerta de manutenção) também não foi validado no aparelho por quem escreveu este documento; veja a seção 2.11.
 
 ## Como manter este arquivo
 
@@ -17,7 +17,7 @@ Regra do projeto (`CLAUDE.md`): ao terminar cada feature, no mesmo PR, quem impl
 - Node 24 (`.nvmrc`), `pnpm install`, `pnpm --filter @ta-em-dia/shared build` depois de mudar o `shared`.
 - **Development build no Android** (`npx expo run:android` ou `eas build --profile development`). As notificações locais usam `expo-notifications`, que não existe no Expo Go.
 - **iOS**: sem build, `scheduler.ios.ts` e `permission.ios.ts` não agendam nada. Nenhum aviso (manutenção ou documentos) chega no iPhone ainda.
-- Teste **duas vezes**: com o app instalado do zero e **atualizando** uma versão antiga com dados (as migrations 5, 6 e 7 só adicionam, mas precisam rodar sobre dados reais; ver 2.11).
+- Teste **duas vezes**: com o app instalado do zero e **atualizando** uma versão antiga com dados (as migrations 5, 6 e 7 só adicionam, mas precisam rodar sobre dados reais; ver 2.12).
 - Tela grande de fonte do sistema (Configurações do Android, "Tamanho da fonte") ligada em pelo menos uma passada: nada pode cortar nem sobrepor.
 - Para ver os avisos chegarem sem esperar dias: o aviso sai às 9h. No Android, ajuste a data e a hora do aparelho para perto das 9h do dia do aviso e abra o app (ele reagenda ao abrir e ao voltar para a frente).
 
@@ -126,7 +126,18 @@ Aba Relatórios.
 - [ ] No iOS nada é agendado até haver development build (como nos outros avisos).
 - [ ] Fonte grande do sistema: nenhuma linha corta o valor à direita.
 
-### 2.9 Transversal
+### 2.9 API: usuário anônimo (PR #36)
+
+Testado só contra um Postgres local (Docker) e no CI sem banco; nunca no Render nem no Neon.
+
+- [ ] Depois do merge, o workflow "Deploy da API" aplica a migration `init` (primeira do projeto: cria todas as tabelas) no staging e o `/health` responde. Se `db:deploy` falhar, veja `DATABASE_URL`.
+- [ ] O build do Render roda `prisma generate` sozinho (`postinstall` da API). Confira o log do build; se falhar, a API não sobe.
+- [ ] `curl -X POST <API_URL>/v1/auth/anonymous -H 'content-type: application/json' -d '{"installationId":"<uuid>","secret":"<64 letras>","platform":"android"}'` devolve 200 com `accessToken`, `refreshToken` e `user`. Repetir devolve o mesmo `user.id`; outro `secret` com o mesmo `installationId` devolve 401 `INVALID_CREDENTIALS`.
+- [ ] No Neon, `auth_identities.secretHash` e `refresh_tokens.tokenHash` têm só hashes (nunca o segredo nem o token).
+- [ ] `GET /health` e `GET /v1/config` seguem abertos (sem token).
+- [ ] Primeira chamada com o serviço dormindo (plano grátis) demora cerca de 1 minuto: o app precisa de um timeout generoso (PR do app).
+
+### 2.10 Transversal
 
 - [ ] Todo formulário obrigatório mostra `*` vermelho e a mensagem de erro abaixo do campo (Veículo, Atualizar km, Prazo).
 - [ ] Alvos de toque de 44 pt (botões redondos do topo, chips, linhas).
@@ -136,11 +147,11 @@ Aba Relatórios.
 - [ ] Nenhuma placa em log (`adb logcat`) nem em mensagem de erro.
 - [ ] Catálogo de componentes (Mais → Catálogo, só fora de produção): `TimelineItem`, `StatTile`, `LicensePlate`, `TopBar`, `VehicleCard`, `DocumentItem`, gráficos, `AccountCard`, `ListGroup`, `FeatureItem` renderizam.
 
-### 2.10 O que veio antes (não revisado aqui)
+### 2.11 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
 
-### 2.11 Migrations e dados existentes
+### 2.12 Migrations e dados existentes
 
 Com um aparelho que já tem dados da versão anterior ao PR #28:
 
@@ -240,3 +251,15 @@ A flag `vehicles.max` existe (`01-roadmap.md` sugere 2 grátis), mas hoje é ili
 ### 3.17 iOS
 
 Sem development build para iOS, nenhum aviso agenda. Quando houver, apague `scheduler.ios.ts` e `permission.ios.ts` e repita as validações de notificação (2.5 e manutenção).
+
+### 3.18 Criar conta anônima é aberto ao mundo
+
+`POST /v1/auth/anonymous` não exige token (é a porta de entrada) e cada `installationId` novo cria um usuário. Sem limite de chamadas, alguém pode encher o banco (o plano grátis do Neon é pequeno). A arquitetura prevê rate limit (`@nestjs/throttler`, grátis), que ainda não existe na API. **Decidir:** adicionar rate limit por IP já no próximo PR da API (recomendado, antes de divulgar a URL) ou esperar o sync. O job que apaga contas anônimas sem uso por 12 meses também não existe.
+
+### 3.19 Renovar o token sem `/auth/refresh`
+
+A API devolve um refresh token (guardado só como hash, 90 dias), mas ainda não há rota para trocá-lo. Enquanto isso, o app renova o acesso chamando `POST /v1/auth/anonymous` de novo (idempotente: mesmo usuário, tokens novos), e cada chamada guarda mais um refresh token que ninguém usa. **Decidir:** criar `POST /v1/auth/refresh` junto do sync (com rotação do token), ou deixar o app sempre chamar `/auth/anonymous` e parar de devolver o refresh token até o login social existir. Recomendação: `/auth/refresh` no PR do sync, que é quando o token passa a ser necessário.
+
+### 3.20 `GET /v1/config` continua público
+
+Devolve sempre o plano `free`. Com o guard global agora existindo, ele ficou marcado `@Public()`. Quando o app mandar o token, a rota deve passar a ler o plano do usuário. Nada a decidir agora; só não esquecer no PR do app ou do sync.
