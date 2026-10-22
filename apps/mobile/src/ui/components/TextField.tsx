@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
-import { colors, fontFamily, spacing } from '../theme/tokens';
+import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { colors, fontFamily, size, spacing } from '../theme/tokens';
+import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
 
 interface TextFieldProps extends Omit<TextInputProps, 'style'> {
@@ -11,6 +12,8 @@ interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   required?: boolean;
   /** Mensagem de erro abaixo da caixa; a borda fica vermelha. */
   error?: string;
+  /** Botão de ícone à direita (ex.: abrir o calendário num campo de data). */
+  action?: { icon: IconName; label: string; onPress: () => void };
 }
 
 /** Campo de texto: rótulo em cima, caixa de 52 pt. A borda fica roxa em foco. */
@@ -19,6 +22,7 @@ export function TextField({
   suffix,
   required,
   error,
+  action,
   onFocus,
   onBlur,
   ...input
@@ -55,6 +59,17 @@ export function TextField({
             {suffix}
           </Text>
         ) : null}
+        {action ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={action.label}
+            onPress={action.onPress}
+            hitSlop={4}
+            style={styles.action}
+          >
+            <Icon name={action.icon} size={20} color={colors.text2} />
+          </Pressable>
+        ) : null}
       </View>
       {error ? (
         <Text variant="caption" color="danger">
@@ -77,6 +92,14 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.border,
     backgroundColor: colors.surface,
+  },
+  // O ícone tem a área de toque mínima, mas a caixa tem só 52 pt: a área sai um pouco para a margem.
+  action: {
+    width: size.touchTarget,
+    height: size.touchTarget,
+    marginRight: -spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   boxFocused: { borderColor: colors.primary },
   boxError: { borderColor: colors.danger },

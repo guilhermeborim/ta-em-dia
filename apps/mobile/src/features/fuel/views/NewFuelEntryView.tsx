@@ -11,6 +11,7 @@ import {
   Button,
   Chip,
   colors,
+  DatePicker,
   EmptyState,
   Icon,
   InfoBanner,
@@ -57,7 +58,7 @@ export function NewFuelEntryView() {
           {vm.vehicle ? (
             <>
               <View style={styles.chips}>
-                <Chip label={vm.dateLabel} icon="calendar" />
+                <Chip label={vm.dateLabel} icon="calendar" onPress={vm.openDatePicker} />
                 <Chip label={vm.vehicle.name} icon="car" />
               </View>
 
@@ -153,6 +154,14 @@ export function NewFuelEntryView() {
           </View>
         ) : null}
       </KeyboardAvoidingView>
+      <DatePicker
+        visible={vm.pickerOpen}
+        value={vm.pickerValue}
+        minimumDate={vm.pickerMin}
+        maximumDate={vm.pickerMax}
+        onChange={vm.pickDate}
+        onClose={vm.closeDatePicker}
+      />
     </SafeAreaView>
   );
 }

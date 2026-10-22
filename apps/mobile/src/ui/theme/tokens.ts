@@ -17,6 +17,7 @@ export const colors = {
   surface: '#FFFFFF',
   surface2: '#EFEEF7',
   border: '#E3E1EE',
+  scrim: 'rgba(21, 20, 31, 0.4)', // fundo escurecido atrás de folhas e modais (Asfalto a 40%)
 
   // Texto
   text: '#15141F', // Asfalto

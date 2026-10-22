@@ -50,14 +50,12 @@ export function PremiumView() {
           ))}
         </ListGroup>
 
-        {vm.joined ? (
-          <InfoBanner icon="check" text="Anotado! Avisamos você quando o Premium sair." />
-        ) : null}
+        {vm.joined ? <InfoBanner icon="check" text="Anotado! Obrigado pelo interesse." /> : null}
       </ScrollView>
 
       {vm.joined ? null : (
         <View style={styles.footer}>
-          <Button label="Avise-me quando lançar" onPress={vm.notifyMe} />
+          <Button label="Tenho interesse" onPress={vm.notifyMe} />
         </View>
       )}
     </SafeAreaView>

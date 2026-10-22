@@ -152,7 +152,7 @@ describe('editar, arquivar e excluir no SQLite', () => {
   });
 
   it('arquivar tira das listas e do veículo ativo, e restaurar põe no fim', async () => {
-    expect(await setVehicleArchived(db, GOL, true, LATER)).toBe(true);
+    expect(await setVehicleArchived(db, GOL, true, LATER)).toBe('ok');
 
     expect((await listVehicles(db)).map((v) => v.id)).toEqual([CG]);
     expect((await listArchivedVehicles(db)).map((v) => v.id)).toEqual([GOL]);
@@ -164,6 +164,26 @@ describe('editar, arquivar e excluir no SQLite', () => {
     await setVehicleArchived(db, GOL, false, LATER);
     expect((await listVehicles(db)).map((v) => v.id)).toEqual([CG, GOL]);
     expect(await listArchivedVehicles(db)).toEqual([]);
+  });
+
+  it('não arquiva o único veículo ativo: precisa de outro', async () => {
+    await setVehicleArchived(db, GOL, true, LATER);
+    const before = await outbox();
+
+    expect(await setVehicleArchived(db, CG, true, LATER)).toBe('last_active');
+    expect((await findVehicle(db, CG))?.archived).toBe(false);
+    expect((await findActiveVehicle(db))?.id).toBe(CG);
+    expect(await outbox()).toEqual(before);
+
+    // Restaurar o outro libera arquivar este.
+    await setVehicleArchived(db, GOL, false, LATER);
+    expect(await setVehicleArchived(db, CG, true, LATER)).toBe('ok');
+  });
+
+  it('arquivar ou restaurar um veículo que não existe', async () => {
+    expect(await setVehicleArchived(db, '018bcfe5-6800-7000-8000-0000000000ff', true)).toBe(
+      'not_found',
+    );
   });
 
   it('excluir apaga de forma lógica o veículo e tudo que depende dele', async () => {

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useDb } from '../../../core/db';
 import { isOnWaitlist, joinWaitlist, premiumFeatures } from '../models/premium';
 
-/** ViewModel de Premium em breve (tela 21): lista de recursos e o "Avise-me quando lançar". */
+/** ViewModel de Premium em breve (tela 21): lista de recursos e o "Tenho interesse". */
 export function usePremiumViewModel() {
   const db = useDb();
   const router = useRouter();

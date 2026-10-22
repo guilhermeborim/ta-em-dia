@@ -22,6 +22,7 @@ export {
   type StackedBar,
 } from './components/Charts';
 export { Chip } from './components/Chip';
+export { DatePicker } from './components/DatePicker';
 export { ConsumptionCard } from './components/ConsumptionCard';
 export { EmptyState } from './components/EmptyState';
 export { FloatingButton } from './components/FloatingButton';

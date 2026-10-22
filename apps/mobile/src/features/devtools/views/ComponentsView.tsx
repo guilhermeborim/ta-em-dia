@@ -9,6 +9,7 @@ import {
   BrandSymbol,
   Button,
   Chip,
+  DatePicker,
   colors,
   ConsumptionCard,
   DocumentItem,
@@ -80,6 +81,8 @@ export function ComponentsView() {
   const [tab, setTab] = useState('home');
   const [chip, setChip] = useState('Todos');
   const [order, setOrder] = useState(['Golzinho', 'Moto do trampo', 'Uno da família']);
+  const [pickedDate, setPickedDate] = useState(() => new Date());
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [fullTank, setFullTank] = useState(false);
   const [segment, setSegment] = useState('next');
   const [text, setText] = useState('');
@@ -143,6 +146,23 @@ export function ComponentsView() {
         <Section title="Campos">
           <TextField label="Posto" value={text} onChangeText={setText} placeholder="Ex.: Shell" />
           <TextField label="Odômetro" suffix="km" placeholder="0" keyboardType="numeric" />
+          <TextField
+            label="Data"
+            value={pickedDate.toLocaleDateString('pt-BR')}
+            editable={false}
+            action={{
+              icon: 'calendar',
+              label: 'Abrir calendário',
+              onPress: () => setPickerOpen(true),
+            }}
+          />
+          <DatePicker
+            visible={pickerOpen}
+            value={pickedDate}
+            maximumDate={new Date()}
+            onChange={setPickedDate}
+            onClose={() => setPickerOpen(false)}
+          />
           <TextField label="Modelo" required placeholder="Ex.: Gol 1.0 MPI" />
           <TextField label="Ano" required error="Informe o ano" />
           <NumberField

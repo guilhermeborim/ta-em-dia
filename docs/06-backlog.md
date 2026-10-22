@@ -46,10 +46,16 @@ Escolhas tomadas em `docs/07-validacao-e-decisoes.md`. Cada item é um PR e pode
 - [ ] **Regras de veículos e prazos**: o texto do "Avise-me quando lançar" não promete mais nada ("Anotado!" sem aviso futuro); prazo cadastrado já dentro da janela avisa uma vez no próximo 9h (igual à manutenção); avisos de documentos de **todos** os veículos ativos; arquivar o único veículo ativo é bloqueado ("Você precisa de outro veículo ativo").
 - [ ] **Limite grátis de 1 veículo**: `vehicles.max` = 1 no plano grátis (`flags.ts`), aplicado em "Adicionar veículo" e no primeiro veículo.
 - [x] **Moto**: tipo `motorcycle` no `shared`, no SQLite (migration só adiciona) e no Prisma, com ícone próprio.
+- [x] **Limite grátis de 1 veículo**: `vehicles.max` = 1 no plano grátis (`flags.ts`), aplicado em "Adicionar veículo" e no primeiro veículo.
+- [ ] **Moto**: tipo `motorcycle` no `shared`, no SQLite (migration só adiciona) e no Prisma, com ícone próprio.
 - [ ] **Prazos por ano**: guardar cada prazo de documento por ano (IPVA 2026, IPVA 2027...), com histórico.
 - [ ] **Seletor de data**: chip "Hoje" e calendário nativo (`@react-native-community/datetimepicker`) nos formulários de abastecimento, manutenção e prazo.
 - [x] **Reordenar arrastando**: arrastar de verdade em Meus veículos (`react-native-gesture-handler` e `react-native-reanimated`).
 - [ ] **API: segurança da conta anônima**: rate limit (`@nestjs/throttler`), `POST /v1/auth/refresh` com rotação do token, job que apaga contas anônimas sem uso por 12 meses; no app, usar o refresh e reagir à volta da internet (`expo-network`).
+- [x] **Seletor de data**: chip "Hoje" e calendário nativo (`@react-native-community/datetimepicker`) nos formulários de abastecimento, manutenção e prazo.
+- [ ] **Reordenar arrastando**: arrastar de verdade em Meus veículos (`react-native-gesture-handler` e `react-native-reanimated`).
+- [x] **API: segurança da conta anônima**: rate limit (`@nestjs/throttler`), `POST /v1/auth/refresh` com rotação do token, job que apaga contas anônimas sem uso por 12 meses.
+- [x] **App: renovar pelo refresh**: usar `POST /v1/auth/refresh`, tratar 429 como "tentar depois" e reagir à volta da internet (`expo-network`).
 
 ## Como manter
 

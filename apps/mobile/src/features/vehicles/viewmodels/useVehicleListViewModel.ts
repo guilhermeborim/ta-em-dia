@@ -3,6 +3,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { useDb } from '../../../core/db';
 import { refreshReminders } from '../../../core/reminders';
 import { buildVehicleCards, moveItem, type VehicleListEntry } from '../models/vehicleList';
+import { useFlag } from '../../../core/flags/useFlag';
+import { addVehicleBlock } from '../models/vehicleLimit';
+import { buildVehicleCards, moveId, type VehicleListEntry } from '../models/vehicleList';
 import { loadVehicleList } from '../models/vehicleList.repository';
 import { listArchivedVehicles, reorderVehicles } from '../models/vehicles.repository';
 
@@ -10,6 +13,7 @@ import { listArchivedVehicles, reorderVehicles } from '../models/vehicles.reposi
 export function useVehicleListViewModel() {
   const db = useDb();
   const router = useRouter();
+  const max = useFlag('vehicles.max');
   const [entries, setEntries] = useState<VehicleListEntry[] | null>(null);
   const [archived, setArchived] = useState<{ id: string; name: string }[]>([]);
 
@@ -73,6 +77,17 @@ export function useVehicleListViewModel() {
     moveUp: (id: string) => move(id, -1),
     moveDown: (id: string) => move(id, 1),
     back: () => router.back(),
-    addVehicle: () => router.push('/novo-veiculo'),
+    addVehicle: () => {
+      // Arquivados contam: o limite é de veículos guardados, não só dos ativos.
+      const blocked = addVehicleBlock(cards.length + archived.length, max);
+      if (!blocked) {
+        router.push('/novo-veiculo');
+        return;
+      }
+      Alert.alert('Limite de veículos', blocked, [
+        { text: 'Ver Premium', onPress: () => router.push('/premium') },
+        { text: 'Ok', style: 'cancel' },
+      ]);
+    },
   };
 }

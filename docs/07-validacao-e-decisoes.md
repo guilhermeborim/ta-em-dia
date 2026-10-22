@@ -48,6 +48,7 @@ Mais → Meus veículos.
 - [ ] Lista de cartões que passa da tela: arrastar até a borda não rola sozinho (limitação conhecida); se incomodar, o auto-scroll entra depois.
 - [ ] Leitor de tela (TalkBack): ações "Mover para cima/baixo" no cartão.
 - [ ] Seção "Arquivados" no fim aparece só quando há arquivados e abre o detalhe deles.
+- [ ] **Limite grátis de 1 veículo**: com um veículo, "Adicionar veículo" (botão do topo e cartão tracejado) mostra o alerta "No plano grátis, o app guarda 1 veículo..." com "Ver Premium" (abre a tela Premium) e "Ok"; nenhum formulário abre. Na primeira abertura do app (onboarding) o primeiro veículo ainda cabe. Excluir o veículo libera a vaga. Quem já tinha 2 ou mais veículos mantém todos, mas não adiciona outro (arquivados contam).
 
 ### 2.3 Detalhe do veículo e Atualizar km (tela 17, PR #29)
 
@@ -67,7 +68,7 @@ Lápis no topo do detalhe.
 
 - [ ] Editar marca, modelo, ano, apelido e placa. Placa inválida ("12") dá erro; "bra2e19" vira "BRA2E19"; vazia remove.
 - [ ] **Arquivar**: o veículo some das listas e do Início; vira o ativo o próximo da ordem; aparece em "Arquivados". **Restaurar** devolve ao fim da ordem.
-- [ ] Arquivar o **único** veículo: o app fica sem veículo ativo (telas mostram "Cadastre seu veículo").
+- [ ] Arquivar o **único** veículo ativo é bloqueado: aparece o alerta "Você precisa de outro veículo ativo para arquivar este." e nada muda. Com outro veículo ativo, arquiva normalmente (PR de regras de veículos e prazos).
 - [ ] **Excluir**: alerta de confirmação; depois some tudo dele (abastecimentos, manutenções, prazos do veículo, leituras de km) e os avisos agendados dele. A CNH continua.
 - [ ] Depois de arquivar ou excluir, o app volta direto para Meus veículos (não para um detalhe que não existe mais).
 - [ ] Tocar numa notificação antiga de um veículo/plano excluído não trava o app.
@@ -84,7 +85,8 @@ Mais → Documentos e prazos.
 - [ ] Chips "Avisar antes" (30, 15, 7, 3, 1 dia); sem nenhum, a tela mostra "Os prazos estão sem aviso".
 - [ ] Banner de pé: "Avisamos 30 e 7 dias antes de cada vencimento." muda quando os prazos usam dias diferentes.
 - [ ] **Notificações** (só Android com development build e permissão dada): cadastre um prazo para daqui a 8 dias e confirme o aviso "IPVA do Gol vence em 7 dias" às 9h do dia certo; "Sua CNH vence em 30 dias" para a CNH. Tocar no aviso abre Documentos e prazos.
-- [ ] Prazo cadastrado já dentro da janela (ex.: faltam 10 dias) **não** dispara o aviso de 30 dias de forma retroativa.
+- [ ] Prazo cadastrado já dentro da janela (ex.: faltam 10 dias, aviso de 30): chega **um** aviso no próximo 9h ("IPVA do Gol vence em 9 dias"), e o aviso de 7 dias continua agendado. Não repete no dia seguinte. Mudar a data ou os dias de aviso libera um novo aviso.
+- [ ] Com dois veículos ativos (um deles só em Premium no futuro; hoje é possível com dados antigos), os dois avisam; tocar no aviso do segundo abre a lista dele. Arquivar um veículo cala os avisos dele.
 - [ ] Prazo vencido não avisa mais.
 - [ ] Início: prazo vencido ou perto de vencer aparece em "Próximos alertas" junto com a manutenção (máximo 2 no total, vencidos primeiro); tocar abre Documentos e prazos.
 - [ ] Mais → "Documentos e prazos" mostra "1 vencido" em vermelho (ou "N perto de vencer" em âmbar).
@@ -109,7 +111,7 @@ Aba Relatórios.
 - [ ] Grupos de itens iguais ao Figma; número de veículos ao lado de Meus veículos; selo PREMIUM em Premium.
 - [ ] Conta e Ajuda e contato mostram "Em breve" (o aviso aparece **acima** do botão flutuante).
 - [ ] Botão flutuante "Abastecer" abre o formulário e não cobre o último item da lista.
-- [ ] Premium abre em modal: título, 5 recursos, "Avise-me quando lançar". Depois de tocar, o botão some e aparece "Anotado! Avisamos você quando o Premium sair." e isso continua ao reabrir o app.
+- [ ] Premium abre em modal: título, 5 recursos, "Tenho interesse". Depois de tocar, o botão some e aparece "Anotado! Obrigado pelo interesse." e isso continua ao reabrir o app.
 - [ ] Em produção (`APP_ENV=production`) os atalhos "Status do app" e "Catálogo de componentes" não aparecem.
 
 ### 2.8 Configurações (tela 20, PR #35)
@@ -138,18 +140,30 @@ Testado só contra um Postgres local (Docker) e no CI sem banco; nunca no Render
 - [ ] `GET /health` e `GET /v1/config` seguem abertos (sem token).
 - [ ] Primeira chamada com o serviço dormindo (plano grátis) demora cerca de 1 minuto: o app precisa de um timeout generoso (PR do app).
 
-### 2.10 App: usuário anônimo (PR #37)
+### 2.10 App: usuário anônimo (PR #37) e renovação pelo refresh
 
-Precisa da API de staging no ar (PR #36 aplicado) e de um build novo do app apontando para ela (`EXPO_PUBLIC_API_URL`).
+Precisa da API de staging no ar (PR #36 e o de segurança, 2.14, aplicados) e de um **development build novo**: `expo-network` é módulo nativo. O app deve apontar para a API (`EXPO_PUBLIC_API_URL`).
 
 - [ ] Primeira abertura: boas-vindas → "Continuar sem login" → o app abre normalmente, sem esperar a API. Em Mais → Status do app, a linha "Usuário anônimo na API" passa a "criado, acesso válido" (toque em "Testar de novo" depois de alguns segundos).
 - [ ] No Neon: um `users` com `isAnonymous = true`, um `devices` com a plataforma certa e um `refresh_tokens`.
 - [ ] Reabrir o app (e voltar do segundo plano) com acesso ainda válido não cria nada novo no banco.
-- [ ] Modo avião na primeira abertura: o app funciona normal e a Status mostra "ainda não criado". Desligue o modo avião com o app aberto: em até 5 minutos (ou ao sair e voltar ao app) vira "criado".
+- [ ] Modo avião na primeira abertura: o app funciona normal e a Status mostra "ainda não criado". Desligue o modo avião com o app aberto: em poucos segundos (o app tenta quando a internet volta) vira "criado". Teste também ligando só o Wi-Fi e só o 4G.
 - [ ] Com o serviço do Render dormindo, a primeira chamada demora cerca de 1 minuto e o app não trava nem mostra erro.
-- [ ] Passados 15 minutos, ao voltar ao app a Status mostra "criado, acesso válido" de novo (o acesso foi renovado; o `users` continua um só).
+- [ ] Passados 15 minutos, ao voltar ao app a Status mostra "criado, acesso válido" de novo (o acesso foi renovado; o `users` continua um só). No banco, o refresh token antigo está com `revokedAt` e há um novo ativo (sem acumular: um ativo por aparelho).
+- [ ] Renovação pelo refresh: depois dos 15 minutos o app chama `/auth/refresh` (não `/auth/anonymous`; veja nos logs do Render). Apague a linha do refresh token no banco e force a renovação: o app cai para o login pelo segredo e continua no mesmo usuário.
+- [ ] Com o limite de chamadas estourado (429), o app não desiste: tenta de novo pelas esperas de 15 s a 5 min.
 - [ ] "Reiniciar App" (Status) apaga a sessão e, ao refazer o login, cria um usuário novo.
 - [ ] Nenhum token, segredo ou id de aparelho aparece em `adb logcat`.
+
+### 2.15 Seletor de data
+
+Exige um **development build novo** (`@react-native-community/datetimepicker` é módulo nativo). No iOS, só quando houver build.
+
+- [ ] Novo abastecimento: o chip de data mostra "Hoje, 21 out"; tocar abre o calendário (diálogo no Android, folha no iOS) sem datas futuras; escolher outro dia troca o chip ("18 out", com o ano se for outro) e o abastecimento aparece nesse dia na lista e no Histórico. Escolher "hoje" de novo volta a "Hoje".
+- [ ] Registrar manutenção (Data) e Documentos (Vencimento): o ícone de calendário no campo abre o seletor já no dia digitado (ou hoje); o dia escolhido preenche o campo e tira o erro. Digitar continua funcionando. O ícone tem toque confortável e o TalkBack lê "Abrir calendário".
+- [ ] Manutenção não deixa escolher o futuro; o prazo deixa (até 2100).
+- [ ] iOS: a folha abre por baixo, em português, com a cor do app; tocar fora fecha sem mudar nada.
+- [ ] Fonte grande do sistema: o campo com ícone não corta o texto.
 
 ### 2.11 Transversal
 
@@ -175,6 +189,16 @@ Com um aparelho que já tem dados da versão anterior ao PR #28:
 - [ ] **Moto (migration 8, recria `vehicles`)**: com veículos antigos (um carro e uma moto cadastrados antes), depois de atualizar nada some: mesma ordem, placa, km, abastecimentos, serviços e prazos; a moto antiga passa a mostrar o ícone de moto e "Tipo: Moto". Cadastre uma moto nova (Carro/Moto no formulário) e confira o ícone no Início (seletor), em Meus veículos e no detalhe. Confira também o ícone no Android e no iOS, em fonte grande.
 - [ ] Voltar para a versão anterior do app com o banco novo não quebra (as migrations só adicionam colunas e tabelas). A migration 8 recria uma tabela e grava `motorcycle`: voltar à versão anterior mostra a moto com ícone de carro, e editar essa moto na versão antiga falha. Só vale para quem testou o app antes do lançamento.
 
+### 2.14 API: segurança da conta anônima
+
+Só dá para conferir com o staging no ar (merge na `main` dispara o deploy).
+
+- [ ] O deploy aplica as duas migrations novas (`vehicle_type_motorcycle` e `device_last_seen`) sem erro; `GET /health` responde.
+- [ ] **Rate limit pelo IP certo**: no Render, mande 25 chamadas seguidas a `POST /v1/auth/anonymous` com corpo vazio (`curl`) e veja o `429 RATE_LIMITED`. Depois peça de outro celular/rede: deve responder normal (se der 429 para todo mundo, o `TRUST_PROXY_HOPS` está errado; o Render pode ter mais de um proxy).
+- [ ] `POST /v1/auth/refresh` com o `refreshToken` de uma resposta do `/auth/anonymous` devolve um par novo; repetir o token antigo dá `401 INVALID_REFRESH_TOKEN`.
+- [ ] **Limpeza**: em Actions → "Limpeza da API" → Run workflow com "Só contar" ligado. O log mostra as contagens (0 e 0 no começo). Só desligue o "Só contar" quando tiver confiança. A execução agendada (segunda, 6h UTC) apaga de verdade.
+- [ ] O `production` da limpeza espera a sua aprovação (environment `production`), como o deploy.
+
 ## 3. Decisões em aberto
 
 Cada item traz minha recomendação. As decisões já tomadas saíram daqui e estão em `docs/01-roadmap.md`, `docs/03-arquitetura.md` e no backlog (`docs/06-backlog.md`, "Decisões do dono"). A numeração não é refeita: os números que faltam já foram decididos.
@@ -197,11 +221,11 @@ Cada item traz minha recomendação. As decisões já tomadas saíram daqui e es
 
 ### 3.11 Telas sem frame no Figma
 
-Pedir ao designer, ou aprovar o que foi feito seguindo os formulários do app: **Atualizar km**, **Editar veículo** (com Arquivar e Excluir), **Adicionar/editar prazo** (com antecedências), **Antecedência** (Configurações, modal) e os textos de confirmação de exclusão.
+Pedir ao designer, ou aprovar o que foi feito seguindo os formulários do app: **Atualizar km**, **Editar veículo** (com Arquivar e Excluir), **Adicionar/editar prazo** (com antecedências), **Antecedência** (Configurações, modal) os textos de confirmação de exclusão e o **seletor de data** (ícone de calendário nos campos de data; no iOS, uma folha com o calendário; no Android, o diálogo do sistema).
 
 ### 3.12 Textos para revisar
 
-Escritos por mim, sem revisão de redação: alerta "Excluir veículo?" e "Excluir prazo?", avisos de arquivar/restaurar, "Anotado! Avisamos você...", mensagens de erro ("O km não pode ser menor que o atual (N km)", "Placa inválida (ex.: ABC1D23)"), estados vazios, mensagens do banner de prazos, e em Configurações "Notificações desativadas / Ative nos ajustes do aparelho para receber os avisos.", "Marque ao menos um dia" e o texto "Às 9h do dia marcado. Vale para os prazos novos; os que já existem mantêm os próprios dias.".
+Escritos por mim, sem revisão de redação: alerta "Excluir veículo?" e "Excluir prazo?", avisos de arquivar/restaurar, "Anotado! Obrigado pelo interesse.", "Você precisa de outro veículo ativo para arquivar este.", mensagens de erro ("O km não pode ser menor que o atual (N km)", "Placa inválida (ex.: ABC1D23)"), estados vazios, mensagens do banner de prazos, e em Configurações "Notificações desativadas / Ative nos ajustes do aparelho para receber os avisos.", "Marque ao menos um dia" e o texto "Às 9h do dia marcado. Vale para os prazos novos; os que já existem mantêm os próprios dias.".
 
 ### 3.15 Ajuda e contato, Termos e Privacidade
 
@@ -221,3 +245,7 @@ Sem development build para iOS, nenhum aviso agenda. Quando houver, apague `sche
 ### 3.20 `GET /v1/config` continua público
 
 Devolve sempre o plano `free`. Com o guard global agora existindo, ele ficou marcado `@Public()`. Quando o app mandar o token, a rota deve passar a ler o plano do usuário. Nada a decidir agora; só não esquecer no PR do app ou do sync.
+
+### 3.23 Limites do rate limit
+
+100 chamadas por minuto por IP em qualquer rota, 20 em `POST /v1/auth/anonymous` e 30 em `POST /v1/auth/refresh` (`src/common/throttle/throttle.ts`). Na rede móvel muita gente divide um IP (CGNAT): 20 contas novas por minuto por IP é folgado para o uso real e ainda segura quem tenta encher o banco (no máximo ~29 mil por dia por IP). **Decidir** se quer mais apertado (ex.: 10 por minuto). Recomendação: manter e olhar os 429 nos logs depois do lançamento.

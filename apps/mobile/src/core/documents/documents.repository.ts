@@ -44,6 +44,25 @@ export async function listDocuments(db: Db, vehicleId?: string): Promise<Documen
   return rows.map(toDocument);
 }
 
+/** Um prazo com o nome do veículo (a CNH não tem). */
+export type DocumentWithVehicle = DocumentRecord & { vehicleName?: string };
+
+/**
+ * Os prazos de todos os veículos ativos (não arquivados nem excluídos) e a CNH, em ordem de
+ * vencimento. É o que os avisos usam: arquivar um veículo cala os avisos dele.
+ */
+export async function listAllDocuments(db: Db): Promise<DocumentWithVehicle[]> {
+  const rows = await db.getAllAsync<DocumentRow & { vehicle_name: string | null }>(
+    `SELECT d.id, d.vehicle_id, d.kind, d.due_date, d.notify_days, d.note, v.name AS vehicle_name
+       FROM documents d
+       LEFT JOIN vehicles v ON v.id = d.vehicle_id
+      WHERE d.deleted_at IS NULL
+        AND (d.vehicle_id IS NULL OR (v.deleted_at IS NULL AND v.archived = 0))
+      ORDER BY d.due_date, d.kind`,
+  );
+  return rows.map((row) => ({ ...toDocument(row), vehicleName: row.vehicle_name ?? undefined }));
+}
+
 /** Um prazo (não excluído), ou `null`. */
 export async function findDocument(db: Db, id: string): Promise<DocumentRecord | null> {
   const row = await db.getFirstAsync<DocumentRow>(

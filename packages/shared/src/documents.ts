@@ -3,7 +3,7 @@
  * A data é "aaaa-mm-dd" (sem hora), para o dia não mudar com o fuso.
  */
 
-import { REMINDER_HOUR } from './maintenance';
+import { nextReminderTime, REMINDER_HOUR } from './maintenance';
 
 export const DOCUMENT_KINDS = ['ipva', 'licensing', 'insurance', 'cnh'] as const;
 export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
@@ -92,6 +92,41 @@ export function documentReminders(
     }
   }
   return reminders.sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime());
+}
+
+export interface LateDocumentReminder {
+  documentId: string;
+  kind: DocumentKind;
+  /** Dias que faltam no dia do aviso (0 é o próprio vencimento). */
+  daysLeft: number;
+  /** O próximo 9h. */
+  fireAt: Date;
+}
+
+/**
+ * Aviso de um prazo que já passou de algum dos seus avisos mas ainda não venceu (ex.: cadastrado
+ * faltando 10 dias, com aviso de 30): avisa uma vez, no próximo 9h, igual à manutenção. `null` se
+ * nenhum aviso foi perdido ou se o próximo 9h já cai depois do vencimento. Quem agenda decide
+ * se já avisou (a regra não sabe o histórico).
+ */
+export function lateDocumentReminder(
+  document: DocumentReminderInput,
+  now: Date = new Date(),
+  hour: number = REMINDER_HOUR,
+): LateDocumentReminder | null {
+  const due = parseDueDate(document.dueDate);
+  if (!due) return null;
+  const missed = document.notifyDays.some(
+    (daysBefore) =>
+      new Date(due.getFullYear(), due.getMonth(), due.getDate() - daysBefore, hour) <= now,
+  );
+  if (!missed) return null;
+
+  const fireAt = nextReminderTime(now, hour);
+  const start = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  const daysLeft = Math.round((start(due) - start(fireAt)) / DAY_MS);
+  if (daysLeft < 0) return null;
+  return { documentId: document.id, kind: document.kind, daysLeft, fireAt };
 }
 
 /**
