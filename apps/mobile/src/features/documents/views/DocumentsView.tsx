@@ -1,6 +1,15 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, colors, DocumentItem, EmptyState, spacing, Text, TopBar } from '../../../ui';
+import {
+  Button,
+  colors,
+  DocumentItem,
+  EmptyState,
+  InfoBanner,
+  spacing,
+  Text,
+  TopBar,
+} from '../../../ui';
 import { useDocumentsViewModel } from '../viewmodels/useDocumentsViewModel';
 
 /** Tela 18: IPVA, licenciamento e seguro do veículo, e a CNH, com a situação de cada prazo. */
@@ -43,6 +52,7 @@ export function DocumentsView() {
                 </View>
               ))
             )}
+            {vm.notice ? <InfoBanner icon="bell" text={vm.notice} /> : null}
           </ScrollView>
 
           {vm.canAdd ? (

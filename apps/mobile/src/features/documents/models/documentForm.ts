@@ -1,4 +1,10 @@
-import { DOCUMENT_LABELS, toDueDate, type DocumentKind } from '@ta-em-dia/shared';
+import {
+  DEFAULT_DOCUMENT_NOTIFY_DAYS,
+  DOCUMENT_LABELS,
+  DOCUMENT_NOTIFY_OPTIONS,
+  toDueDate,
+  type DocumentKind,
+} from '@ta-em-dia/shared';
 import { formatDateInput, toDateInput } from '../../../core/format';
 
 export { formatDateInput };
@@ -8,6 +14,27 @@ export interface DocumentForm {
   kind: DocumentKind | null;
   /** "dd/mm/aaaa". */
   dueDate: string;
+  /** Dias de antecedência marcados (vazio = sem aviso). */
+  notifyDays: number[];
+}
+
+/** Formulário novo: sem tipo escolhido, sem data e com os avisos padrão. */
+export const emptyDocumentForm: DocumentForm = {
+  kind: null,
+  dueDate: '',
+  notifyDays: DEFAULT_DOCUMENT_NOTIFY_DAYS,
+};
+
+/** Chips de antecedência: "30 dias", "1 dia"... */
+export const notifyOptions = DOCUMENT_NOTIFY_OPTIONS.map((days) => ({
+  days,
+  label: `${days} ${days === 1 ? 'dia' : 'dias'}`,
+}));
+
+/** Marca ou desmarca um dia de antecedência, mantendo do maior para o menor. */
+export function toggleNotifyDay(current: number[], days: number): number[] {
+  const next = current.includes(days) ? current.filter((d) => d !== days) : [...current, days];
+  return next.sort((a, b) => b - a);
 }
 
 export type DocumentErrors = Partial<Record<'kind' | 'dueDate', string>>;
@@ -43,7 +70,7 @@ export const dueInputFrom = (dueDate: string): string => {
 };
 
 export function buildDocumentInput(form: DocumentForm):
-  | { value: { kind: DocumentKind; dueDate: string }; errors?: undefined }
+  | { value: { kind: DocumentKind; dueDate: string; notifyDays: number[] }; errors?: undefined }
   | {
       value?: undefined;
       errors: DocumentErrors;
@@ -56,5 +83,5 @@ export function buildDocumentInput(form: DocumentForm):
   if (Object.keys(errors).length > 0 || form.kind === null || due.dueDate === undefined) {
     return { errors };
   }
-  return { value: { kind: form.kind, dueDate: due.dueDate } };
+  return { value: { kind: form.kind, dueDate: due.dueDate, notifyDays: form.notifyDays } };
 }

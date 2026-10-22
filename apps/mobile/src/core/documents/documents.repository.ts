@@ -59,6 +59,8 @@ export interface NewDocument {
   kind: DocumentKind;
   /** "aaaa-mm-dd". */
   dueDate: string;
+  /** Dias de aviso. Sem isso, os padrões (30 e 7). */
+  notifyDays?: number[];
 }
 
 /**
@@ -75,7 +77,7 @@ export async function addDocument(
     vehicleId: isVehicleDocument(input.kind) ? input.vehicleId : undefined,
     kind: input.kind,
     dueDate: input.dueDate,
-    notifyDays: DEFAULT_DOCUMENT_NOTIFY_DAYS,
+    notifyDays: input.notifyDays ?? DEFAULT_DOCUMENT_NOTIFY_DAYS,
   });
   if (isVehicleDocument(document.kind) && !document.vehicleId) {
     throw new Error('Documento do veículo precisa de um veículo');
@@ -110,11 +112,18 @@ export async function addDocument(
   return document;
 }
 
-/** Troca a data de vencimento e enfileira o upsert. `null` se o prazo não existe. */
-export async function updateDocumentDueDate(
+/** O que dá para mudar num prazo: a data e os dias de aviso (vazio = sem aviso). */
+export interface DocumentPatch {
+  /** "aaaa-mm-dd". */
+  dueDate: string;
+  notifyDays: number[];
+}
+
+/** Grava a edição e enfileira o upsert. `null` se o prazo não existe. */
+export async function updateDocument(
   db: Db,
   id: string,
-  dueDate: string,
+  patch: DocumentPatch,
   now: Date = new Date(),
 ): Promise<DocumentRecord | null> {
   const at = now.toISOString();
@@ -123,10 +132,11 @@ export async function updateDocumentDueDate(
   await db.withTransactionAsync(async () => {
     const current = await findDocument(db, id);
     if (!current) return;
-    updated = documentSchema.parse({ ...current, dueDate });
+    updated = documentSchema.parse({ ...current, ...patch });
     await db.runAsync(
-      'UPDATE documents SET due_date = ?, updated_at = ? WHERE id = ?',
+      'UPDATE documents SET due_date = ?, notify_days = ?, updated_at = ? WHERE id = ?',
       updated.dueDate,
+      JSON.stringify(updated.notifyDays),
       at,
       id,
     );

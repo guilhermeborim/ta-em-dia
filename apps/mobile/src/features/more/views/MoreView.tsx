@@ -16,7 +16,13 @@ export function MoreView() {
           text="Veículos, documentos, conta e configurações aparecem aqui."
         />
         <MenuItem icon="car" label="Meus veículos" onPress={vm.openVehicles} />
-        <MenuItem icon="file" label="Documentos e prazos" onPress={vm.openDocuments} />
+        <MenuItem
+          icon="file"
+          label="Documentos e prazos"
+          value={vm.documentsBadge?.text}
+          valueTone={vm.documentsBadge?.tone}
+          onPress={vm.openDocuments}
+        />
         <MenuItem icon="history" label="Histórico" onPress={vm.openHistory} />
         {vm.showDevTools ? (
           <View style={styles.dev}>

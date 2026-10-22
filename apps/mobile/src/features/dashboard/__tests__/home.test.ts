@@ -24,6 +24,7 @@ describe('loadHomeState', () => {
       entries: [],
       dailyKm: 30,
       plans: [],
+      documents: [],
     });
   });
 

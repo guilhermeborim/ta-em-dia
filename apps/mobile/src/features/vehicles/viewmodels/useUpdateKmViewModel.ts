@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useDb } from '../../../core/db';
-import { refreshMaintenanceReminders } from '../../../core/maintenance';
+import { refreshReminders } from '../../../core/reminders';
 import { addManualReading } from '../../../core/odometer';
 import { buildKmInput, formatKm } from '../models/updateKm';
 import { loadVehicleDetail } from '../models/vehicleDetail.repository';
@@ -44,7 +44,7 @@ export function useUpdateKmViewModel() {
     try {
       await addManualReading(db, { vehicleId: id, km: result.km });
       // O km mudou: os avisos de manutenção dependem dele.
-      void refreshMaintenanceReminders(db);
+      void refreshReminders(db);
       router.back();
     } finally {
       setBusy(false);

@@ -24,7 +24,7 @@ const plan = (patch: Partial<MaintenancePlan> = {}): MaintenancePlan => ({
 });
 
 const status = (plans: MaintenancePlan[], currentKm = 41000) =>
-  vehicleStatus({ plans, currentKm, dailyKm: 30 }, TODAY);
+  vehicleStatus({ plans, documents: [], currentKm, dailyKm: 30 }, TODAY);
 
 describe('vehicleStatus', () => {
   it('sem lembretes ativos com intervalo, sem selo', () => {
@@ -48,6 +48,37 @@ describe('vehicleStatus', () => {
   });
 });
 
+describe('vehicleStatus: documentos', () => {
+  const document = (dueDate: string) => ({
+    id: dueDate,
+    vehicleId: GOL,
+    kind: 'ipva' as const,
+    dueDate,
+    notifyDays: [30, 7],
+  });
+  const withDocs = (documents: ReturnType<typeof document>[], plans: MaintenancePlan[] = []) =>
+    vehicleStatus({ plans, documents, currentKm: 41000, dailyKm: 30 }, TODAY);
+
+  it('só prazos: vencido, perto e em dia', () => {
+    expect(withDocs([document('2026-10-15')])).toEqual({ tone: 'danger', label: '1 vencido' });
+    expect(withDocs([document('2026-11-13')])).toEqual({
+      tone: 'warning',
+      label: '1 perto de vencer',
+    });
+    expect(withDocs([document('2027-09-30')])).toEqual({ tone: 'ok', label: 'Tudo em dia' });
+  });
+
+  it('soma com a manutenção', () => {
+    expect(withDocs([document('2026-10-15')], [plan()])).toEqual({
+      tone: 'danger',
+      label: '1 vencido',
+    });
+    expect(withDocs([document('2026-10-15'), document('2026-10-01')], [plan()])?.label).toBe(
+      '2 vencidos',
+    );
+  });
+});
+
 describe('buildVehicleCards', () => {
   const vehicle = (id: string, patch: Partial<Vehicle> = {}): Vehicle => ({
     id,
@@ -67,6 +98,7 @@ describe('buildVehicleCards', () => {
         currentKm: 48910,
         dailyKm: 30,
         plans: [],
+        documents: [],
       })),
       TODAY,
     );

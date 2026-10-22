@@ -7,11 +7,22 @@ import {
   deleteDocument,
   findDocument,
   listDocuments,
-  updateDocumentDueDate,
+  updateDocument,
 } from '../../../core/documents';
 import { createVehicle, deleteVehicle } from '../../vehicles/models/vehicles.repository';
-import { buildDocumentInput, dueInputFrom, parseDueInput } from '../models/documentForm';
-import { availableKinds, buildDocumentSections, toDocumentItem } from '../models/documentsList';
+import {
+  buildDocumentInput,
+  dueInputFrom,
+  emptyDocumentForm,
+  parseDueInput,
+  toggleNotifyDay,
+} from '../models/documentForm';
+import {
+  availableKinds,
+  buildDocumentSections,
+  noticeText,
+  toDocumentItem,
+} from '../models/documentsList';
 import { loadDocuments } from '../models/documents.repository';
 
 const TODAY = new Date(2026, 9, 21, 15);
@@ -124,14 +135,13 @@ describe('formulário', () => {
   });
 
   it('exige tipo e data; devolve a data no formato guardado', () => {
-    expect(buildDocumentInput({ kind: null, dueDate: '' }).errors).toEqual({
+    expect(buildDocumentInput({ ...emptyDocumentForm, dueDate: '' }).errors).toEqual({
       kind: 'Escolha o documento',
       dueDate: 'Informe a data (dd/mm/aaaa)',
     });
-    expect(buildDocumentInput({ kind: 'ipva', dueDate: '20/11/2026' }).value).toEqual({
-      kind: 'ipva',
-      dueDate: '2026-11-20',
-    });
+    expect(
+      buildDocumentInput({ kind: 'ipva', dueDate: '20/11/2026', notifyDays: [30, 7] }).value,
+    ).toEqual({ kind: 'ipva', dueDate: '2026-11-20', notifyDays: [30, 7] });
   });
 
   it('na edição, o campo vem com a data do prazo', () => {
@@ -212,13 +222,14 @@ describe('prazos no SQLite', () => {
     const ipva = await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2026-10-15' });
     await db.runAsync('DELETE FROM outbox');
 
-    expect((await updateDocumentDueDate(db, ipva.id, '2027-10-15'))?.dueDate).toBe('2027-10-15');
-    expect((await findDocument(db, ipva.id))?.dueDate).toBe('2027-10-15');
+    const patch = { dueDate: '2027-10-15', notifyDays: [15] };
+    expect(await updateDocument(db, ipva.id, patch)).toMatchObject(patch);
+    expect(await findDocument(db, ipva.id)).toMatchObject(patch);
     expect(await outbox()).toEqual([{ table_name: 'documents', op: 'upsert' }]);
-    await expect(updateDocumentDueDate(db, ipva.id, 'xx')).rejects.toThrow();
-    expect(
-      await updateDocumentDueDate(db, '018bcfe5-6800-7000-8000-0000000000ff', '2027-01-01'),
-    ).toBeNull();
+    await expect(
+      updateDocument(db, ipva.id, { dueDate: 'xx', notifyDays: [30] }),
+    ).rejects.toThrow();
+    expect(await updateDocument(db, '018bcfe5-6800-7000-8000-0000000000ff', patch)).toBeNull();
   });
 
   it('exclusão é lógica e libera o tipo para cadastrar de novo', async () => {
@@ -242,5 +253,45 @@ describe('prazos no SQLite', () => {
     await deleteVehicle(db, GOL, NOW);
 
     expect((await listDocuments(db)).map((d) => d.kind)).toEqual(['cnh']);
+  });
+});
+
+describe('avisos do formulário e do pé da tela', () => {
+  it('marca e desmarca dias, do maior para o menor', () => {
+    expect(toggleNotifyDay([30, 7], 15)).toEqual([30, 15, 7]);
+    expect(toggleNotifyDay([30, 7], 30)).toEqual([7]);
+    expect(toggleNotifyDay([7], 7)).toEqual([]);
+  });
+
+  it('texto do aviso: iguais, "1 dia", diferentes e sem avisos', () => {
+    const base = { kind: 'ipva' as const, dueDate: '2026-11-20' };
+    const d = (id: string, notifyDays: number[]) => ({ id, ...base, notifyDays });
+    expect(noticeText([])).toBeNull();
+    expect(noticeText([d('a', [30, 7]), d('b', [7, 30])])).toBe(
+      'Avisamos 30 e 7 dias antes de cada vencimento.',
+    );
+    expect(noticeText([d('a', [30, 15, 7])])).toBe(
+      'Avisamos 30, 15 e 7 dias antes de cada vencimento.',
+    );
+    expect(noticeText([d('a', [1])])).toBe('Avisamos 1 dia antes de cada vencimento.');
+    expect(noticeText([d('a', [30, 7]), d('b', [3])])).toBe(
+      'Avisamos antes de cada vencimento, nos dias de cada prazo.',
+    );
+    expect(noticeText([d('a', [])])).toBe(
+      'Os prazos estão sem aviso. Toque num deles para escolher.',
+    );
+  });
+
+  it('"perto de vencer" segue o primeiro aviso do prazo; sem avisos, 30 dias', () => {
+    const only7 = toDocumentItem(
+      doc({ kind: 'ipva', dueDate: '2026-11-13', notifyDays: [7] }),
+      TODAY,
+    );
+    expect(only7.tone).toBe('ok');
+    const none = toDocumentItem(
+      doc({ kind: 'ipva', dueDate: '2026-11-13', notifyDays: [] }),
+      TODAY,
+    );
+    expect(none.tone).toBe('warning');
   });
 });

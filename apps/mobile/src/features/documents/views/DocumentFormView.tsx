@@ -107,6 +107,25 @@ function DocumentFormView({ mode }: { mode: 'add' | 'edit' }) {
                 maxLength={10}
               />
 
+              <View style={styles.kinds}>
+                <Text variant="small" color="text2">
+                  Avisar antes
+                </Text>
+                <View style={styles.chips}>
+                  {vm.notifyOptions.map((option) => (
+                    <Chip
+                      key={option.days}
+                      label={option.label}
+                      selected={option.selected}
+                      onPress={() => vm.toggleNotify(option.days)}
+                    />
+                  ))}
+                </View>
+                <Text variant="small" color="text3">
+                  Às 9h do dia marcado. Sem nenhum marcado, não avisamos.
+                </Text>
+              </View>
+
               {vm.isEdit ? (
                 <View style={styles.danger}>
                   <Button

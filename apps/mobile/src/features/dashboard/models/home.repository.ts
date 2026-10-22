@@ -1,10 +1,12 @@
 import {
   dailyAverageKm,
+  type DocumentRecord,
   type FuelEntry,
   type MaintenancePlan,
   type Vehicle,
 } from '@ta-em-dia/shared';
 import type { Db } from '../../../core/db';
+import { listDocuments } from '../../../core/documents';
 import { listFuelEntries } from '../../../core/fuel';
 import { listPlans, loadVehicleKm } from '../../../core/maintenance';
 
@@ -22,6 +24,8 @@ export interface HomeState {
   dailyKm: number;
   /** Planos de manutenção do veículo (ativos e desativados). */
   plans: MaintenancePlan[];
+  /** Prazos do veículo e a CNH (a pessoa pode ter a CNH sem ter veículo). */
+  documents: DocumentRecord[];
 }
 
 interface VehicleRow {
@@ -42,7 +46,15 @@ export async function loadHomeState(db: Db): Promise<HomeState> {
       ORDER BY sort_order, created_at, id
       LIMIT 1`,
   );
-  if (!row) return { vehicle: null, entries: [], dailyKm: dailyAverageKm([]), plans: [] };
+  if (!row) {
+    return {
+      vehicle: null,
+      entries: [],
+      dailyKm: dailyAverageKm([]),
+      plans: [],
+      documents: await listDocuments(db),
+    };
+  }
 
   const entries = await listFuelEntries(db, row.id);
   const { currentKm, dailyKm } = await loadVehicleKm(db, row.id, row.initial_km);
@@ -60,5 +72,6 @@ export async function loadHomeState(db: Db): Promise<HomeState> {
     entries,
     dailyKm,
     plans: await listPlans(db, row.id),
+    documents: await listDocuments(db, row.id),
   };
 }

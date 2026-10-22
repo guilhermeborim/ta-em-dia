@@ -86,19 +86,22 @@ export function DashboardView() {
                   <AlertCard
                     key={card.id}
                     tone={card.tone}
-                    icon="wrench"
+                    icon={card.icon}
                     title={card.title}
                     subtitle={card.subtitle}
                     status={card.status}
                     progress={card.progress}
                     progressLabel={card.progressLabel}
                     hint={card.hint}
-                    onPress={() => vm.openPlan(card.id)}
+                    onPress={() => vm.openAlert(card)}
                   />
                 ))}
               </View>
             ) : vm.hasReminders ? (
-              <InfoBanner icon="check" text="Tudo em dia: nenhuma manutenção perto de vencer." />
+              <InfoBanner
+                icon="check"
+                text="Tudo em dia: nenhuma manutenção ou documento perto de vencer."
+              />
             ) : (
               <ActionCard
                 icon="wrench"

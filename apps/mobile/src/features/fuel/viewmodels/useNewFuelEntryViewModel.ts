@@ -5,7 +5,7 @@ import { formatKm } from '../../../core/format';
 import { useDb } from '../../../core/db';
 import { loadFuelFormContext, type FuelFormContext } from '../models/fuelContext';
 import { addFuelEntry } from '../../../core/fuel';
-import { refreshMaintenanceReminders } from '../../../core/maintenance';
+import { refreshReminders } from '../../../core/reminders';
 import {
   buildFuelEntryInput,
   deriveAmounts,
@@ -70,7 +70,7 @@ export function useNewFuelEntryViewModel() {
     try {
       const entry = await addFuelEntry(db, result.value);
       // O km mudou: os avisos de manutenção dependem dele.
-      void refreshMaintenanceReminders(db);
+      void refreshReminders(db);
       router.dismissTo({ pathname: '/', params: { saved: entry.id } });
     } finally {
       setBusy(false);
