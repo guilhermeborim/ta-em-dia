@@ -13,17 +13,19 @@ interface FuelItemProps {
   total: string;
   /** Média do trecho. Ex.: "13,1 km/l". Omita quando não der para calcular. */
   kmPerLiter?: string;
+  /** Sem cantos arredondados: para itens empilhados dentro de um grupo arredondado. */
+  flat?: boolean;
   onPress?: () => void;
 }
 
 /** Item da lista de abastecimentos. */
-export function FuelItem({ title, details, total, kmPerLiter, onPress }: FuelItemProps) {
+export function FuelItem({ title, details, total, kmPerLiter, flat, onPress }: FuelItemProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${title}, ${total}`}
       onPress={onPress}
-      style={[styles.row, styles.fuel]}
+      style={[styles.row, styles.fuel, flat && styles.flat]}
     >
       <IconAvatar
         icon="fuel"
@@ -92,6 +94,7 @@ export function MenuItem({ icon, label, value, onPress }: MenuItemProps) {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface },
   fuel: { gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderRadius: radius.button },
+  flat: { borderRadius: 0 },
   menu: { gap: 14, paddingHorizontal: 16, paddingVertical: 14 },
   main: { flex: 1, gap: 2 },
   right: { alignItems: 'flex-end', gap: 2 },

@@ -5,7 +5,9 @@ import {
   costPerKm,
   dailyAverageKm,
   exactKmPerLiter,
+  periodConsumption,
   periodKmPerLiter,
+  segmentKmPerLiter,
   monthOverMonth,
   monthProjection,
   nextMaintenance,
@@ -162,5 +164,59 @@ describe('calculateMissingFuelAmount', () => {
     expect(calculateMissingFuelAmount({ liters: 40 }, ['liters'])).toBeNull();
     expect(calculateMissingFuelAmount({ liters: 40, total: null }, ['liters', 'total'])).toBeNull();
     expect(calculateMissingFuelAmount({ liters: 0, total: 100 }, ['liters', 'total'])).toBeNull();
+  });
+});
+
+describe('periodConsumption', () => {
+  const entries = [
+    { date: d('2026-10-01'), km: 10000, liters: 40, total: 240, fullTank: true },
+    { date: d('2026-10-05'), km: 10200, liters: 10, total: 60, fullTank: false },
+    { date: d('2026-10-10'), km: 10500, liters: 40, total: 240, fullTank: true },
+  ];
+
+  it('traz a média e a conta (km rodados e litros depois do primeiro)', () => {
+    expect(periodConsumption(entries)).toEqual({ kmPerLiter: 10, distanceKm: 500, liters: 50 });
+    expect(periodKmPerLiter(entries)).toBe(10);
+  });
+
+  it('retorna null com menos de dois abastecimentos ou sem distância', () => {
+    expect(periodConsumption(entries.slice(0, 1))).toBeNull();
+    expect(periodConsumption([entries[0], { ...entries[0], km: 10000 }])).toBeNull();
+  });
+});
+
+describe('segmentKmPerLiter', () => {
+  const e = (km: number, liters: number, fullTank: boolean) => ({
+    date: d('2026-10-01'),
+    km,
+    liters,
+    total: liters * 6,
+    fullTank,
+  });
+
+  it('calcula o trecho entre dois tanques cheios, somando os parciais do meio', () => {
+    expect(
+      segmentKmPerLiter([e(10000, 40, true), e(10200, 10, false), e(10500, 40, true)]),
+    ).toEqual([null, null, 10]);
+  });
+
+  it('cada tanque cheio fecha um trecho e abre o próximo', () => {
+    expect(segmentKmPerLiter([e(10000, 40, true), e(10400, 40, true), e(10900, 50, true)])).toEqual(
+      [null, 10, 10],
+    );
+  });
+
+  it('mantém a ordem da entrada, mesmo desordenada', () => {
+    expect(segmentKmPerLiter([e(10500, 40, true), e(10000, 40, true)])).toEqual([12.5, null]);
+  });
+
+  it('parcial não tem km/l, e antes do primeiro tanque cheio não há trecho', () => {
+    expect(
+      segmentKmPerLiter([e(9800, 20, false), e(10000, 40, true), e(10300, 20, false)]),
+    ).toEqual([null, null, null]);
+  });
+
+  it('retorna lista vazia sem abastecimentos', () => {
+    expect(segmentKmPerLiter([])).toEqual([]);
   });
 });
