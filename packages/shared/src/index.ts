@@ -1,3 +1,4 @@
+export * from './auth';
 export * from './calculations';
 export * from './documents';
 export * from './flags';
