@@ -30,5 +30,20 @@ export const fuelEntrySchema = z.object({
   note: z.string().max(500).optional(),
 });
 
+export const maintenancePlanSchema = z.object({
+  id: z.uuid(),
+  vehicleId: z.uuid(),
+  /** Código da lista pronta (ver `MAINTENANCE_CATALOG`) ou o nome digitado em "Outro". */
+  type: z.string().min(1).max(60),
+  intervalKm: z.number().int().positive().optional(),
+  intervalMonths: z.number().int().positive().optional(),
+  lastDoneKm: z.number().int().nonnegative(),
+  lastDoneAt: z.coerce.date(),
+  enabled: z.boolean(),
+  notifyBeforeKm: z.number().int().nonnegative().optional(),
+  notifyBeforeDays: z.number().int().nonnegative().optional(),
+});
+
 export type Vehicle = z.infer<typeof vehicleSchema>;
 export type FuelEntry = z.infer<typeof fuelEntrySchema>;
+export type MaintenancePlan = z.infer<typeof maintenancePlanSchema>;
