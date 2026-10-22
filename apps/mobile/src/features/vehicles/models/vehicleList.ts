@@ -1,4 +1,10 @@
-import { maintenanceStatus, type MaintenancePlan, type Vehicle } from '@ta-em-dia/shared';
+import {
+  maintenanceStatus,
+  type DocumentRecord,
+  type MaintenancePlan,
+  type Vehicle,
+} from '@ta-em-dia/shared';
+import { statusOfDocument } from '../../../core/documents';
 import { vehicleDetails } from '../../../core/vehicle';
 
 /** Veículo com o que "Meus veículos" precisa para montar o cartão. */
@@ -8,6 +14,8 @@ export interface VehicleListEntry {
   currentKm: number;
   dailyKm: number;
   plans: MaintenancePlan[];
+  /** Prazos do veículo (IPVA, licenciamento, seguro). A CNH é da pessoa e não entra. */
+  documents: DocumentRecord[];
 }
 
 export type VehicleStatusTone = 'ok' | 'warning' | 'danger';
@@ -24,11 +32,12 @@ export interface VehicleCardView {
 }
 
 /**
- * Selo do cartão pelos lembretes ativos com intervalo: vencidos primeiro, depois "perto de
- * vencer"; sem nada pendente, "Tudo em dia". Documentos entram aqui no item "Documentos e prazos".
+ * Selo do cartão pelos lembretes de manutenção ativos com intervalo e pelos prazos de
+ * documentos do veículo: vencidos primeiro, depois "perto de vencer"; sem nada pendente,
+ * "Tudo em dia".
  */
 export function vehicleStatus(
-  entry: Pick<VehicleListEntry, 'plans' | 'currentKm' | 'dailyKm'>,
+  entry: Pick<VehicleListEntry, 'plans' | 'documents' | 'currentKm' | 'dailyKm'>,
   today: Date = new Date(),
 ): VehicleCardView['status'] {
   let overdue = 0;
@@ -38,6 +47,12 @@ export function vehicleStatus(
     if (!plan.enabled) continue;
     const { tone } = maintenanceStatus(plan, entry.currentKm, entry.dailyKm, today);
     if (tone === 'none') continue;
+    tracked++;
+    if (tone === 'overdue') overdue++;
+    else if (tone === 'soon') soon++;
+  }
+  for (const document of entry.documents) {
+    const { tone } = statusOfDocument(document, today);
     tracked++;
     if (tone === 'overdue') overdue++;
     else if (tone === 'soon') soon++;

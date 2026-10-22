@@ -213,11 +213,13 @@ interface MenuItemProps {
   label: string;
   /** Texto ou número à direita (ex.: quantidade). */
   value?: string;
+  /** Cor do valor (ex.: "1 vencido" em vermelho). Padrão: cinza. */
+  valueTone?: 'warning' | 'danger';
   onPress?: () => void;
 }
 
 /** Linha de menu (aba Mais): ícone, rótulo, valor opcional e seta. */
-export function MenuItem({ icon, label, value, onPress }: MenuItemProps) {
+export function MenuItem({ icon, label, value, valueTone, onPress }: MenuItemProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -236,7 +238,7 @@ export function MenuItem({ icon, label, value, onPress }: MenuItemProps) {
         {label}
       </Text>
       {value ? (
-        <Text variant="small" color="text3">
+        <Text variant="small" color={valueTone ?? 'text3'}>
           {value}
         </Text>
       ) : null}

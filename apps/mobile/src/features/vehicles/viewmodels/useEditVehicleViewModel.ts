@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useDb } from '../../../core/db';
-import { refreshMaintenanceReminders } from '../../../core/maintenance';
+import { refreshReminders } from '../../../core/reminders';
 import {
   buildVehiclePatch,
   editFormFrom,
@@ -84,7 +84,7 @@ export function useEditVehicleViewModel() {
       run(async () => {
         await setVehicleArchived(db, id, !vehicle?.archived);
         // O veículo ativo pode ter mudado: os avisos seguem o ativo.
-        void refreshMaintenanceReminders(db);
+        void refreshReminders(db);
         leave();
       }),
     [db, id, leave, run, vehicle?.archived],
@@ -94,7 +94,7 @@ export function useEditVehicleViewModel() {
     () =>
       run(async () => {
         await deleteVehicle(db, id);
-        void refreshMaintenanceReminders(db);
+        void refreshReminders(db);
         leave();
       }),
     [db, id, leave, run],

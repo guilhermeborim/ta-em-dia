@@ -1,7 +1,7 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { useDb } from '../../../core/db';
-import { refreshMaintenanceReminders } from '../../../core/maintenance';
+import { refreshReminders } from '../../../core/reminders';
 import { buildPlanDetail } from '../models/planDetail';
 import { loadPlanDetail, setPlanEnabled, type PlanDetailData } from '../models/plans.repository';
 
@@ -34,7 +34,7 @@ export function usePlanDetailViewModel() {
     setBusy(true);
     try {
       await setPlanEnabled(db, id, false);
-      void refreshMaintenanceReminders(db);
+      void refreshReminders(db);
       router.back();
     } finally {
       setBusy(false);

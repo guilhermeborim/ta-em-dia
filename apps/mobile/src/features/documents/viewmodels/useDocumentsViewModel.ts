@@ -1,7 +1,12 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { useDb } from '../../../core/db';
-import { availableKinds, buildDocumentSections, type DocumentsData } from '../models/documentsList';
+import {
+  availableKinds,
+  buildDocumentSections,
+  noticeText,
+  type DocumentsData,
+} from '../models/documentsList';
 import { loadDocuments } from '../models/documents.repository';
 
 /** ViewModel de Documentos e prazos (tela 18): prazos do veículo ativo e a CNH. Lê só o SQLite local. */
@@ -28,6 +33,7 @@ export function useDocumentsViewModel() {
   return {
     loading: data === null,
     sections,
+    notice: data ? noticeText(data.documents) : null,
     isEmpty: data !== null && data.documents.length === 0,
     /** Sem tipo para cadastrar (todos já têm prazo), o botão some. */
     canAdd: data !== null && availableKinds(data).length > 0,

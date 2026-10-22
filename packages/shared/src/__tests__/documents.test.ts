@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { documentStatus, isVehicleDocument, parseDueDate, toDueDate } from '../documents';
+import {
+  documentReminders,
+  documentStatus,
+  isVehicleDocument,
+  parseDueDate,
+  toDueDate,
+} from '../documents';
 import { documentSchema } from '../schemas';
 
 const today = new Date(2026, 9, 21, 15);
@@ -72,5 +78,54 @@ describe('documentSchema', () => {
   it('só a CNH é da pessoa', () => {
     expect(isVehicleDocument('ipva')).toBe(true);
     expect(isVehicleDocument('cnh')).toBe(false);
+  });
+});
+
+describe('documentReminders', () => {
+  const now = new Date(2026, 9, 21, 10);
+  const input = (patch = {}) => ({
+    id: 'a',
+    kind: 'ipva' as const,
+    dueDate: '2026-12-20',
+    notifyDays: [30, 7],
+    ...patch,
+  });
+
+  it('um aviso por dia de antecedência, às 9h, do mais próximo ao mais distante', () => {
+    const reminders = documentReminders([input()], now);
+    expect(reminders.map((r) => [r.daysBefore, r.fireAt])).toEqual([
+      [30, new Date(2026, 10, 20, 9)],
+      [7, new Date(2026, 11, 13, 9)],
+    ]);
+    expect(reminders[0]).toMatchObject({ documentId: 'a', kind: 'ipva' });
+  });
+
+  it('não repete o que já passou: 23 dias antes, só o aviso de 7 dias', () => {
+    const reminders = documentReminders([input({ dueDate: '2026-11-13' })], now);
+    expect(reminders.map((r) => r.daysBefore)).toEqual([7]);
+  });
+
+  it('o aviso de hoje só vale se as 9h ainda não passaram', () => {
+    expect(documentReminders([input({ dueDate: '2026-10-28' })], now)).toEqual([]);
+    expect(
+      documentReminders([input({ dueDate: '2026-10-28' })], new Date(2026, 9, 21, 8)),
+    ).toHaveLength(1);
+  });
+
+  it('vencido, sem antecedência ou data inválida: nada', () => {
+    expect(documentReminders([input({ dueDate: '2026-10-15' })], now)).toEqual([]);
+    expect(documentReminders([input({ notifyDays: [] })], now)).toEqual([]);
+    expect(documentReminders([input({ dueDate: 'xx' })], now)).toEqual([]);
+  });
+
+  it('mistura os prazos em ordem e ignora dias repetidos', () => {
+    const reminders = documentReminders(
+      [
+        input({ id: 'a', notifyDays: [7, 7] }),
+        input({ id: 'b', kind: 'cnh', dueDate: '2026-12-01', notifyDays: [7] }),
+      ],
+      now,
+    );
+    expect(reminders.map((r) => r.documentId)).toEqual(['b', 'a']);
   });
 });

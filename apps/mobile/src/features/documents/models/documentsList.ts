@@ -1,12 +1,12 @@
 import {
   DOCUMENT_KINDS,
   DOCUMENT_LABELS,
-  documentStatus,
   isVehicleDocument,
   parseDueDate,
   type DocumentKind,
   type DocumentRecord,
 } from '@ta-em-dia/shared';
+import { statusOfDocument } from '../../../core/documents';
 import { toDateInput } from '../../../core/format';
 import type { IconName, StatusTone } from '../../../ui';
 
@@ -63,7 +63,7 @@ export function toDocumentItem(
   document: DocumentRecord,
   today: Date = new Date(),
 ): DocumentItemView {
-  const status = documentStatus(document.dueDate, today, Math.max(...document.notifyDays, 1));
+  const status = statusOfDocument(document, today);
   return {
     id: document.id,
     title: DOCUMENT_LABELS[document.kind],
@@ -113,4 +113,22 @@ export function availableKinds(data: DocumentsData): DocumentKind[] {
   return DOCUMENT_KINDS.filter(
     (kind) => !used.has(kind) && (data.vehicle !== null || !isVehicleDocument(kind)),
   );
+}
+
+/**
+ * Texto do aviso no pé da tela: "Avisamos 30 e 7 dias antes de cada vencimento." quando todos
+ * os prazos usam os mesmos dias; senão, um texto geral. Sem prazos, sem texto.
+ */
+export function noticeText(documents: DocumentRecord[]): string | null {
+  if (documents.length === 0) return null;
+  const sets = new Set(documents.map((d) => [...d.notifyDays].sort((a, b) => b - a).join(',')));
+  if (sets.size > 1) return 'Avisamos antes de cada vencimento, nos dias de cada prazo.';
+
+  const [only] = [...sets];
+  if (!only) return 'Os prazos estão sem aviso. Toque num deles para escolher.';
+  const days = only.split(',').map(Number);
+  if (days.length === 1) {
+    return `Avisamos ${days[0]} ${days[0] === 1 ? 'dia' : 'dias'} antes de cada vencimento.`;
+  }
+  return `Avisamos ${days.slice(0, -1).join(', ')} e ${days.at(-1)} dias antes de cada vencimento.`;
 }

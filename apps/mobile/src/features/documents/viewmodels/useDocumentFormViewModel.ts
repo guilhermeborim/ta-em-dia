@@ -3,17 +3,16 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useDb } from '../../../core/db';
-import {
-  addDocument,
-  deleteDocument,
-  findDocument,
-  updateDocumentDueDate,
-} from '../../../core/documents';
+import { refreshReminders } from '../../../core/reminders';
+import { addDocument, deleteDocument, findDocument, updateDocument } from '../../../core/documents';
 import {
   buildDocumentInput,
   dueInputFrom,
+  emptyDocumentForm,
   formatDateInput,
   kindOptions,
+  notifyOptions,
+  toggleNotifyDay,
   type DocumentErrors,
   type DocumentForm,
 } from '../models/documentForm';
@@ -32,7 +31,7 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
   const [title, setTitle] = useState('');
   // `undefined` = carregando; `null` = não existe (ou foi excluído).
   const [found, setFound] = useState<boolean | undefined>(mode === 'edit' ? undefined : true);
-  const [form, setForm] = useState<DocumentForm>({ kind: null, dueDate: '' });
+  const [form, setForm] = useState<DocumentForm>(emptyDocumentForm);
   const [errors, setErrors] = useState<DocumentErrors>({});
   const [busy, setBusy] = useState(false);
 
@@ -45,7 +44,11 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
         setFound(document !== null);
         if (document) {
           setTitle(DOCUMENT_LABELS[document.kind]);
-          setForm({ kind: document.kind, dueDate: dueInputFrom(document.dueDate) });
+          setForm({
+            kind: document.kind,
+            dueDate: dueInputFrom(document.dueDate),
+            notifyDays: [...document.notifyDays].sort((a, b) => b - a),
+          });
         }
         return;
       }
@@ -71,10 +74,12 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
     setBusy(true);
     try {
       if (mode === 'edit' && id) {
-        await updateDocumentDueDate(db, id, result.value.dueDate);
+        await updateDocument(db, id, result.value);
       } else {
         await addDocument(db, { ...result.value, vehicleId: data?.vehicle?.id });
       }
+      // O prazo mudou: os avisos dele também.
+      void refreshReminders(db);
       router.back();
     } finally {
       setBusy(false);
@@ -86,6 +91,7 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
     setBusy(true);
     try {
       await deleteDocument(db, id);
+      void refreshReminders(db);
       router.back();
     } finally {
       setBusy(false);
@@ -115,6 +121,12 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
       setForm((prev) => ({ ...prev, kind }));
       setErrors((prev) => ({ ...prev, kind: undefined }));
     },
+    notifyOptions: notifyOptions.map((option) => ({
+      ...option,
+      selected: form.notifyDays.includes(option.days),
+    })),
+    toggleNotify: (days: number) =>
+      setForm((prev) => ({ ...prev, notifyDays: toggleNotifyDay(prev.notifyDays, days) })),
     setDueDate: (value: string) => {
       setForm((prev) => ({ ...prev, dueDate: formatDateInput(value) }));
       setErrors((prev) => ({ ...prev, dueDate: undefined }));

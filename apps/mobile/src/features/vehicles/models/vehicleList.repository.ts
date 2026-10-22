@@ -1,4 +1,5 @@
 import type { Db } from '../../../core/db';
+import { listDocuments } from '../../../core/documents';
 import { listPlans, loadVehicleKm } from '../../../core/maintenance';
 import type { VehicleListEntry } from './vehicleList';
 import { listVehicles } from './vehicles.repository';
@@ -11,6 +12,7 @@ export async function loadVehicleList(db: Db): Promise<VehicleListEntry[]> {
       vehicle,
       ...(await loadVehicleKm(db, vehicle.id, vehicle.initialKm)),
       plans: await listPlans(db, vehicle.id),
+      documents: (await listDocuments(db, vehicle.id)).filter((d) => d.vehicleId !== undefined),
     });
   }
   return entries;

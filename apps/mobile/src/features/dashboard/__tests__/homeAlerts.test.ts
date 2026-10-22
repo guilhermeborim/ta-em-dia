@@ -1,4 +1,4 @@
-import type { FuelEntry, MaintenancePlan } from '@ta-em-dia/shared';
+import type { DocumentRecord, FuelEntry, MaintenancePlan } from '@ta-em-dia/shared';
 import type { HomeState } from '../models/home.repository';
 import { buildHomeAlerts, HOME_ALERTS_LIMIT } from '../models/homeAlerts';
 
@@ -24,6 +24,7 @@ const state = (plans: MaintenancePlan[], currentKm = 48600): HomeState => ({
   entries: [] as FuelEntry[],
   dailyKm: 30,
   plans,
+  documents: [],
 });
 
 // Com o km atual em 48.600 (média diária padrão de 30 km/dia):
@@ -83,9 +84,72 @@ describe('buildHomeAlerts', () => {
   });
 
   it('sem veículo, nada', () => {
-    expect(buildHomeAlerts({ vehicle: null, entries: [], dailyKm: 30, plans: [] }, TODAY)).toEqual({
+    expect(
+      buildHomeAlerts({ vehicle: null, entries: [], dailyKm: 30, plans: [], documents: [] }, TODAY),
+    ).toEqual({
       cards: [],
       hasReminders: false,
     });
+  });
+});
+
+describe('buildHomeAlerts: documentos', () => {
+  const document = (kind: DocumentRecord['kind'], dueDate: string): DocumentRecord => ({
+    id: id(),
+    kind,
+    dueDate,
+    notifyDays: [30, 7],
+  });
+  const withDocuments = (plans: MaintenancePlan[], documents: DocumentRecord[]): HomeState => ({
+    ...state(plans),
+    documents,
+  });
+
+  it('prazo vencido ou perto de vencer entra com ícone, data e dicas', () => {
+    const { cards } = buildHomeAlerts(
+      withDocuments([], [document('ipva', '2026-10-15'), document('insurance', '2026-11-13')]),
+      TODAY,
+    );
+    expect(cards.map((c) => [c.kind, c.icon, c.title, c.subtitle, c.tone, c.status])).toEqual([
+      ['document', 'file', 'IPVA', 'Venceu em 15/10/2026', 'danger', 'Vencido'],
+      ['document', 'shield', 'Seguro', 'Vence em 13/11/2026', 'warning', '23 dias'],
+    ]);
+    expect(cards[0]).toMatchObject({
+      progress: 1,
+      progressLabel: 'Venceu há 6 dias',
+      hint: 'Toque para resolver',
+    });
+    expect(cards[1]).toMatchObject({ progressLabel: 'Faltam 23 dias', hint: 'Toque para ver' });
+    expect(cards[1].progress).toBeCloseTo(7 / 30);
+  });
+
+  it('prazo em dia não entra; documentos não ativam o convite aos lembretes de manutenção', () => {
+    const alerts = buildHomeAlerts(withDocuments([], [document('licensing', '2027-09-30')]), TODAY);
+    expect(alerts).toEqual({ cards: [], hasReminders: false });
+  });
+
+  it('vencido vem antes de perto, venha de onde vier, e o limite vale para tudo', () => {
+    const { cards } = buildHomeAlerts(
+      withDocuments([soon('oil'), soon('alignment')], [document('cnh', '2026-10-01')]),
+      TODAY,
+    );
+    expect(cards.map((c) => [c.kind, c.tone])).toEqual([
+      ['document', 'danger'],
+      ['plan', 'warning'],
+    ]);
+  });
+
+  it('a CNH aparece mesmo sem veículo', () => {
+    const alerts = buildHomeAlerts(
+      {
+        vehicle: null,
+        entries: [],
+        dailyKm: 30,
+        plans: [],
+        documents: [document('cnh', '2026-11-20')],
+      },
+      TODAY,
+    );
+    expect(alerts.cards.map((c) => c.title)).toEqual(['CNH']);
   });
 });
