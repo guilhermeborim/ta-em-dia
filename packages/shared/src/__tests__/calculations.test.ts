@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_DAILY_KM,
+  calculateMissingFuelAmount,
   costPerKm,
   dailyAverageKm,
   exactKmPerLiter,
@@ -110,5 +111,56 @@ describe('monthProjection e monthOverMonth', () => {
   it('compara com o mês anterior', () => {
     expect(monthOverMonth(110, 100)).toBeCloseTo(10);
     expect(monthOverMonth(110, 0)).toBeNull();
+  });
+});
+
+describe('calculateMissingFuelAmount', () => {
+  it('calcula o total por preço e litros', () => {
+    expect(
+      calculateMissingFuelAmount({ pricePerLiter: 5.99, liters: 38.25 }, [
+        'pricePerLiter',
+        'liters',
+      ]),
+    ).toEqual({ field: 'total', value: 229.12 });
+  });
+
+  it('calcula os litros por total e preço', () => {
+    expect(
+      calculateMissingFuelAmount({ total: 200, pricePerLiter: 6.25 }, ['total', 'pricePerLiter']),
+    ).toEqual({ field: 'liters', value: 32 });
+  });
+
+  it('calcula o preço por total e litros, com 3 casas', () => {
+    expect(calculateMissingFuelAmount({ total: 100, liters: 17 }, ['liters', 'total'])).toEqual({
+      field: 'pricePerLiter',
+      value: 5.882,
+    });
+  });
+
+  it('com três preenchidos, recalcula o digitado há mais tempo', () => {
+    expect(
+      calculateMissingFuelAmount({ pricePerLiter: 6, liters: 40, total: 999 }, [
+        'pricePerLiter',
+        'liters',
+        'total',
+      ]),
+    ).toEqual({ field: 'pricePerLiter', value: 24.975 });
+  });
+
+  it('editar de novo um campo o põe como mais recente', () => {
+    expect(
+      calculateMissingFuelAmount({ pricePerLiter: 6, liters: 40, total: 240 }, [
+        'pricePerLiter',
+        'liters',
+        'total',
+        'pricePerLiter',
+      ]),
+    ).toEqual({ field: 'liters', value: 40 });
+  });
+
+  it('retorna null com menos de dois valores ou valor zerado', () => {
+    expect(calculateMissingFuelAmount({ liters: 40 }, ['liters'])).toBeNull();
+    expect(calculateMissingFuelAmount({ liters: 40, total: null }, ['liters', 'total'])).toBeNull();
+    expect(calculateMissingFuelAmount({ liters: 0, total: 100 }, ['liters', 'total'])).toBeNull();
   });
 });
