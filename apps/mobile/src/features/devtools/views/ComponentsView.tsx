@@ -115,6 +115,8 @@ export function ComponentsView() {
         <Section title="Campos">
           <TextField label="Posto" value={text} onChangeText={setText} placeholder="Ex.: Shell" />
           <TextField label="Odômetro" suffix="km" placeholder="0" keyboardType="numeric" />
+          <TextField label="Modelo" required placeholder="Ex.: Gol 1.0 MPI" />
+          <TextField label="Ano" required error="Informe o ano" />
           <NumberField
             label="Valor total"
             prefix="R$"

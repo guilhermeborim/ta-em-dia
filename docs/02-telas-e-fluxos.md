@@ -10,6 +10,7 @@ App gratuito para iOS e Android que ajuda o motorista a saber quanto gasta com o
 - **Uso rápido:** registrar um abastecimento deve levar menos de 20 segundos, muitas vezes em pé no posto, com uma mão.
 - **Offline:** tudo funciona sem internet; um indicador discreto mostra o estado do sync.
 - **Acessibilidade:** contraste AA, alvos de toque ≥ 44 pt, suporte a fonte grande do sistema.
+- **Campos obrigatórios:** todo campo obrigatório leva um `*` vermelho depois do rótulo; sem `*`, é opcional. Erro aparece em texto vermelho abaixo do campo. Nas tabelas abaixo, `*` também marca o obrigatório.
 - **Premium:** recursos Premium aparecem com um selo e, no lançamento, levam a uma tela "Em breve".
 - **Entregáveis esperados do design:** identidade (nome, ícone, cores, tipografia), design system básico, telas do MVP em tema claro, screenshots das lojas.
 
@@ -45,7 +46,7 @@ São 22 telas, agrupadas por área.
 | 2   | Boas-vindas (2 a 3 slides) | Benefícios: controle de gastos, alertas de manutenção, documentos em dia                                                                                                                                    | Pular, avançar           |
 | 3   | Login                      | Logo, frase curta, botão "Entrar com Google", botão "Entrar com Apple" (só no iPhone; no Android só Google, sem botão da Apple), link/botão secundário "Continuar sem login", links de Termos e Privacidade | Entrar ou seguir anônimo |
 | 4   | Aviso de modo sem login    | Explica que os dados ficam no aparelho e podem ser salvos numa conta depois                                                                                                                                 | Continuar, voltar        |
-| 5   | Primeiro veículo           | Formulário curto: tipo, marca, modelo, ano, apelido, km atual                                                                                                                                               | Salvar, pular            |
+| 5   | Primeiro veículo           | Formulário curto: tipo, marca*, modelo*, ano*, apelido (opcional), km atual*                                                                                                                                | Salvar, pular            |
 | 6   | Permissão de notificações  | Tela prévia explicando os alertas antes do pedido do sistema                                                                                                                                                | Permitir, agora não      |
 
 ### Abas principais

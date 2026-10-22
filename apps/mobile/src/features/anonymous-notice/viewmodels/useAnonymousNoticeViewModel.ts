@@ -10,7 +10,7 @@ export function useAnonymousNoticeViewModel() {
     confirm: () => {
       // Limpa a pilha (Login + Aviso) para o botão voltar não retornar ao Login.
       router.dismissAll();
-      router.replace('/');
+      router.replace('/primeiro-veiculo');
     },
     back: () => router.back(),
   };

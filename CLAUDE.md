@@ -25,6 +25,7 @@ Node 24 (`.nvmrc`). O NestJS 12 é só ESM e o Jest da API roda com `--experimen
 
 ## Regras do projeto
 
+- Formulários: campo obrigatório mostra `*` vermelho no rótulo; o que não tem `*` é opcional. Ver `apps/mobile/CLAUDE.md`.
 - Offline-first: as telas do app leem só o SQLite local; a API é backup e sync, nunca a fonte de leitura das telas.
 - Regras de negócio (km/l, projeção, próxima manutenção, flags) ficam em `packages/shared`, puras e com teste. Não duplique no app nem na API.
 - IDs são UUID v7 gerados no app. Exclusão é lógica (`deleted_at`), nunca `DELETE` em tabela sincronizável.
