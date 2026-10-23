@@ -186,6 +186,15 @@ O app grava sempre no SQLite primeiro e sincroniza depois; a API é o backup e a
 
 **Quando sincroniza:** ao abrir o app, ao voltar do segundo plano, depois de cada gravação (debounce de ~5 s), ao recuperar internet e em background fetch quando o sistema permitir.
 
+**No app (`core/sync`):**
+
+- `useSyncLifecycle` (ligado em `src/app/_layout.tsx`, junto do `useAnonymousSession`, depois do "Continuar sem login") pede um sync ao abrir, ao mudar o estado do app (voltar para a frente ou sair dele, para enviar o que ficou antes de o sistema encerrar), quando a internet volta (`expo-network`) e 5 s depois de cada gravação: `enqueue` (em `core/db/outbox.ts`) avisa os ouvintes registrados com `onOutboxChange`.
+- `createSyncScheduler` decide quando rodar: um sync por vez; um pedido que chega durante o envio roda de novo ao acabar (nenhuma gravação se perde); sem resposta da API repete com a espera crescente do `sessionKeeper` (15 s a 5 min); `done`, `rejected` e `skipped` não repetem sozinhos.
+- `runSync` (`syncRunner.ts`): sem `sync.cloud`, não faz nada; com sessão guardada que não pode sincronizar, nem chama a API; senão garante a sessão (`ensureAnonymousSession`, que só chama a API com o acesso vencido) e roda `syncNow`. 401 marca o acesso como vencido (`expireSession`) para a próxima rodada renovar.
+- **Quem sincroniza** (`canSync`): `sync.cloud` ligada e, para quem não fez login (usuário anônimo), também `sync.anonymous`, que fica **desligada** em todos os planos até o dono decidir (`docs/07-validacao-e-decisoes.md`, 3.25). Hoje todo mundo é anônimo, então o motor existe e está testado, mas não envia nada.
+- `syncNow` (`syncEngine.ts`): primeiro **envia** a `outbox` em lotes de até 100 (`readOutboxBatch`, na ordem de gravação, pai antes do filho; aceitas e rejeitadas saem da fila; resposta de outro tamanho ou fora do contrato deixa a fila como está), depois **recebe** o pull em páginas de até 500. Para na primeira falha e nunca lança erro. Linha da fila fora do formato do envio (JSON quebrado) é descartada para não travar as outras.
+- **Aplicar o pull** (`applyPulledChanges`): uma transação por página, com `defer_foreign_keys` (uma filha pode vir antes do veículo na ordem de versões), que também grava o `since` em `sync_state` (`last_version`). Linha com mudança local ainda na `outbox` é pulada (o servidor decide quando ela chegar); linha fora do schema é ignorada; exclusão de linha desconhecida é ignorada. O `version` do servidor fica na coluna `version` e `user_id` continua nulo. Se o pull mudou algo, os avisos são reagendados.
+
 **Regras**
 
 - IDs nascem no app (UUID v7), então nada depende do servidor para existir.

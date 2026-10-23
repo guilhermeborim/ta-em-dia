@@ -39,6 +39,15 @@ export async function clearSession(store: SecretStore = SecureStore): Promise<vo
   await store.deleteItemAsync(SESSION_KEY);
 }
 
+/**
+ * A API recusou o access token (401) apesar de a data local dizer que vale: marca como vencido para
+ * a próxima `ensureAnonymousSession` renovar. Sem sessão, não faz nada.
+ */
+export async function expireSession(store: SecretStore = SecureStore): Promise<void> {
+  const session = await loadSession(store);
+  if (session) await saveSession(store, { ...session, expiresAt: 0 });
+}
+
 /** O access token ainda serve (não expira nos próximos minutos). */
 export const isSessionValid = (session: ApiSession | null, now: Date): boolean =>
   session !== null && session.expiresAt - EXPIRY_MARGIN_MS > now.getTime();

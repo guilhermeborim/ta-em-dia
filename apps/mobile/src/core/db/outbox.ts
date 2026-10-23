@@ -8,6 +8,17 @@ export type OutboxTable =
   | 'odometer_readings'
   | 'documents';
 
+type OutboxListener = () => void;
+const listeners = new Set<OutboxListener>();
+
+/** Avisa quando entra uma mudança na `outbox` (o sync agenda o envio). Devolve como cancelar. */
+export function onOutboxChange(listener: OutboxListener): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
 /** Registra uma mudança local para o sync enviar depois. Chame dentro da mesma transação da gravação. */
 export async function enqueue(
   db: Db,
@@ -25,4 +36,11 @@ export async function enqueue(
     JSON.stringify(payload),
     updatedAt,
   );
+  for (const listener of listeners) {
+    try {
+      listener();
+    } catch {
+      // Um ouvinte com defeito não pode quebrar a gravação.
+    }
+  }
 }

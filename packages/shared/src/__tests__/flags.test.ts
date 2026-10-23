@@ -15,6 +15,14 @@ describe('canAddVehicle', () => {
   });
 });
 
+describe('sync de quem não fez login', () => {
+  it('fica desligado em todos os planos até o dono decidir', () => {
+    expect(DEFAULT_FLAGS.free['sync.anonymous']).toBe(false);
+    expect(DEFAULT_FLAGS.premium['sync.anonymous']).toBe(false);
+    expect(flagsFor('free', { 'sync.anonymous': true })['sync.anonymous']).toBe(true);
+  });
+});
+
 describe('FIPE', () => {
   it('ainda não existe em nenhum plano; a API liga quando lançar', () => {
     expect(DEFAULT_FLAGS.free['fipe.value']).toBe(false);

@@ -5,5 +5,5 @@ export {
   type InstallationCredentials,
   type SecretStore,
 } from './installation';
-export { clearSession, loadSession, type ApiSession } from './session';
+export { clearSession, expireSession, loadSession, type ApiSession } from './session';
 export { useAnonymousSession } from './useAnonymousSession';

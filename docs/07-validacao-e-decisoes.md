@@ -171,6 +171,19 @@ Testado contra um Postgres local (Docker): push dos seis tipos de linha, pull co
 - [ ] No Neon: `users.syncVersion` do usuário bate com a última `version` e `devices.lastSyncAt` foi preenchido.
 - [ ] `protocol` 2 devolve 400 `SYNC_PROTOCOL_UNSUPPORTED`; sem token, 401.
 
+### 2.17 App: motor de sync (PR do motor de sync)
+
+Testado só com testes automáticos (API de mentira com a mesma regra da real, dois "aparelhos" em SQLite). Nunca contra a API real nem no aparelho. Como `sync.anonymous` está desligada, nada disto roda no app de quem usa "Continuar sem login": para validar, ligue a flag no seu build (`'sync.anonymous': true` em `DEFAULT_FLAGS.free`, `packages/shared/src/flags.ts`) e aponte `EXPO_PUBLIC_API_URL` para o staging com o deploy do PR da API de sync (2.16).
+
+- [ ] Com a flag ligada, abra o app, cadastre um veículo e um abastecimento: em até ~10 s a fila esvazia (`SELECT COUNT(*) FROM outbox` = 0) e o Neon tem as duas linhas, com `version` 1 e 2.
+- [ ] Segundo aparelho (ou "Reiniciar App" no primeiro): "Continuar sem login" cria **outro** usuário anônimo (as credenciais são por instalação); então só dá para ver a troca entre aparelhos depois do login com Google (PR do login). Aqui, confira só o envio.
+- [ ] Modo avião: grave 3 abastecimentos; desligue o modo avião com o app aberto: em poucos segundos eles vão para a API (a internet voltando dispara o sync).
+- [ ] Gravar e fechar o app logo em seguida: ao sair da frente o app tenta enviar na hora.
+- [ ] Com o serviço do Render dormindo (1 minuto para acordar): o app não trava nem mostra erro; o sync termina quando a API responde.
+- [ ] Editar o mesmo veículo várias vezes seguidas manda um lote só (5 s depois da última gravação), não uma chamada por toque.
+- [ ] Nenhum dado de veículo, placa ou token aparece em `adb logcat`.
+- [ ] Bateria: com a flag ligada, deixar o app aberto 1 hora sem mexer não gera chamadas (o sync só roda ao abrir, voltar, rede voltar ou gravar).
+
 ### 2.15 Seletor de data
 
 Exige um **development build novo** (`@react-native-community/datetimepicker` é módulo nativo). No iOS, só quando houver build.
@@ -233,3 +246,14 @@ Devolve sempre o plano `free`. Com o guard global agora existindo, ele ficou mar
 - **Exclusão e edição:** uma edição mais nova que a exclusão recria a linha (a linha inteira vale); uma exclusão mais antiga que uma edição do servidor é ignorada (`STALE`). Alternativa: exclusão sempre vence. Recomendação: manter, é a mesma regra para tudo.
 - **`sync.cloud` não é conferida:** todos os usuários, anônimos ou não, sincronizam (a flag é `true` em todos os planos). Se algum dia o sync virar Premium, a API passa a checar. Recomendação: manter até lá.
 - **Limite de chamadas:** o sync usa o limite padrão (100 por minuto por IP). Com push depois de cada gravação (~5 s) e pull, um uso intenso chega perto de 25 chamadas por minuto por aparelho; atrás do CGNAT, vários aparelhos dividem o IP. Alternativa: limite próprio mais folgado para `/v1/sync/*`. Recomendação: manter e olhar os 429 depois do lançamento (como em 3.23).
+
+### 3.25 Sincronizar quem usa "Continuar sem login"
+
+O motor de sync está pronto, mas **só envia dados de quem tem login**. Para o usuário anônimo ele fica desligado pela flag `sync.anonymous` (padrão desligado), porque a tela 4 ("Aviso sem login") promete "Seus dados vão ficar só neste celular. Sem conta, tudo é salvo no aparelho." e a tela 23 ("Enviando seus dados") só aparece ao vincular a conta: ligar o envio sem login faria o app mandar veículos, placas e abastecimentos para o servidor contra o que a tela diz (e contra `docs/05-privacidade-lgpd.md`). Opções:
+
+| Opção                        | O que muda                                                                                                                                           | Prós e contras                                                                                                                                                          |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A. Só quem fez login (atual) | Nada; a flag fica desligada. Ao vincular a conta (PR do login), o primeiro envio manda tudo (telas 23 e 24).                                         | Combina com a tela 4 e com o Figma. Quem usa sem login e perde o celular perde os dados (a tela 4 já avisa).                                                            |
+| B. Todos, também anônimos    | Ligar `sync.anonymous`, trocar o texto da tela 4 (ex.: "Seus dados ficam salvos no aparelho e numa cópia protegida na nuvem") e atualizar `docs/05`. | Backup para todos e vincular sem migrar nada (como diz `docs/03`). Contra: dado pessoal (placa) na nuvem de quem não criou conta; texto e Política precisam dizer isso. |
+
+Recomendação: **A** agora; revisar quando o login existir. Se escolher B, o texto da tela 4, a Política e o `docs/05` entram no mesmo PR que liga a flag.
