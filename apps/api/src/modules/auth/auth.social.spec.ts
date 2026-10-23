@@ -88,6 +88,10 @@ class FakeRepository {
   async switchAccount(input: SwitchAccountInput) {
     this.switched.push(input);
   }
+  deleted: string[] = [];
+  async deleteUser(userId: string) {
+    this.deleted.push(userId);
+  }
 }
 
 function setup() {
@@ -271,5 +275,13 @@ describe('AuthService.link', () => {
   it('usuário do token que não existe mais: 401', async () => {
     const { service } = setup();
     await expect(service.link('sumiu', link, NOW)).rejects.toMatchObject({ status: 401 });
+  });
+});
+
+describe('AuthService.deleteAccount', () => {
+  it('apaga o usuário do token', async () => {
+    const { repository, service } = setup();
+    expect(await service.deleteAccount(account.id)).toEqual({ deleted: true });
+    expect(repository.deleted).toEqual([account.id]);
   });
 });

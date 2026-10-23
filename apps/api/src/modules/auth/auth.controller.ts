@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, HttpCode, Post } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import {
   anonymousAuthSchema,
@@ -67,5 +67,13 @@ export class AuthController {
   @HttpCode(200)
   link(@CurrentUserId() userId: string, @Body() body: unknown) {
     return this.auth.link(userId, parseBody(linkRequestSchema, body));
+  }
+
+  /** Exclusão de conta (LGPD e App Store 5.1.1(v)): o `userId` vem do token, nunca do corpo. */
+  @Throttle({ default: { limit: THROTTLE_LIMITS.social, ttl: THROTTLE_WINDOW_MS } })
+  @Delete('account')
+  @HttpCode(200)
+  deleteAccount(@CurrentUserId() userId: string) {
+    return this.auth.deleteAccount(userId);
   }
 }
