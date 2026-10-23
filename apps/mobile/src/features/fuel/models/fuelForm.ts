@@ -60,12 +60,20 @@ export function formatDecimal(value: number, field: FuelAmountField): string {
 
 /**
  * Texto do campo de valor. No preço por litro, sem vírgula digitada, o primeiro dígito é o
- * inteiro e o resto são centavos ("65" vira "6,5"); com vírgula, vale o que foi digitado.
+ * inteiro e o resto são casas ("65" vira "6,5"), menos quando começa em 1: aí os dois primeiros
+ * são o inteiro ("10" fica "10", "105" vira "10,5"). Com vírgula, vale o que foi digitado.
  */
 export function sanitizeAmount(field: FuelAmountField, text: string): string {
   const clean = sanitizeDecimal(text, decimals[field].max);
-  if (field !== 'pricePerLiter' || clean.includes(',') || clean.length < 2) return clean;
-  return sanitizeDecimal(`${clean.slice(0, 1)},${clean.slice(1)}`, decimals[field].max);
+  if (field !== 'pricePerLiter' || clean.includes(',')) return clean;
+  // Começando em 1, o inteiro tem dois dígitos ("10", "10,5"): preço de R$ 1,xx não existe. Quem
+  // precisa de 1,xx digita a vírgula.
+  const integerDigits = clean.startsWith('1') ? 2 : 1;
+  if (clean.length <= integerDigits) return clean;
+  return sanitizeDecimal(
+    `${clean.slice(0, integerDigits)},${clean.slice(integerDigits)}`,
+    decimals[field].max,
+  );
 }
 
 export function maxDecimals(field: FuelAmountField): number {

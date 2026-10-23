@@ -45,7 +45,15 @@ describe('sanitizeAmount', () => {
     expect(sanitizeAmount('pricePerLiter', '6559')).toBe('6,559');
   });
 
+  it('preço por litro: começando em 1, o inteiro tem dois dígitos (10, 10,5)', () => {
+    expect(sanitizeAmount('pricePerLiter', '1')).toBe('1');
+    expect(sanitizeAmount('pricePerLiter', '10')).toBe('10');
+    expect(sanitizeAmount('pricePerLiter', '105')).toBe('10,5');
+    expect(sanitizeAmount('pricePerLiter', '1050')).toBe('10,50');
+  });
+
   it('preço por litro: vírgula digitada vale como está', () => {
+    expect(sanitizeAmount('pricePerLiter', '1,05')).toBe('1,05');
     expect(sanitizeAmount('pricePerLiter', '10,5')).toBe('10,5');
   });
 
