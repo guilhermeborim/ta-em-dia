@@ -63,7 +63,7 @@ apps/api/src/
 ├─ prisma/            # PrismaService (adapter pg); só os repositories o usam
 ├─ common/            # auth (guard JWT global, @Public, @CurrentUserId); a criar: interceptors, filtros de erro, logger
 └─ modules/
-   ├─ auth/           # POST /v1/auth/anonymous (Google, Apple e link: a criar)
+   ├─ auth/           # anonymous, refresh, google, apple e link (login social)
    ├─ health/         # GET /health
    ├─ config/         # GET /v1/config (feature flags por plano)
    └─ (a criar) users, vehicles, odometer, fuel, maintenance,
@@ -222,22 +222,26 @@ Todo usuário tem conta na API desde o primeiro uso: quem toca "Continuar sem lo
 **Entrar com Google ou Apple**
 
 1. O app obtém o `id_token` nativo (Google Sign-In e `expo-apple-authentication`).
-2. `POST /v1/auth/google` ou `/apple` com o `id_token`; a API valida assinatura, `aud` e `iss` com as chaves públicas do provedor.
-3. Se nenhuma conta existe com esse `sub`, cria o usuário.
+2. `POST /v1/auth/google` ou `/apple` (públicas) com `{ idToken, installationId, platform, name? }` (`socialAuthSchema`, em `shared`); a API valida assinatura RS256, `iss` e `aud` com as chaves públicas do provedor (`jose`, `createRemoteJWKSet`, com cache) e responde com os mesmos tokens do anônimo (`authTokensSchema`).
+3. Se nenhuma conta existe com esse `sub`, cria o usuário (`is_anonymous=false`, e-mail só se o provedor o confirmou). O aparelho (`installationId`) passa a ser da conta e os refresh tokens anteriores dele são revogados.
 
 **Vincular (anônimo → conta)**
 
 1. Usuário anônimo toca "Salvar meus dados" e faz login social.
-2. `POST /v1/auth/link` com o token anônimo + `id_token`.
-3. Se o `sub` ainda não tem conta: adiciona a identidade ao usuário atual e `is_anonymous=false`.
-4. Se já tem conta (outro celular): o app pergunta "Juntar dados" (move veículos e registros do anônimo para a conta existente) ou "Usar só os da conta" (descarta os locais). Depois faz pull completo.
+2. `POST /v1/auth/link` com o token anônimo + `{ provider, idToken, installationId, platform, name?, onConflict? }` (`linkRequestSchema`). O `installationId` precisa ser de um aparelho do usuário do token (senão 403 `DEVICE_MISMATCH`). Quem já tem login recebe 409 `ALREADY_LINKED`.
+3. Se o `sub` ainda não tem conta: adiciona a identidade ao usuário atual e `is_anonymous=false` (`outcome: 'linked'`). Nenhum dado muda de dono. A resposta traz tokens novos (`linkResultSchema`).
+4. Se já tem conta (outro celular): 409 `ACCOUNT_EXISTS` com `account: { vehicles, records }` (quantos veículos e registros, abastecimentos e serviços, a conta tem; para a tela 24) e nada muda. O app pergunta "Juntar dados" ou "Usar só os da conta" e repete a chamada com `onConflict`:
+   - `merge` (`outcome: 'merged'`): os dados que o anônimo já tinha na API (veículos, registros e prazos, inclusive os excluídos) passam para a conta, cada linha com um `version` novo do contador da conta (para os outros aparelhos dela puxarem). O que ficou só no aparelho vai pela `outbox`, no primeiro envio.
+   - `use_account` (`outcome: 'switched'`): o que o anônimo tinha na API é descartado. O app apaga os dados locais e faz o pull completo.
+   - Nos dois, o aparelho passa para a conta e o usuário anônimo é apagado, tudo numa transação. A junção não confere o limite de veículos do plano.
 
-**Como está hoje (só o anônimo)**
+**Como está hoje na API**
 
 - `POST /v1/auth/anonymous` (público) valida `{ installationId, secret, platform }` com `anonymousAuthSchema` (`shared`). Aparelho novo: cria `users` (UUID v7, `is_anonymous`), `auth_identities` (`provider=anonymous`, `provider_subject=installationId`, `secretHash`), `devices` e um `refresh_tokens` numa transação. Aparelho conhecido: compara o hash do segredo (tempo constante) e devolve tokens novos para o mesmo usuário (idempotente); segredo errado é `401 INVALID_CREDENTIALS`. Duas primeiras chamadas ao mesmo tempo: a que perde a corrida segue com o usuário criado pela outra.
 - Resposta: `{ accessToken, expiresIn: 900, refreshToken, user: { id, isAnonymous, plan } }`. O access token é um JWT HS256 (`JWT_SECRET`, `sub` = `userId`, 15 min). O refresh token é opaco (256 bits, 90 dias) e só o SHA-256 dele vai para o banco. O segredo do aparelho também só existe como SHA-256.
 - Guard JWT global (`JwtAuthGuard`): toda rota exige `Authorization: Bearer`, exceto as marcadas `@Public()` (`/health`, `/v1/config`, `/v1/auth/anonymous`). `@CurrentUserId()` entrega o `userId` do token. Rate limit global por IP (`@nestjs/throttler`, `AppThrottlerGuard`): 100 chamadas por minuto em toda rota, 20 em `/auth/anonymous` e 30 em `/auth/refresh`; passou do limite, `429` com `code: RATE_LIMITED` e `Retry-After`. `/health` fica de fora. Atrás do proxy do host a API lê o IP de `X-Forwarded-For` (`TRUST_PROXY_HOPS`, padrão 1, que é o Render).
 - `POST /v1/auth/refresh` (público, `refreshRequestSchema` em `shared`): troca o refresh token por um par novo e revoga o antigo (rotação). Token desconhecido, vencido ou já trocado é `401 INVALID_REFRESH_TOKEN`. Um token já trocado que volta é reuso: todas as sessões do aparelho são revogadas e o app entra de novo por `/auth/anonymous`. Cada aparelho tem uma sessão só: `/auth/anonymous` revoga os refresh tokens anteriores do aparelho (nada se acumula) e `devices.lastSeenAt` guarda a última sessão aberta ou renovada.
+- Login social: `IdTokenVerifier` (`id-token.verifier.ts`) valida o `id_token` e devolve `sub`, e-mail confirmado e nome; qualquer falha é 401 `INVALID_ID_TOKEN`, sem dizer o motivo. As audiências vêm de `GOOGLE_CLIENT_IDS` (client IDs separados por vírgula; no Android o `aud` do token é o client ID web usado como `webClientId`) e `APPLE_CLIENT_ID` (o bundle id do app); sem elas a rota responde 503 `PROVIDER_NOT_CONFIGURED`. `/auth/google`, `/auth/apple` e `/auth/link` têm limite de 20 chamadas por minuto por IP. Não usamos `nonce`: o `id_token` vale poucos minutos e trafega só por HTTPS. Contas do Google e da Apple com o mesmo e-mail são contas separadas. Nada do token, e-mail ou nome vai para log.
 - Limpeza (`src/jobs`, `node dist/jobs/run-purge.js [--dry-run]`, workflow `api-cleanup.yml`, toda segunda às 6h UTC): apaga as contas anônimas criadas há mais de 12 meses cujos aparelhos não abriram a sessão (`lastSeenAt`) nem sincronizaram (`lastSyncAt`) nesse prazo (os dados saem em cascata) e os refresh tokens vencidos há mais de 1 dia. Conta com login nunca é tocada. O host grátis dorme, então o job roda no GitHub Actions, com o `DATABASE_URL` de cada environment; o production espera a aprovação do revisor, como o deploy. "Run workflow" aceita simulação.
 - Banco: Prisma 7 com `@prisma/adapter-pg`. O cliente é gerado em `src/generated/` (fora do git) pelo `postinstall` da API. A migration `init` cria todas as tabelas do schema e roda no workflow de deploy (`db:deploy`).
 

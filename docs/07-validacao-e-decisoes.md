@@ -184,6 +184,17 @@ Testado só com testes automáticos (API de mentira com a mesma regra da real, d
 - [ ] Nenhum dado de veículo, placa ou token aparece em `adb logcat`.
 - [ ] Bateria: com a flag ligada, deixar o app aberto 1 hora sem mexer não gera chamadas (o sync só roda ao abrir, voltar, rede voltar ou gravar).
 
+### 2.18 API: login com Google e Apple (PR da API de login social)
+
+Testado contra um Postgres local (Docker): criar conta social, vincular ao anônimo, junção (`merge`) com veículo, registro, prazo e linha excluída (versões novas no contador da conta, aparelho e dono trocados, anônimo apagado) e troca (`use_account`). O `id_token` foi testado só com chaves geradas no teste; nunca com um token real do Google ou da Apple, e nunca no Render nem no Neon.
+
+- [ ] Depois do merge, o deploy sobe sem migration nova (nada mudou no schema) e o `/health` responde.
+- [ ] No Render (staging), `GOOGLE_CLIENT_IDS` tem o client ID web do projeto do Google Cloud (e os client IDs de Android e iOS, se o `aud` do token vier deles) e `APPLE_CLIENT_ID` tem o bundle id (`com.guilhermeborim.taemdia.staging`). Sem eles, `POST /v1/auth/google` devolve 503 `PROVIDER_NOT_CONFIGURED`.
+- [ ] Com um `id_token` real do Google (pelo app do PR seguinte, ou pelo OAuth Playground com o client ID certo): `POST /v1/auth/google` devolve 200 com `user.isAnonymous: false`; repetir devolve o mesmo `user.id`; `aud` de outro app devolve 401 `INVALID_ID_TOKEN`.
+- [ ] Mesmo teste com o `identityToken` da Apple em um iPhone (precisa de conta Apple Developer paga e do bundle id com "Sign in with Apple").
+- [ ] `POST /v1/auth/link` com o token de um usuário anônimo e um login novo: 200 `outcome: linked`, o mesmo `user.id`, `users.isAnonymous = false` e `auth_identities` com a linha do Google no Neon. Com um login que já tem conta: 409 `ACCOUNT_EXISTS` com `account.vehicles` e `account.records`; repetir com `onConflict: "merge"` devolve `merged` e o usuário anônimo some do Neon.
+- [ ] No Neon, `auth_identities.email` e `users.email` têm só o e-mail confirmado; nenhum `id_token` aparece nos logs do Render.
+
 ### 2.15 Seletor de data
 
 Exige um **development build novo** (`@react-native-community/datetimepicker` é módulo nativo). No iOS, só quando houver build.
@@ -257,3 +268,10 @@ O motor de sync está pronto, mas **só envia dados de quem tem login**. Para o 
 | B. Todos, também anônimos    | Ligar `sync.anonymous`, trocar o texto da tela 4 (ex.: "Seus dados ficam salvos no aparelho e numa cópia protegida na nuvem") e atualizar `docs/05`. | Backup para todos e vincular sem migrar nada (como diz `docs/03`). Contra: dado pessoal (placa) na nuvem de quem não criou conta; texto e Política precisam dizer isso. |
 
 Recomendação: **A** agora; revisar quando o login existir. Se escolher B, o texto da tela 4, a Política e o `docs/05` entram no mesmo PR que liga a flag.
+
+### 3.26 Login social: regras que assumi na API
+
+- **Junção passa do limite grátis:** `merge` leva todos os veículos do aparelho para a conta mesmo que a soma passe de 1 (`vehicles.max`). O app já aceita quem tem 2 ou mais veículos de antes do limite; a junção segue a mesma regra. Alternativa: recusar a junção quando passar. Recomendação: manter, perder veículo do usuário é pior.
+- **Mesmo e-mail em Google e Apple:** são contas separadas (não juntamos por e-mail, que o usuário pode esconder na Apple). Recomendação: manter.
+- **Sem `nonce`:** a API não confere `nonce` no `id_token`. Um token roubado só serve nos poucos minutos em que vale. Alternativa: o app gera um `nonce` e a API confere. Recomendação: manter por ora.
+- **Contas e chaves de terceiros:** o login precisa de um projeto no Google Cloud (grátis) e de uma conta Apple Developer (paga, a exceção do projeto para as lojas). Dependem de você: criar os client IDs e pôr em `GOOGLE_CLIENT_IDS` e `APPLE_CLIENT_ID` em cada ambiente do Render.

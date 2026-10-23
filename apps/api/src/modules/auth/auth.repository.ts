@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { SYNC_TABLES, type SocialProvider, type SyncTable } from '@ta-em-dia/shared';
 import { Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../prisma/prisma.service';
+import { SYNC_SPECS } from '../sync/sync.tables';
 
 export interface AuthUser {
   id: string;
@@ -39,7 +41,75 @@ export interface RotateInput {
   now: Date;
 }
 
+/** Quem entra com o login social: o `sub` do provedor e o que ele disse sobre a pessoa. */
+export interface SocialProfile {
+  provider: SocialProvider;
+  subject: string;
+  email: string | null;
+  name: string | null;
+}
+
+export interface DeviceOwner {
+  id: string;
+  userId: string;
+}
+
+export interface SwitchAccountInput {
+  /** O usuário anônimo deste aparelho (some no fim). */
+  fromUserId: string;
+  /** A conta que já existia. */
+  toUserId: string;
+  /** `true` leva os dados do anônimo para a conta; `false` descarta. */
+  merge: boolean;
+  session: SessionInput;
+}
+
 const USER_SELECT = { id: true, isAnonymous: true, plan: true } as const;
+
+type Tx = Prisma.TransactionClient;
+
+/**
+ * Abre uma sessão no aparelho para o usuário: atualiza plataforma e `lastSeenAt`, passa o aparelho
+ * para o usuário (login em outra conta), revoga os refresh tokens anteriores (o aparelho tem uma
+ * sessão só) e guarda o novo.
+ */
+async function openSessionIn(tx: Tx, userId: string, input: SessionInput): Promise<void> {
+  const device = await tx.device.upsert({
+    where: { installationId: input.installationId },
+    create: {
+      userId,
+      installationId: input.installationId,
+      platform: input.platform,
+      lastSeenAt: input.now,
+    },
+    update: { userId, platform: input.platform, lastSeenAt: input.now },
+    select: { id: true },
+  });
+  await tx.refreshToken.updateMany({
+    where: { deviceId: device.id, revokedAt: null },
+    data: { revokedAt: input.now },
+  });
+  await tx.refreshToken.create({
+    data: {
+      deviceId: device.id,
+      tokenHash: input.refreshTokenHash,
+      expiresAt: input.refreshExpiresAt,
+    },
+  });
+}
+
+/** Os ids das linhas do usuário numa tabela sincronizável (direto ou pelo veículo), do menor `version` ao maior. */
+async function listOwnedIds(tx: Tx, table: SyncTable, userId: string): Promise<string[]> {
+  const delegate = tx[SYNC_SPECS[table].model] as unknown as {
+    findMany(args: unknown): Promise<{ id: string }[]>;
+  };
+  const rows = await delegate.findMany({
+    where: SYNC_SPECS[table].ownedDirectly ? { userId } : { vehicle: { userId } },
+    select: { id: true },
+    orderBy: { version: 'asc' },
+  });
+  return rows.map((row) => row.id);
+}
 
 @Injectable()
 export class AuthRepository {
@@ -99,30 +169,159 @@ export class AuthRepository {
    * refresh tokens anteriores do aparelho (ele tem uma sessão só) e guarda o novo.
    */
   async openSession(userId: string, input: SessionInput): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
-      const device = await tx.device.upsert({
-        where: { installationId: input.installationId },
-        create: {
-          userId,
-          installationId: input.installationId,
-          platform: input.platform,
-          lastSeenAt: input.now,
-        },
-        update: { platform: input.platform, lastSeenAt: input.now },
-        select: { id: true },
-      });
-      await tx.refreshToken.updateMany({
-        where: { deviceId: device.id, revokedAt: null },
-        data: { revokedAt: input.now },
-      });
-      await tx.refreshToken.create({
-        data: {
-          deviceId: device.id,
-          tokenHash: input.refreshTokenHash,
-          expiresAt: input.refreshExpiresAt,
-        },
-      });
+    await this.prisma.$transaction((tx) => openSessionIn(tx, userId, input));
+  }
+
+  /** A conta (e o usuário dela) com esse login social, se existe. */
+  async findSocialIdentity(provider: SocialProvider, subject: string): Promise<AuthUser | null> {
+    const found = await this.prisma.authIdentity.findUnique({
+      where: { provider_providerSubject: { provider, providerSubject: subject } },
+      select: { user: { select: USER_SELECT } },
     });
+    return found?.user ?? null;
+  }
+
+  async findUser(userId: string): Promise<AuthUser | null> {
+    return this.prisma.user.findUnique({ where: { id: userId }, select: USER_SELECT });
+  }
+
+  /** O aparelho pelo `installationId` e de quem ele é; `null` se nunca abriu sessão. */
+  findDevice(installationId: string): Promise<DeviceOwner | null> {
+    return this.prisma.device.findUnique({
+      where: { installationId },
+      select: { id: true, userId: true },
+    });
+  }
+
+  /** Quantos veículos e registros (abastecimentos e serviços de manutenção) o usuário tem, sem os excluídos. */
+  async countData(userId: string): Promise<{ vehicles: number; records: number }> {
+    const vehicle = { userId, deletedAt: null };
+    const [vehicles, fuel, maintenance] = await Promise.all([
+      this.prisma.vehicle.count({ where: vehicle }),
+      this.prisma.fuelEntry.count({ where: { deletedAt: null, vehicle } }),
+      this.prisma.maintenanceRecord.count({ where: { deletedAt: null, vehicle } }),
+    ]);
+    return { vehicles, records: fuel + maintenance };
+  }
+
+  /**
+   * Cria o usuário do login social com a identidade e abre a sessão do aparelho (que passa a ser
+   * dele). `null` se outra chamada criou a mesma identidade antes (o chamador busca de novo).
+   */
+  async createSocialUser(
+    input: SocialProfile & { userId: string; session: SessionInput },
+  ): Promise<AuthUser | null> {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: {
+            id: input.userId,
+            isAnonymous: false,
+            email: input.email,
+            name: input.name,
+            identities: {
+              create: {
+                provider: input.provider,
+                providerSubject: input.subject,
+                email: input.email,
+              },
+            },
+          },
+          select: USER_SELECT,
+        });
+        await openSessionIn(tx, user.id, input.session);
+        return user;
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Vincula o login social ao usuário anônimo (que deixa de ser anônimo) e abre a sessão nova do
+   * aparelho. `null` se esse login já pertence a outra conta (o chamador decide o que fazer).
+   */
+  async linkIdentity(
+    userId: string,
+    profile: SocialProfile,
+    session: SessionInput,
+  ): Promise<AuthUser | null> {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        await tx.authIdentity.create({
+          data: {
+            userId,
+            provider: profile.provider,
+            providerSubject: profile.subject,
+            email: profile.email,
+          },
+        });
+        const user = await tx.user.update({
+          where: { id: userId },
+          data: { isAnonymous: false, email: profile.email, name: profile.name },
+          select: USER_SELECT,
+        });
+        await openSessionIn(tx, userId, session);
+        return user;
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * O aparelho passa para a conta que já existia e o usuário anônimo é apagado. Com `merge`, antes
+   * disso os dados dele (veículos, registros e prazos, inclusive os excluídos) vão para a conta, cada
+   * linha com um `version` novo do contador da conta para os outros aparelhos da conta puxarem.
+   * Tudo numa transação: se algo falha, nada muda.
+   */
+  async switchAccount(input: SwitchAccountInput): Promise<void> {
+    await this.prisma.$transaction(
+      async (tx) => {
+        // Trava a conta e lê o contador: nenhum push dela cruza com a junção.
+        const target = await tx.user.update({
+          where: { id: input.toUserId },
+          data: { syncVersion: { increment: 0 } },
+          select: { syncVersion: true },
+        });
+        if (input.merge) {
+          // Os ids saem antes de mover os veículos: as tabelas filhas chegam ao dono pelo veículo.
+          const ids = await Promise.all(
+            SYNC_TABLES.map(async (table) => ({
+              table,
+              ids: await listOwnedIds(tx, table, input.fromUserId),
+            })),
+          );
+          let version = target.syncVersion;
+          for (const { table, ids: rowIds } of ids) {
+            const delegate = tx[SYNC_SPECS[table].model] as unknown as {
+              update(args: unknown): Promise<unknown>;
+            };
+            for (const id of rowIds) {
+              version += 1n;
+              await delegate.update({
+                where: { id },
+                data: {
+                  version,
+                  ...(SYNC_SPECS[table].ownedDirectly ? { userId: input.toUserId } : {}),
+                },
+              });
+            }
+          }
+          await tx.user.update({ where: { id: input.toUserId }, data: { syncVersion: version } });
+        }
+        await openSessionIn(tx, input.toUserId, input.session);
+        // Sem aparelhos nem dados no anônimo, nada o segura: sai com tudo o que sobrou.
+        await tx.user.delete({ where: { id: input.fromUserId } });
+      },
+      { timeout: 30_000 },
+    );
   }
 
   /** O refresh token pelo hash, com o usuário do aparelho; `null` se não existe. */

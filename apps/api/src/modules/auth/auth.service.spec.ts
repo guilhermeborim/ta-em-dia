@@ -9,6 +9,7 @@ import {
   StoredRefreshToken,
 } from './auth.repository';
 import { AuthService } from './auth.service';
+import type { IdTokenVerifier } from './id-token.verifier';
 import { sha256 } from './tokens';
 
 const request = {
@@ -80,7 +81,11 @@ const jwt = new JwtService({ secret: 'test-secret' });
 
 function setup() {
   const repository = new FakeRepository();
-  const service = new AuthService(repository as unknown as AuthRepository, jwt);
+  const service = new AuthService(
+    repository as unknown as AuthRepository,
+    jwt,
+    {} as unknown as IdTokenVerifier,
+  );
   return { repository, service };
 }
 

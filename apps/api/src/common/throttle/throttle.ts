@@ -10,4 +10,6 @@ export const THROTTLE_LIMITS = {
   default: 100,
   anonymous: 20,
   refresh: 30,
+  /** Entrar com Google/Apple e vincular: cada chamada valida um `id_token` com as chaves do provedor. */
+  social: 20,
 } as const;
