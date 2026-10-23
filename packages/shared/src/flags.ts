@@ -12,6 +12,8 @@ export interface FeatureFlags {
   'reports.advanced': boolean;
   'export.pdf': boolean;
   'geo.fuelReminder': boolean;
+  /** Valor do veículo na tabela FIPE (Fase 2). Desligada: o app mostra o cartão "Em breve". */
+  'fipe.value': boolean;
   'attachments.max': number | null;
 }
 
@@ -24,6 +26,7 @@ export const DEFAULT_FLAGS: Record<Plan, FeatureFlags> = {
     'reports.advanced': true,
     'export.pdf': false,
     'geo.fuelReminder': false,
+    'fipe.value': false,
     'attachments.max': null,
   },
   premium: {
@@ -32,6 +35,7 @@ export const DEFAULT_FLAGS: Record<Plan, FeatureFlags> = {
     'reports.advanced': true,
     'export.pdf': true,
     'geo.fuelReminder': true,
+    'fipe.value': false,
     'attachments.max': null,
   },
 };

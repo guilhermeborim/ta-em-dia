@@ -15,6 +15,14 @@ describe('canAddVehicle', () => {
   });
 });
 
+describe('FIPE', () => {
+  it('ainda não existe em nenhum plano; a API liga quando lançar', () => {
+    expect(DEFAULT_FLAGS.free['fipe.value']).toBe(false);
+    expect(DEFAULT_FLAGS.premium['fipe.value']).toBe(false);
+    expect(flagsFor('free', { 'fipe.value': true })['fipe.value']).toBe(true);
+  });
+});
+
 describe('plano grátis', () => {
   it('tem 1 veículo; o premium não tem limite', () => {
     expect(DEFAULT_FLAGS.free['vehicles.max']).toBe(1);

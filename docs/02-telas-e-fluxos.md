@@ -158,7 +158,7 @@ Não precisam de design final agora, mas o layout do MVP deve deixar espaço par
 | Configuração do lembrete no posto      | Fase 2 | Liga/desliga, explicação de bateria e privacidade                                            |
 | Câmera da bomba (OCR)                  | Fase 2 | Moldura para enquadrar o visor, revisão dos valores lidos                                    |
 | Widgets                                | Fase 2 | Tamanhos pequeno e médio: próximo alerta, gasto do mês, km/l                                 |
-| FIPE                                   | Fase 2 | Cartão no detalhe do veículo com valor e variação                                            |
+| FIPE                                   | Fase 2 | Cartão no detalhe do veículo com valor e variação (no MVP, só o cartão "Em breve" Premium)   |
 | Multas                                 | Fase 2 | Lista por veículo com status e vencimento                                                    |
 | Exportar PDF                           | Fase 2 | Prévia do relatório                                                                          |
 | Paywall Premium                        | Fase 2 | Comparação grátis × Premium, preço mensal/anual, restaurar compra                            |
