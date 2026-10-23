@@ -53,6 +53,7 @@ export { SocialButton } from './components/SocialButton';
 export { StatTile } from './components/StatTile';
 export { SummaryCard } from './components/SummaryCard';
 export { SwitchRow } from './components/SwitchRow';
+export { TeaserCard } from './components/TeaserCard';
 export { TabBar, type TabBarItem } from './components/TabBar';
 export { Text, type TextColor, type TextVariant } from './components/Text';
 export { TextField } from './components/TextField';

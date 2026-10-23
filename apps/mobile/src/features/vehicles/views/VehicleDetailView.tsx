@@ -7,8 +7,10 @@ import {
   Icon,
   InfoCard,
   LicensePlate,
+  PremiumBadge,
   spacing,
   StatTile,
+  TeaserCard,
   TopBar,
 } from '../../../ui';
 import { useVehicleDetailViewModel } from '../viewmodels/useVehicleDetailViewModel';
@@ -51,6 +53,15 @@ export function VehicleDetailView() {
             </View>
 
             <InfoCard rows={view.rows} />
+
+            {vm.showFipeTeaser ? (
+              <TeaserCard
+                icon="trend-up"
+                title="Valor na FIPE"
+                hint="Em breve"
+                right={<PremiumBadge />}
+              />
+            ) : null}
           </ScrollView>
 
           <View style={styles.footer}>

@@ -61,6 +61,7 @@ Toque num cartão de Meus veículos.
 - [ ] Depois de atualizar o km, os avisos de manutenção e os alertas do Início refletem o km novo.
 - [ ] Média/dia mostra 30 km enquanto não há duas leituras (regra de `shared`): confirme se o texto não confunde.
 - [ ] Custo/km "—" quando não há km rodado.
+- [ ] **Cartão "Valor na FIPE"** (PR do cartão FIPE): abaixo dos dados, borda tracejada, quadrado lima com seta de alta, "Valor na FIPE" / "Em breve" e o selo PREMIUM à direita, igual ao frame 17. Em fonte grande o texto não corta o selo. O TalkBack lê "Valor na FIPE. Em breve". Tocar não faz nada.
 
 ### 2.4 Editar, arquivar e excluir veículo (PR #30)
 
@@ -210,3 +211,7 @@ Sem development build para iOS, nenhum aviso agenda. Quando houver, apague `sche
 ### 3.20 `GET /v1/config` continua público
 
 Devolve sempre o plano `free`. Com o guard global agora existindo, ele ficou marcado `@Public()`. Quando o app mandar o token, a rota deve passar a ler o plano do usuário. Nada a decidir agora; só não esquecer no PR do app ou do sync.
+
+### 3.24 Cartão "Valor na FIPE": o que acontece ao tocar
+
+Hoje o cartão é só informativo: tocar não faz nada, como no Figma (que não mostra seta). Alternativa: abrir a tela Premium, onde "FIPE" já aparece na lista de recursos. Recomendação: manter como está até a Fase 2.

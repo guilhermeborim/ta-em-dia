@@ -35,6 +35,7 @@ import {
   RecordItem,
   OwnBadge,
   PremiumBadge,
+  TeaserCard,
   SettingItem,
   SocialButton,
   spacing,
@@ -542,6 +543,12 @@ export function ComponentsView() {
             status={{ tone: 'ok', label: 'Tudo em dia' }}
           />
           <DashedAddCard label="Adicionar veículo" />
+          <TeaserCard
+            icon="trend-up"
+            title="Valor na FIPE"
+            hint="Em breve"
+            right={<PremiumBadge />}
+          />
         </Section>
 
         <Section title="Conta e menu">
