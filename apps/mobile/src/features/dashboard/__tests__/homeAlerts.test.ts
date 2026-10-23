@@ -93,6 +93,22 @@ describe('buildHomeAlerts', () => {
   });
 });
 
+describe('buildHomeAlerts: limite', () => {
+  it('sem limite (tela Todos os alertas) devolve todos, manutenção e documento juntos', () => {
+    const docs: DocumentRecord[] = ['ipva', 'insurance', 'licensing'].map((kind, n) => ({
+      id: `doc-${n}`,
+      kind: kind as DocumentRecord['kind'],
+      dueDate: '2026-10-15',
+      notifyDays: [30, 7],
+    }));
+    const all = buildHomeAlerts({ ...state([]), documents: docs }, TODAY, Infinity).cards;
+    expect(all).toHaveLength(3);
+    expect(buildHomeAlerts({ ...state([]), documents: docs }, TODAY).cards).toHaveLength(
+      HOME_ALERTS_LIMIT,
+    );
+  });
+});
+
 describe('buildHomeAlerts: documentos', () => {
   const document = (kind: DocumentRecord['kind'], dueDate: string): DocumentRecord => ({
     id: id(),

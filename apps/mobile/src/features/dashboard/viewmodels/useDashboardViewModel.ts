@@ -71,6 +71,7 @@ export function useDashboardViewModel() {
     toast,
     openFuel: () => router.push('/novo-abastecimento'),
     openMaintenance: () => router.navigate('/manutencao'),
+    openAllAlerts: () => router.push('/alertas'),
     openAlert: (card: HomeAlertCard) =>
       card.kind === 'document'
         ? router.push('/documentos')

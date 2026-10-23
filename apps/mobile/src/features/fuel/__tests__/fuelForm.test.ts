@@ -6,6 +6,7 @@ import {
   formatDecimal,
   formatEntryDate,
   parseDecimal,
+  sanitizeAmount,
   sanitizeDecimal,
   touchAmount,
   type FuelForm,
@@ -29,6 +30,23 @@ describe('sanitizeDecimal', () => {
 
   it('mantém a vírgula recém-digitada', () => {
     expect(sanitizeDecimal('5,', 2)).toBe('5,');
+  });
+});
+
+describe('sanitizeAmount', () => {
+  it('preço por litro: primeiro dígito é o inteiro, o resto são casas', () => {
+    expect(sanitizeAmount('pricePerLiter', '6')).toBe('6');
+    expect(sanitizeAmount('pricePerLiter', '65')).toBe('6,5');
+    expect(sanitizeAmount('pricePerLiter', '6559')).toBe('6,559');
+  });
+
+  it('preço por litro: vírgula digitada vale como está', () => {
+    expect(sanitizeAmount('pricePerLiter', '10,5')).toBe('10,5');
+  });
+
+  it('litros e total não mudam', () => {
+    expect(sanitizeAmount('liters', '65')).toBe('65');
+    expect(sanitizeAmount('total', '120,5')).toBe('120,5');
   });
 });
 

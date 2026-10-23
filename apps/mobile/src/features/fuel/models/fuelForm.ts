@@ -54,6 +54,16 @@ export function formatDecimal(value: number, field: FuelAmountField): string {
   }).format(value);
 }
 
+/**
+ * Texto do campo de valor. No preço por litro, sem vírgula digitada, o primeiro dígito é o
+ * inteiro e o resto são centavos ("65" vira "6,5"); com vírgula, vale o que foi digitado.
+ */
+export function sanitizeAmount(field: FuelAmountField, text: string): string {
+  const clean = sanitizeDecimal(text, decimals[field].max);
+  if (field !== 'pricePerLiter' || clean.includes(',') || clean.length < 2) return clean;
+  return sanitizeDecimal(`${clean.slice(0, 1)},${clean.slice(1)}`, decimals[field].max);
+}
+
 export function maxDecimals(field: FuelAmountField): number {
   return decimals[field].max;
 }

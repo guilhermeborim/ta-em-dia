@@ -236,6 +236,16 @@ Exige um **development build novo** (`@react-native-community/datetimepicker` é
 - [ ] Nenhuma placa em log (`adb logcat`) nem em mensagem de erro.
 - [ ] Catálogo de componentes (Mais → Catálogo, só fora de produção): `TimelineItem`, `StatTile`, `LicensePlate`, `TopBar`, `VehicleCard`, `DocumentItem`, gráficos, `AccountCard`, `ListGroup`, `FeatureItem` renderizam.
 
+### 2.20 Ajustes do app (branch `fix/ajustes-app`)
+
+- [ ] Android: teclado de preço por litro, litros e total pago mostra a vírgula (`numeric`). Se não mostrar no seu aparelho, avise.
+- [ ] Preço por litro: digitar `65` mostra `6,5`; `655` mostra `6,55`.
+- [ ] Relatórios abre em "Mês".
+- [ ] Configurações → Exportar dados: o aviso "Em breve" aparece acima da barra de navegação do Android.
+- [ ] Início → Próximos alertas → Ver todos: abre "Todos os alertas" com manutenções e documentos juntos; tocar num card abre o item; voltar retorna ao Início.
+
+**Decisão aberta:** a tela "Todos os alertas" não tem frame no Figma; usei o layout do Início (barra de topo + cartões). Alternativa: pedir o frame ao designer. Recomendo manter até lá.
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.

@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ActionCard,
@@ -47,7 +47,7 @@ export function DashboardView() {
                 tone="soft"
                 icon="cloud"
                 title="Salve seus dados na nuvem"
-                text="Entre com Google ou Apple"
+                text={`${Platform.OS === 'ios' ? 'Entre com Google ou Apple' : 'Entre com Google'}`}
                 onPress={vm.saveData}
               />
             )}
@@ -83,7 +83,7 @@ export function DashboardView() {
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Ver todos os alertas"
-                    onPress={vm.openMaintenance}
+                    onPress={vm.openAllAlerts}
                     style={styles.seeAll}
                   >
                     <Text variant="bodyStrong" color="primary">

@@ -13,8 +13,7 @@ import {
   entryDateFor,
   formatEntryDate,
   fuelTypeOptions,
-  maxDecimals,
-  sanitizeDecimal,
+  sanitizeAmount,
   touchAmount,
   type FuelForm,
   type FuelFormErrors,
@@ -55,7 +54,7 @@ export function useNewFuelEntryViewModel() {
   const setAmount = useCallback((field: FuelAmountField, text: string) => {
     setForm((prev) => ({
       ...prev,
-      [field]: sanitizeDecimal(text, maxDecimals(field)),
+      [field]: sanitizeAmount(field, text),
       amountOrder: touchAmount(prev.amountOrder, field),
     }));
     setErrors((prev) => ({ ...prev, amounts: undefined }));

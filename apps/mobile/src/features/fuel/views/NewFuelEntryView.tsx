@@ -25,6 +25,9 @@ import {
 import { useNewFuelEntryViewModel } from '../viewmodels/useNewFuelEntryViewModel';
 
 /** Tela 9: novo abastecimento (e 9b, com tanque cheio marcado). */
+/** Android: o teclado decimal esconde a vírgula em alguns aparelhos; o numérico mostra. */
+const decimalKeyboard = Platform.OS === 'android' ? 'numeric' : 'decimal-pad';
+
 export function NewFuelEntryView() {
   const vm = useNewFuelEntryViewModel();
 
@@ -83,7 +86,7 @@ export function NewFuelEntryView() {
                     value={vm.amounts.pricePerLiter}
                     onChangeText={vm.setPricePerLiter}
                     placeholder="0,00"
-                    keyboardType="decimal-pad"
+                    keyboardType={decimalKeyboard}
                   />
                 </View>
                 <View style={styles.flex}>
@@ -93,7 +96,7 @@ export function NewFuelEntryView() {
                     value={vm.amounts.liters}
                     onChangeText={vm.setLiters}
                     placeholder="0,00"
-                    keyboardType="decimal-pad"
+                    keyboardType={decimalKeyboard}
                   />
                 </View>
               </View>
