@@ -91,7 +91,7 @@ Essa decisão é separada, porque muda o risco. Antes de implementar:
 
 - [ ] Política de Privacidade e Termos revisados por advogado, em URL pública.
 - [ ] Telas de Termos e Privacidade ligadas às URLs.
-- [ ] Excluir conta funcionando no app e na API.
+- [ ] Excluir conta funcionando no app e na API (implementado; falta validar no aparelho e revogar o token da Apple, `docs/07` 2.23 e 3.28).
 - [ ] Exportar meus dados funcionando.
 - [ ] Nenhum dado pessoal em log (app e API).
 - [ ] Segredos fora do repositório (`.env` ignorado).

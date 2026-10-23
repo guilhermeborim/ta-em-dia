@@ -214,7 +214,7 @@ Testado só com testes automáticos (API de mentira, SQLite em memória). Nunca 
 - [ ] **Segundo aparelho:** entrar com a mesma conta em outro celular traz tudo; um abastecimento novo em um aparece no outro depois de abrir o app (o sync roda ao abrir e depois de gravar).
 - [ ] **Refresh recusado:** apagar `refresh_tokens` da conta no Neon e esperar o acesso vencer: o app continua abrindo com os dados locais e não vira anônimo sozinho (confira em Status: sessão ausente). Falta uma tela que peça para entrar de novo (3.27).
 - [ ] **Nada em log:** nenhum `id_token`, e-mail ou nome aparece em `adb logcat` nem no log do Render.
-- [ ] "Excluir conta" mostra "Em breve" (a tela 22 é outro item).
+- [ ] "Excluir conta" abre a tela 22 (ver 2.23).
 
 ### 2.15 Seletor de data
 
@@ -255,6 +255,18 @@ Exige um **development build novo** (`@react-native-community/datetimepicker` é
 - [ ] Posto é obrigatório: `*` vermelho no rótulo; salvar vazio mostra "Informe o posto" abaixo da caixa e o erro some ao digitar.
 - [ ] Android e iOS: ao tocar em "Posto", a tela sobe, o campo e os chips ficam visíveis acima do teclado e dá para rolar (`KeyboardAvoidingView` agora usa `padding` nos dois sistemas).
 - [ ] Chips quebram em linhas com fonte grande, sem cortar o nome longo e sem empurrar o botão Salvar para fora da tela; o teclado não cobre os chips.
+
+### 2.23 App: Excluir conta (tela 22)
+
+Precisa do login com Google funcionando e da API no ar com `DELETE /v1/auth/account` (PR da API).
+
+- [ ] Conta → "Excluir conta" abre a tela 22 igual ao Figma (ícone de lixeira rosa, título, cartão com 4 linhas e "x" vermelho, campo, botões). Os números (veículos e registros) batem com a Conta.
+- [ ] "Excluir minha conta" fica desabilitado até digitar EXCLUIR (minúsculas também valem); o teclado não cobre o campo nem os botões.
+- [ ] Com internet: excluir leva ao Login, o aparelho fica sem dados e a conta some do banco (veja 2.22). Entrar de novo com o mesmo Google cria uma conta vazia.
+- [ ] Sem internet (modo avião): aviso "Sem conexão com o servidor. Nada foi apagado..." e os dados continuam no aparelho e na API.
+- [ ] Cancelar e a seta voltam para a Conta sem apagar nada.
+- [ ] Os avisos de manutenção e de documentos deixam de chegar depois de excluir.
+- [ ] Fonte grande: título e linhas do cartão quebram sem cortar.
 
 ### 2.12 O que veio antes (não revisado aqui)
 
@@ -321,6 +333,15 @@ Recomendação: **A** agora; revisar quando o login existir. Se escolher B, o te
 - **Sem frame no Figma:** as sugestões são chips (o `Chip` do app) logo abaixo do campo "Posto" (obrigatório), até 5, os mais usados primeiro; sem texto digitado, mostram os mais usados. Alternativa: lista suspensa sobre o teclado. Recomendação: manter e desenhar no Figma depois.
 - **Nomes antigos não são reescritos:** abastecimentos já gravados com grafias diferentes ("shell" e "Shell") continuam como estão; só os novos reaproveitam o nome mais usado. Alternativa: migration que unifica os antigos. Recomendação: manter até existir "Seus postos".
 - **Só reaproveita nome igual:** "Shell" e "Shell Centro" são postos diferentes (sem aproximação por semelhança). Recomendação: manter.
+
+### 3.29 Excluir conta no app: escolhas que fiz
+
+- **Sem "e as fotos" no cartão:** o Figma lista "2 veículos e as fotos", mas o app não guarda fotos (`docs/05`). O texto vira só "2 veículos". Recomendação: manter e corrigir o frame.
+- **Números reais no cartão:** o Figma mostra "47 registros"; o app mostra os registros do aparelho (abastecimentos e manutenções), como na Conta.
+- **Sem aviso de sucesso:** depois de excluir, o app volta direto ao Login, sem mensagem. Alternativa: um aviso "Conta excluída" no Login. Recomendação: fazer num PR pequeno se quiser.
+- **Falha mostra aviso temporário** (sem frame no Figma): "Sem conexão com o servidor. Nada foi apagado. Tente de novo em instantes." e "Não foi possível excluir a conta agora. Nada foi apagado. Tente de novo." Textos meus. Recomendação: manter.
+- **Digitar EXCLUIR** vale em minúsculas e com espaços nas pontas (o campo já abre em maiúsculas). Recomendação: manter.
+- **Conta anônima não tem o botão:** quem não entrou com login só tem dados no aparelho; "Sair" não existe para ela. Para apagar tudo, basta desinstalar o app (a API apaga a conta anônima após 12 meses sem uso). Recomendação: manter.
 
 ### 3.27 Login no app: escolhas que fiz
 
