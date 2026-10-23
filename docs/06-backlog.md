@@ -43,19 +43,33 @@ Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
 
 Escolhas tomadas em `docs/07-validacao-e-decisoes.md`. Cada item é um PR e pode ser feito fora da ordem das fases.
 
-- [ ] **Regras de veículos e prazos**: o texto do "Avise-me quando lançar" não promete mais nada ("Anotado!" sem aviso futuro); prazo cadastrado já dentro da janela avisa uma vez no próximo 9h (igual à manutenção); avisos de documentos de **todos** os veículos ativos; arquivar o único veículo ativo é bloqueado ("Você precisa de outro veículo ativo").
-- [ ] **Limite grátis de 1 veículo**: `vehicles.max` = 1 no plano grátis (`flags.ts`), aplicado em "Adicionar veículo" e no primeiro veículo.
+- [x] **Regras de veículos e prazos**: o texto do "Avise-me quando lançar" não promete mais nada ("Anotado!" sem aviso futuro); prazo cadastrado já dentro da janela avisa uma vez no próximo 9h (igual à manutenção); avisos de documentos de **todos** os veículos ativos; arquivar o único veículo ativo é bloqueado ("Você precisa de outro veículo ativo").
 - [x] **Moto**: tipo `motorcycle` no `shared`, no SQLite (migration só adiciona) e no Prisma, com ícone próprio.
 - [x] **Limite grátis de 1 veículo**: `vehicles.max` = 1 no plano grátis (`flags.ts`), aplicado em "Adicionar veículo" e no primeiro veículo.
-- [ ] **Moto**: tipo `motorcycle` no `shared`, no SQLite (migration só adiciona) e no Prisma, com ícone próprio.
 - [ ] **Prazos por ano**: guardar cada prazo de documento por ano (IPVA 2026, IPVA 2027...), com histórico.
-- [ ] **Seletor de data**: chip "Hoje" e calendário nativo (`@react-native-community/datetimepicker`) nos formulários de abastecimento, manutenção e prazo.
 - [x] **Reordenar arrastando**: arrastar de verdade em Meus veículos (`react-native-gesture-handler` e `react-native-reanimated`).
-- [ ] **API: segurança da conta anônima**: rate limit (`@nestjs/throttler`), `POST /v1/auth/refresh` com rotação do token, job que apaga contas anônimas sem uso por 12 meses; no app, usar o refresh e reagir à volta da internet (`expo-network`).
 - [x] **Seletor de data**: chip "Hoje" e calendário nativo (`@react-native-community/datetimepicker`) nos formulários de abastecimento, manutenção e prazo.
-- [ ] **Reordenar arrastando**: arrastar de verdade em Meus veículos (`react-native-gesture-handler` e `react-native-reanimated`).
 - [x] **API: segurança da conta anônima**: rate limit (`@nestjs/throttler`), `POST /v1/auth/refresh` com rotação do token, job que apaga contas anônimas sem uso por 12 meses.
 - [x] **App: renovar pelo refresh**: usar `POST /v1/auth/refresh`, tratar 429 como "tentar depois" e reagir à volta da internet (`expo-network`).
+
+## Decisões do dono (23/10/2026)
+
+Escolhas tomadas sobre os itens 3.9 a 3.23 de `docs/07-validacao-e-decisoes.md`. Cada item é um PR.
+
+### Para implementar
+
+- [ ] **Lembrar de atualizar o km a cada 7 dias**: trocar os 15 dias por 7 (primeiro aviso e repetição; texto "Faz 7 dias sem atualizar o km do <veículo>"; valor em `shared`, se existir). Atualizar também o checklist 2.8 de `docs/07-validacao-e-decisoes.md`.
+- [ ] **Ajuda e contato, Termos e Privacidade**: trocar o "Em breve" por telas ou links. Depende do dono: e-mail ou página de suporte e as URLs públicas (`docs/05-privacidade-lgpd.md`, checklist antes de publicar).
+- [ ] **Cartão "Valor na FIPE"** (tela 17): cartão com o selo "Em breve" de Premium, igual ao Figma. Sem consulta real (Fase 2). Atrás de feature flag.
+
+### Decididas, sem trabalho
+
+- **Relatórios (3.9)**: "Ano" são os últimos 12 meses; em "Mês" o gráfico mostra também o mês anterior; Documentos não guarda valor (sem a categoria do Figma); o custo por km não inclui manutenção.
+- **Configurações (3.10)**: o app é só tema claro e o Figma não precisa mudar; as unidades são só km e litros e a seta do Figma fica; antecedência padrão vale só para prazos novos; o pedido de permissão do sistema fica como está; "Exportar dados" fica para a Fase B.
+- **Telas sem frame no Figma (3.11)**: aprovadas como estão (Atualizar km, Editar veículo, prazo, Antecedência, confirmações de exclusão, seletor de data).
+- **Textos (3.12)**: aprovados como estão.
+- **Detalhes visuais (3.16)**: as cores da placa Mercosul ficam; o restante (Bricolage ExtraBold no Premium, cores dos gráficos) fica como está.
+- **Rate limit (3.23)**: manter os limites; olhar os 429 nos logs depois do lançamento.
 
 ## Como manter
 
