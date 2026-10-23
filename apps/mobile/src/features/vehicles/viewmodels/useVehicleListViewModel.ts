@@ -1,11 +1,11 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
+import { Alert } from 'react-native';
 import { useDb } from '../../../core/db';
-import { refreshReminders } from '../../../core/reminders';
-import { buildVehicleCards, moveItem, type VehicleListEntry } from '../models/vehicleList';
 import { useFlag } from '../../../core/flags/useFlag';
+import { refreshReminders } from '../../../core/reminders';
 import { addVehicleBlock } from '../models/vehicleLimit';
-import { buildVehicleCards, moveId, type VehicleListEntry } from '../models/vehicleList';
+import { buildVehicleCards, moveItem, type VehicleListEntry } from '../models/vehicleList';
 import { loadVehicleList } from '../models/vehicleList.repository';
 import { listArchivedVehicles, reorderVehicles } from '../models/vehicles.repository';
 

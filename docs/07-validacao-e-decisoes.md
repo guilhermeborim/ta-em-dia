@@ -203,41 +203,6 @@ Só dá para conferir com o staging no ar (merge na `main` dispara o deploy).
 
 Cada item traz minha recomendação. As decisões já tomadas saíram daqui e estão em `docs/01-roadmap.md`, `docs/03-arquitetura.md` e no backlog (`docs/06-backlog.md`, "Decisões do dono"). A numeração não é refeita: os números que faltam já foram decididos.
 
-### 3.9 Relatórios
-
-- "Ano" são os **últimos 12 meses** (não o ano civil). Qual faz sentido?
-- Em "Mês", o gráfico mostra também o mês anterior (uma barra só não compara nada).
-- Sem a categoria "Documentos" do Figma: documentos guardam só datas, sem valor. Atualizar o Figma ou guardar um valor opcional (dado novo; passa por `05-privacidade-lgpd.md`).
-- Custo por km = só abastecimentos ÷ km rodados. Incluir manutenção?
-
-### 3.10 Configurações (PR #35)
-
-- **Aparência (Automático/Claro/Escuro)** está no Figma, mas o app é só tema claro (`apps/mobile/CLAUDE.md`) e o bloco foi omitido. Decidir se o Figma será atualizado ou se o tema escuro entra no roadmap.
-- **Unidades** (km/mi, litros/galões): só km e litros existem; Distância e Volume mostram o valor e **não** têm seta nem abrem nada (o Figma tem seta). Trocar de unidade mexe em quase todas as telas. **Decidir** se entra no MVP; senão, tirar a seta do Figma. Recomendação: Fase 2.
-- **"Lembrar de atualizar o km"**: assumi que avisa 15 dias depois da última atualização do km (leitura manual, abastecimento ou serviço; sem nenhuma, a data do cadastro do veículo) e **repete a cada 15 dias** até a pessoa atualizar. Só o veículo ativo. Alternativa: avisar uma vez só. Recomendação: manter a repetição, que só dura até atualizar.
-- **Antecedência padrão** dos prazos: vale só para prazos **novos**; os existentes mantêm os próprios dias (a pessoa já os escolheu no prazo). Exige ao menos um dia marcado. Alternativa: aplicar também aos existentes. Recomendação: manter.
-- **Pedido de permissão**: ligar um interruptor pede a permissão do sistema se ela ainda não foi dada (no Android 13+ só aparece uma vez). Se negada, o app avisa e segue sem agendar.
-- Exportar dados fica "Em breve" (item da Fase B, LGPD).
-
-### 3.11 Telas sem frame no Figma
-
-Pedir ao designer, ou aprovar o que foi feito seguindo os formulários do app: **Atualizar km**, **Editar veículo** (com Arquivar e Excluir), **Adicionar/editar prazo** (com antecedências), **Antecedência** (Configurações, modal) os textos de confirmação de exclusão e o **seletor de data** (ícone de calendário nos campos de data; no iOS, uma folha com o calendário; no Android, o diálogo do sistema).
-
-### 3.12 Textos para revisar
-
-Escritos por mim, sem revisão de redação: alerta "Excluir veículo?" e "Excluir prazo?", avisos de arquivar/restaurar, "Anotado! Obrigado pelo interesse.", "Você precisa de outro veículo ativo para arquivar este.", mensagens de erro ("O km não pode ser menor que o atual (N km)", "Placa inválida (ex.: ABC1D23)"), estados vazios, mensagens do banner de prazos, e em Configurações "Notificações desativadas / Ative nos ajustes do aparelho para receber os avisos.", "Marque ao menos um dia" e o texto "Às 9h do dia marcado. Vale para os prazos novos; os que já existem mantêm os próprios dias.".
-
-### 3.15 Ajuda e contato, Termos e Privacidade
-
-"Ajuda e contato" mostra "Em breve": falta um e-mail ou página de suporte. As telas de Termos e Privacidade dependem das URLs públicas (`05-privacidade-lgpd.md`, checklist antes de publicar).
-
-### 3.16 Detalhes visuais
-
-- Cartão "Valor na FIPE" da tela 17 é Fase 2: não foi feito. Confirmar que sai do desenho do MVP.
-- Cores da placa Mercosul (`#1A1A1F`, `#003399`) estão fixas no componente: não são da paleta do app.
-- Título do Premium usa Bricolage **ExtraBold** (a Bold do Figma não está carregada); vale carregar a Bold?
-- Fontes e cores novas dos gráficos (`chartFuel`, `chartMaint`) copiam as variáveis do Figma.
-
 ### 3.17 iOS
 
 Sem development build para iOS, nenhum aviso agenda. Quando houver, apague `scheduler.ios.ts` e `permission.ios.ts` e repita as validações de notificação (2.5 e manutenção).
@@ -245,7 +210,3 @@ Sem development build para iOS, nenhum aviso agenda. Quando houver, apague `sche
 ### 3.20 `GET /v1/config` continua público
 
 Devolve sempre o plano `free`. Com o guard global agora existindo, ele ficou marcado `@Public()`. Quando o app mandar o token, a rota deve passar a ler o plano do usuário. Nada a decidir agora; só não esquecer no PR do app ou do sync.
-
-### 3.23 Limites do rate limit
-
-100 chamadas por minuto por IP em qualquer rota, 20 em `POST /v1/auth/anonymous` e 30 em `POST /v1/auth/refresh` (`src/common/throttle/throttle.ts`). Na rede móvel muita gente divide um IP (CGNAT): 20 contas novas por minuto por IP é folgado para o uso real e ainda segura quem tenta encher o banco (no máximo ~29 mil por dia por IP). **Decidir** se quer mais apertado (ex.: 10 por minuto). Recomendação: manter e olhar os 429 nos logs depois do lançamento.
