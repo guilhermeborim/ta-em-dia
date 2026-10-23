@@ -8,11 +8,12 @@ services:
     plan: free
     region: virginia
     buildCommand: >-
-      npm install -g pnpm@10.28.0 &&
+      npm install --prefix "$HOME/.pnpm" pnpm@10.28.0 &&
+      export PATH="$HOME/.pnpm/node_modules/.bin:$PATH" &&
       HUSKY=0 pnpm install --frozen-lockfile --prod=false &&
       pnpm --filter @ta-em-dia/shared build &&
       pnpm --filter @ta-em-dia/api build
-    startCommand: pnpm --filter @ta-em-dia/api start
+    startCommand: cd apps/api && node dist/main.js
     healthCheckPath: /health
     autoDeployTrigger: 'off'
     envVars:
