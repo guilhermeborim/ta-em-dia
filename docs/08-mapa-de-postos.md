@@ -17,7 +17,7 @@ Ideia: um mapa que lista os postos num raio do usuário. Os próprios usuários 
 ### 2. Ver um posto
 
 - Nome, bandeira, endereço, distância.
-- Preços por combustível (gasolina comum, aditivada, etanol, diesel, GNV) com data e autor anônimo ("um usuário confiável").
+- Preços por combustível (gasolina comum, aditivada, etanol, diesel, GNV) só com a data e quantas pessoas confirmaram. O autor nunca aparece.
 - Avaliações em etiquetas, não em texto livre: combustível bom, combustível suspeito, banheiro limpo, tem conveniência, tem loja 24h, fila grande, atendimento bom.
 - Nota geral (média das avaliações das etiquetas) e quantas pessoas confirmaram.
 - Botão **Atualizar** e botão **Denunciar**.
@@ -55,14 +55,14 @@ Cada usuário tem uma pontuação interna, nunca pública com nome:
 | Conta nova (menos de 7 dias)                     | peso baixo      |
 
 - O **peso** da pontuação decide quanto o preço do usuário vale: contas de alta reputação sobrescrevem na hora; contas novas precisam de uma confirmação para aparecer em destaque.
-- Faixas visíveis ao próprio usuário: Iniciante, Colaborador, Confiável. Sem ranking público e sem recompensa em dinheiro (evita fraude).
+- A pontuação é só interna, para dar peso ao que cada um publica. Sem faixas, sem ranking e sem recompensa (evita fraude).
 - Abaixo de um limite: o usuário perde a permissão de publicar. Banimento manual no painel.
 
 ### 6. Regras de dados
 
 - O que é publicado é o **posto, o preço, as etiquetas e a data**. Nada de nome, foto ou e-mail do autor para outros usuários.
 - O app guarda o autor internamente (para reputação e moderação). Excluir conta anonimiza as contribuições (mantém o preço, remove o vínculo).
-- Sem fotos e sem texto livre no início (menos moderação, menos LGPD).
+- **Sem fotos, sem comentários e sem ranking**, também no futuro (decisão do dono). Só preço, etiquetas fixas e data.
 - Preço é informação do posto, não dado pessoal. A localização do usuário nunca é publicada.
 
 ## Tecnologias
@@ -102,8 +102,9 @@ Cada fase entrega valor sozinha e custa R$ 0.
 
 **Fase A, só o seu histórico (sem comunidade)**
 
-- Seus abastecimentos já guardam posto e preço. O app mostra "seus postos": mais barato que você achou, última vez, média.
-- Sem mapa, sem API nova. Aproveita o que já existe.
+- Hoje o abastecimento guarda o posto só como texto livre e opcional ("Shell", "shell", "Posto Shell Centro" viram três postos). Por isso, o **MVP** passa a pedir o posto de forma padronizada (ver `docs/01-roadmap.md`): o campo sugere os postos que o usuário já usou e reaproveita o mesmo nome, sem pedir localização.
+- Com o posto padronizado, o app mostra "seus postos": preço mais barato que você achou, última vez, média.
+- Sem mapa, sem API nova.
 
 **Fase B, postos próximos (OpenStreetMap)**
 
@@ -126,13 +127,10 @@ Cada fase entrega valor sozinha e custa R$ 0.
 - Pontuação, confirmações, faixas, perda de permissão.
 - Banimento e apelo.
 
-**Fase E, só com usuários de sobra**
+## Decisões do dono do projeto
 
-- Fotos, comentários e ranking regional. Aqui a moderação cresce e pode haver custo. Decidir com dados de uso.
-
-## Decisões em aberto (dono do projeto)
-
-- O app permite editar o nome ou o endereço do posto, ou só o preço e as etiquetas? Recomendação: só preço e etiquetas no início; endereço vem do OSM e é corrigido lá.
-- Mostrar autores como "usuário confiável" ou esconder totalmente? Recomendação: esconder; mostrar só a data e as confirmações.
-- Dar benefício Premium a quem contribui (ex.: sem anúncios)? Recomendação: não no começo, para evitar fraude.
-- Quando abrir a Fase C: depois de quantos usuários ativos? Recomendação: decidir com dados de uso, a partir de algumas centenas de usuários ativos por mês numa mesma cidade.
+- O app **não** edita nome nem endereço do posto. Vêm do OpenStreetMap. Só preço e etiquetas são do usuário.
+- Autores ficam escondidos. Aparecem só a data e quantas pessoas confirmaram.
+- Sem benefício Premium para quem contribui, no começo.
+- Se não houver custo em dinheiro, a fase C em diante sai mesmo com o mapa vazio. Ele ganha forma aos poucos.
+- Sem fotos, comentários e ranking (a antiga fase E foi removida).
