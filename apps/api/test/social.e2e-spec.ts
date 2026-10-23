@@ -25,6 +25,9 @@ const fakeRepository = {
     return user;
   },
   async openSession() {},
+  async deleteUser(id: string) {
+    users.delete(id);
+  },
   async findUser(id: string) {
     return users.get(id) ?? null;
   },
@@ -108,5 +111,20 @@ describe('login social (e2e)', () => {
       outcome: 'linked',
       user: { id: 'anon-1', isAnonymous: false },
     });
+  });
+
+  it('excluir conta exige o token e apaga o usuário do token', async () => {
+    await request(app.getHttpServer()).delete('/v1/auth/account').expect(401);
+
+    const jwt = app.get(JwtService);
+    users.set('conta-1', { id: 'conta-1', isAnonymous: false, plan: 'free' });
+    users.set('outra', { id: 'outra', isAnonymous: false, plan: 'free' });
+    const accessToken = await jwt.signAsync({ sub: 'conta-1' });
+    const res = await request(app.getHttpServer())
+      .delete('/v1/auth/account')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+    expect(res.body).toEqual({ deleted: true });
+    expect([...users.keys()]).toEqual(['outra']);
   });
 });

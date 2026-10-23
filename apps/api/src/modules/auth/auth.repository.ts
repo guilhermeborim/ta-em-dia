@@ -324,6 +324,15 @@ export class AuthRepository {
     );
   }
 
+  /**
+   * Apaga o usuário de vez (LGPD): identidades, aparelhos (com push token e refresh tokens),
+   * veículos e tudo que depende deles saem em cascata, inclusive as linhas com `deletedAt`.
+   * Idempotente: usuário que já não existe não é erro.
+   */
+  async deleteUser(userId: string): Promise<void> {
+    await this.prisma.user.deleteMany({ where: { id: userId } });
+  }
+
   /** O refresh token pelo hash, com o usuário do aparelho; `null` se não existe. */
   async findRefreshToken(tokenHash: string): Promise<StoredRefreshToken | null> {
     const found = await this.prisma.refreshToken.findUnique({

@@ -210,6 +210,12 @@ export class AuthService {
     return this.tokensFor(stored.user, next.token);
   }
 
+  /** "Excluir conta": apaga o usuário do token e tudo dele. Os tokens deixam de valer junto. */
+  async deleteAccount(userId: string): Promise<{ deleted: true }> {
+    await this.repository.deleteUser(userId);
+    return { deleted: true };
+  }
+
   private async tokensFor(user: AuthUser, refreshToken: string): Promise<AuthTokens> {
     return {
       accessToken: await this.jwt.signAsync({ sub: user.id }, { expiresIn: ACCESS_TOKEN_SECONDS }),
