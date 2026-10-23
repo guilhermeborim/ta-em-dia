@@ -30,7 +30,7 @@ export interface FuelForm {
   station: string;
 }
 
-export type FuelFormErrors = Partial<Record<'amounts' | 'km', string>>;
+export type FuelFormErrors = Partial<Record<'amounts' | 'km' | 'station', string>>;
 
 export const emptyFuelForm: FuelForm = {
   fuelType: 'gasoline',
@@ -117,8 +117,8 @@ export function entryDateFor(picked: Date | null, now: Date = new Date()): Date 
 }
 
 /**
- * Valida o formulário: km é obrigatório e dois dos três valores precisam estar
- * preenchidos. Posto é opcional e reaproveita o nome de um posto já usado.
+ * Valida o formulário: km e posto são obrigatórios e dois dos três valores precisam estar
+ * preenchidos. O posto reaproveita o nome de um posto já usado.
  */
 export function buildFuelEntryInput(
   form: FuelForm,
@@ -137,7 +137,18 @@ export function buildFuelEntryInput(
     errors.amounts = 'Preencha 2 dos 3 valores: preço por litro, litros e total';
   }
 
-  if (errors.km || errors.amounts || km === null || !pricePerLiter || !liters || !total) {
+  const stationName = resolveStationName(ctx.stations ?? [], form.station);
+  if (stationName === undefined) errors.station = 'Informe o posto';
+
+  if (
+    errors.km ||
+    errors.amounts ||
+    stationName === undefined ||
+    km === null ||
+    !pricePerLiter ||
+    !liters ||
+    !total
+  ) {
     return { errors };
   }
 
@@ -151,7 +162,7 @@ export function buildFuelEntryInput(
       pricePerLiter,
       total,
       fullTank: form.fullTank,
-      stationName: resolveStationName(ctx.stations ?? [], form.station),
+      stationName,
     },
   };
 }

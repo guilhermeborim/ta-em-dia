@@ -121,7 +121,10 @@ export function useNewFuelEntryViewModel() {
       setErrors((prev) => ({ ...prev, km: undefined }));
     },
     setFullTank: (fullTank: boolean) => setForm((prev) => ({ ...prev, fullTank })),
-    setStation: (station: string) => setForm((prev) => ({ ...prev, station })),
+    setStation: (station: string) => {
+      setForm((prev) => ({ ...prev, station }));
+      setErrors((prev) => ({ ...prev, station: undefined }));
+    },
     close: () => router.back(),
     addVehicle: () => router.replace('/primeiro-veiculo'),
     save,

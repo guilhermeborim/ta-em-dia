@@ -15,7 +15,12 @@ import {
 const VEHICLE_ID = '018bcfe5-6800-7000-8000-000000000001';
 const DATE = new Date('2026-10-21T12:00:00.000Z');
 
-const form = (patch: Partial<FuelForm>): FuelForm => ({ ...emptyFuelForm, km: '48.910', ...patch });
+const form = (patch: Partial<FuelForm>): FuelForm => ({
+  ...emptyFuelForm,
+  km: '48.910',
+  station: 'Posto Ipiranga',
+  ...patch,
+});
 
 describe('sanitizeDecimal', () => {
   it('troca ponto por vírgula e limita as casas', () => {
@@ -181,13 +186,12 @@ describe('buildFuelEntryInput', () => {
     });
   });
 
-  it('posto vazio fica sem nome', () => {
+  it('exige o posto', () => {
     const result = buildFuelEntryInput(
       form({ total: '240', liters: '40', amountOrder: ['total', 'liters'], station: '  ' }),
       { vehicleId: VEHICLE_ID, date: DATE },
     );
-    expect(result.value?.stationName).toBeUndefined();
-    expect(result.value?.pricePerLiter).toBe(6);
+    expect(result.errors).toEqual({ station: 'Informe o posto' });
   });
 
   it('exige km e dois valores', () => {

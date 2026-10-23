@@ -35,10 +35,7 @@ export function NewFuelEntryView() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         <ScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
@@ -132,7 +129,9 @@ export function NewFuelEntryView() {
               </Text>
 
               <TextField
-                label="Posto (opcional)"
+                label="Posto"
+                required
+                error={vm.errors.station}
                 value={vm.form.station}
                 onChangeText={vm.setStation}
                 placeholder="Ex.: Posto Ipiranga"

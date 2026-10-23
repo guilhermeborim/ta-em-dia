@@ -252,6 +252,8 @@ Exige um **development build novo** (`@react-native-community/datetimepicker` é
 - [ ] Depois de um abastecimento com "Posto Ipiranga", ao abrir o campo e digitar "ipi" aparece o chip "Posto Ipiranga"; tocar nele preenche o campo.
 - [ ] Digitar "posto ípiranga" (outra grafia) e salvar grava "Posto Ipiranga" (confira em Histórico ou na lista de abastecimentos).
 - [ ] Digitar um nome novo salva o nome novo e ele aparece nas sugestões do próximo abastecimento.
+- [ ] Posto é obrigatório: `*` vermelho no rótulo; salvar vazio mostra "Informe o posto" abaixo da caixa e o erro some ao digitar.
+- [ ] Android e iOS: ao tocar em "Posto", a tela sobe, o campo e os chips ficam visíveis acima do teclado e dá para rolar (`KeyboardAvoidingView` agora usa `padding` nos dois sistemas).
 - [ ] Chips quebram em linhas com fonte grande, sem cortar o nome longo e sem empurrar o botão Salvar para fora da tela; o teclado não cobre os chips.
 
 ### 2.12 O que veio antes (não revisado aqui)
@@ -316,7 +318,7 @@ Recomendação: **A** agora; revisar quando o login existir. Se escolher B, o te
 
 ### 3.28 Posto padronizado: escolhas que fiz
 
-- **Sem frame no Figma:** as sugestões são chips (o `Chip` do app) logo abaixo do campo "Posto (opcional)", até 5, os mais usados primeiro; sem texto digitado, mostram os mais usados. Alternativa: lista suspensa sobre o teclado. Recomendação: manter e desenhar no Figma depois.
+- **Sem frame no Figma:** as sugestões são chips (o `Chip` do app) logo abaixo do campo "Posto" (obrigatório), até 5, os mais usados primeiro; sem texto digitado, mostram os mais usados. Alternativa: lista suspensa sobre o teclado. Recomendação: manter e desenhar no Figma depois.
 - **Nomes antigos não são reescritos:** abastecimentos já gravados com grafias diferentes ("shell" e "Shell") continuam como estão; só os novos reaproveitam o nome mais usado. Alternativa: migration que unifica os antigos. Recomendação: manter até existir "Seus postos".
 - **Só reaproveita nome igual:** "Shell" e "Shell Centro" são postos diferentes (sem aproximação por semelhança). Recomendação: manter.
 
