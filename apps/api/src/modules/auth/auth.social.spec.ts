@@ -212,6 +212,33 @@ describe('AuthService.link', () => {
     expect(payload.sub).toBe(account.id);
   });
 
+  it('merge que passaria do limite de 1 veículo do plano grátis: 409 VEHICLE_LIMIT_REACHED e nada muda', async () => {
+    const { repository, service } = setup();
+    repository.identities.set('google:sub-ana', account);
+    repository.data.set(anon.id, { vehicles: 1, records: 5 });
+    await expect(
+      service.link(anon.id, { ...link, onConflict: 'merge' }, NOW),
+    ).rejects.toMatchObject({
+      status: 409,
+      response: { code: 'VEHICLE_LIMIT_REACHED' },
+    });
+    expect(repository.switched).toHaveLength(0);
+    expect(repository.sessions).toHaveLength(0);
+  });
+
+  it('merge cabe quando o aparelho não tem veículo na API, e "usar só a conta" nunca é barrado', async () => {
+    const { repository, service } = setup();
+    repository.identities.set('google:sub-ana', account);
+    expect((await service.link(anon.id, { ...link, onConflict: 'merge' }, NOW)).outcome).toBe(
+      'merged',
+    );
+
+    repository.data.set(anon.id, { vehicles: 1, records: 5 });
+    expect((await service.link(anon.id, { ...link, onConflict: 'use_account' }, NOW)).outcome).toBe(
+      'switched',
+    );
+  });
+
   it('corrida: outra chamada ligou o login a uma conta no meio do caminho', async () => {
     const { repository, service } = setup();
     repository.raceWinner = account;

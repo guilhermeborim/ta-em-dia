@@ -8,6 +8,8 @@ import { JwtService } from '@nestjs/jwt';
 import {
   AnonymousAuthRequest,
   AuthTokens,
+  canMergeVehicles,
+  DEFAULT_FLAGS,
   LinkOutcome,
   LinkRequest,
   LinkResult,
@@ -157,6 +159,20 @@ export class AuthService {
       });
     }
     const merge = request.onConflict === 'merge';
+    if (merge) {
+      // O plano grátis guarda 1 veículo: a junção não pode passar disso (arquivados contam).
+      const max = DEFAULT_FLAGS[existing.plan]['vehicles.max'];
+      const [local, remote] = await Promise.all([
+        this.repository.countData(userId),
+        this.repository.countData(existing.id),
+      ]);
+      if (!canMergeVehicles(local.vehicles, remote.vehicles, max)) {
+        throw new ConflictException({
+          code: 'VEHICLE_LIMIT_REACHED',
+          message: 'No plano grátis, o app guarda 1 veículo.',
+        });
+      }
+    }
     await this.repository.switchAccount({
       fromUserId: userId,
       toUserId: existing.id,

@@ -22,6 +22,7 @@ export function useLoginViewModel() {
   const router = useRouter();
   const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
@@ -42,7 +43,9 @@ export function useLoginViewModel() {
       if (busy) return;
       setBusy(true);
       try {
-        const result = await loginFlow(flow, provider);
+        const result = await loginFlow(flow, provider, {
+          onDownload: () => setDownloading(true),
+        });
         if (result.status === 'done') {
           await completeSocialLogin(provider);
           // Conta que já tem veículo (outro celular) não precisa cadastrar o primeiro de novo.
@@ -51,6 +54,7 @@ export function useLoginViewModel() {
           showToast(MESSAGES[result.status]);
         }
       } finally {
+        setDownloading(false);
         setBusy(false);
       }
     },
@@ -71,6 +75,8 @@ export function useLoginViewModel() {
     showApple: Platform.OS === 'ios',
     toast,
     busy,
+    /** "Baixando seus dados": o login deu certo e os dados da conta estão vindo. */
+    downloading,
     onGoogle: () => signIn('google'),
     onApple: () => signIn('apple'),
     skip,

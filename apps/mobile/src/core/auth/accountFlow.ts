@@ -69,6 +69,8 @@ export type LoginFlowResult = { status: 'done'; hasVehicles: boolean } | { statu
 export async function loginFlow(
   deps: AccountFlowDeps,
   provider: SocialProvider,
+  /** `onDownload` avisa que o login deu certo e os dados da conta estão vindo ("Baixando seus dados"). */
+  hooks: { onDownload?: () => void } = {},
 ): Promise<LoginFlowResult> {
   const signed = await deps.signIn(provider);
   if (signed.kind !== 'ok') return { status: failureOfSignIn(signed) };
@@ -76,6 +78,7 @@ export async function loginFlow(
   const login = await loginWithSocial(deps, signed.credential);
   if (login.kind !== 'ok') return { status: login.kind };
   await remember(deps.db, signed.credential);
+  hooks.onDownload?.();
   if (!(await pullAll(deps))) return { status: 'retry' };
 
   const row = await deps.db.getFirstAsync<{ total: number }>(

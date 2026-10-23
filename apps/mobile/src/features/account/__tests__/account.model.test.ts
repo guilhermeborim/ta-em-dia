@@ -7,6 +7,7 @@ import {
   formatLastSync,
   isEmptyAccount,
   loadLocalData,
+  mergeBlockedHint,
   mergeHint,
   progressOf,
 } from '../models/account.model';
@@ -77,6 +78,11 @@ describe('textos da tela 24', () => {
     expect(mergeHint({ vehicles: 1, records: 47 }, { vehicles: 1, records: 22 })).toBe(
       'Soma tudo: 2 veículos e 69 registros',
     );
+  });
+
+  it('explica por que "Juntar dados" está bloqueado no plano grátis', () => {
+    expect(mergeBlockedHint(1)).toBe('No plano grátis, o app guarda 1 veículo');
+    expect(mergeBlockedHint(3)).toBe('No plano grátis, o app guarda 3 veículos');
   });
 
   it('conta vazia não pergunta nada', () => {

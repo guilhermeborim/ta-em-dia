@@ -1,4 +1,9 @@
-import type { LinkConflictStrategy, LinkOutcome, SocialProvider } from '@ta-em-dia/shared';
+import {
+  canMergeVehicles,
+  type LinkConflictStrategy,
+  type LinkOutcome,
+  type SocialProvider,
+} from '@ta-em-dia/shared';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Platform } from 'react-native';
@@ -19,6 +24,7 @@ import {
 } from '../../../core/auth/accountFlow';
 import { useAccountFlow } from '../../../core/auth/useAccountFlow';
 import { useDb } from '../../../core/db';
+import { useFlag } from '../../../core/flags/useFlag';
 import { useToast } from '../../../core/toast/useToast';
 import {
   conflictBody,
@@ -26,6 +32,7 @@ import {
   formatLastSync,
   isEmptyAccount,
   loadLocalData,
+  mergeBlockedHint,
   mergeHint,
   progressOf,
   recordsText,
@@ -41,8 +48,6 @@ interface Conflict {
 }
 
 interface Transfer {
-  /** `upload`: enviando o que está no aparelho; `download`: trazendo o que a conta tem. */
-  mode: 'upload' | 'download';
   done: number;
   total: number;
   /** `null` enquanto trabalha; depois, se deu para terminar. */
@@ -56,6 +61,7 @@ export function useAccountViewModel() {
   const db = useDb();
   const router = useRouter();
   const flow = useAccountFlow();
+  const maxVehicles = useFlag('vehicles.max');
   const { toast, show } = useToast();
   const [account, setAccount] = useState<AccountProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +69,7 @@ export function useAccountViewModel() {
   const [busy, setBusy] = useState(false);
   const [conflict, setConflict] = useState<Conflict | null>(null);
   const [transfer, setTransfer] = useState<Transfer | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reload = useCallback(async () => {
@@ -84,19 +91,39 @@ export function useAccountViewModel() {
     [],
   );
 
-  /** Tela 23: leva os dados para a conta e mostra o progresso; no fim, "Tudo salvo!" e volta. */
+  /**
+   * Leva os dados para a conta. Enviar mostra a tela 23 (progresso) e, no fim, "Tudo salvo!". "Usar
+   * só os da conta" traz os da conta e mostra a folha "Baixando seus dados".
+   */
   const runTransfer = useCallback(
     async (outcome: LinkOutcome) => {
-      const mode = outcome === 'switched' ? 'download' : 'upload';
-      setTransfer({ mode, done: 0, total: 0, synced: null });
+      if (outcome === 'switched') {
+        setDownloading(true);
+        try {
+          const { synced } = await finishLink(flow, outcome);
+          await reload();
+          show(
+            synced
+              ? { title: 'Tudo certo!', message: 'Os dados da sua conta estão neste aparelho.' }
+              : {
+                  title: 'Conta conectada',
+                  message: 'Não deu para baixar tudo agora. Continuamos assim que houver internet.',
+                },
+          );
+        } finally {
+          setDownloading(false);
+        }
+        return;
+      }
+      setTransfer({ done: 0, total: 0, synced: null });
       const { synced } = await finishLink(flow, outcome, (p) =>
-        setTransfer({ mode, done: p.done, total: p.total, synced: null }),
+        setTransfer({ done: p.done, total: p.total, synced: null }),
       );
       setTransfer((current) => (current ? { ...current, synced } : current));
       await reload();
       closeTimer.current = setTimeout(() => setTransfer(null), FINISHED_MS);
     },
-    [flow, reload],
+    [flow, reload, show],
   );
 
   const handle = useCallback(
@@ -179,6 +206,9 @@ export function useAccountViewModel() {
 
   const name = account ? displayName(account) : '';
   const conflictLocal = { vehicles: local.vehicles, records: local.records };
+  const canMerge = conflict
+    ? canMergeVehicles(local.vehicles, conflict.account.vehicles, maxVehicles)
+    : true;
 
   return {
     loading,
@@ -213,25 +243,24 @@ export function useAccountViewModel() {
     conflict: conflict
       ? {
           body: conflictBody(conflict.account),
-          mergeHint: mergeHint(conflictLocal, conflict.account),
+          canMerge,
+          mergeHint: canMerge
+            ? mergeHint(conflictLocal, conflict.account)
+            : mergeBlockedHint(maxVehicles),
           confirm: confirmConflict,
           cancel: () => setConflict(null),
         }
       : null,
+    downloading,
     transfer: transfer
       ? {
-          title: transfer.mode === 'upload' ? 'Enviando seus dados' : 'Buscando seus dados',
-          detail:
-            transfer.mode === 'upload'
-              ? `${transfer.done} de ${transfer.total} ${transfer.total === 1 ? 'registro' : 'registros'} · não feche o app`
-              : 'Trazendo os dados da sua conta · não feche o app',
-          progress: transfer.mode === 'upload' ? progressOf(transfer.done, transfer.total) : 0,
+          title: 'Enviando seus dados',
+          detail: `${transfer.done} de ${transfer.total} ${transfer.total === 1 ? 'registro' : 'registros'} · não feche o app`,
+          progress: progressOf(transfer.done, transfer.total),
           finished: transfer.synced === null ? null : transfer.synced ? 'ok' : 'pending',
           finishedTitle: transfer.synced ? 'Tudo salvo!' : 'Conta conectada',
           finishedMessage: transfer.synced
-            ? transfer.mode === 'upload'
-              ? 'Seus dados estão seguros na sua conta.'
-              : 'Os dados da sua conta estão neste aparelho.'
+            ? 'Seus dados estão seguros na sua conta.'
             : 'Não deu para terminar agora. Continuamos assim que houver internet.',
         }
       : null,

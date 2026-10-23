@@ -52,6 +52,7 @@ import {
   SwitchRow,
   TimelineItem,
   TopBar,
+  ProgressSheet,
   Toast,
   typography,
   VehicleCard,
@@ -88,6 +89,7 @@ export function ComponentsView() {
   const [segment, setSegment] = useState('next');
   const [text, setText] = useState('');
   const [number, setNumber] = useState('');
+  const [sheet, setSheet] = useState(false);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -266,6 +268,20 @@ export function ComponentsView() {
               color={colors.warning}
             />
           </View>
+        </Section>
+
+        <Section title="Folha de progresso">
+          <Button
+            label="Abrir folha de progresso"
+            variant="outline"
+            onPress={() => setSheet(true)}
+          />
+          <ProgressSheet
+            visible={sheet}
+            title="Baixando seus dados"
+            text="Trazendo tudo da sua conta. Não feche o app."
+            onRequestClose={() => setSheet(false)}
+          />
         </Section>
 
         <Section title="Toast">
