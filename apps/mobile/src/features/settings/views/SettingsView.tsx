@@ -46,7 +46,7 @@ export function SettingsView() {
             <SwitchRow
               flat
               label="Lembrar de atualizar o km"
-              hint="A cada 15 dias"
+              hint="A cada 7 dias"
               value={vm.notifyOdometer}
               onValueChange={vm.setNotifyOdometer}
             />

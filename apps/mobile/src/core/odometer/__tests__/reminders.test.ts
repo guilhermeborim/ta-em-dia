@@ -90,15 +90,15 @@ describe('refreshOdometerReminder', () => {
     expect(last()).toEqual([]);
   });
 
-  it('ligado: um aviso 15 dias depois da última atualização, às 9h', async () => {
+  it('ligado: um aviso 7 dias depois da última atualização, às 9h', async () => {
     await saveToggle(db, 'notifyOdometer', true);
     await refresh();
     expect(last()).toEqual([
       {
         id: `odometer:${VEHICLE_ID}`,
         title: 'Tá em Dia',
-        body: 'Faz 15 dias sem atualizar o km do Gol',
-        fireAt: new Date(2026, 8, 16, 9),
+        body: 'Faz 7 dias sem atualizar o km do Gol',
+        fireAt: new Date(2026, 8, 8, 9),
         data: { vehicleId: VEHICLE_ID },
       },
     ]);
@@ -108,14 +108,14 @@ describe('refreshOdometerReminder', () => {
     await saveToggle(db, 'notifyOdometer', true);
     await addManualReading(db, { vehicleId: VEHICLE_ID, km: 10 }, { now: new Date(2026, 8, 4) });
     await refresh();
-    expect(last()[0].fireAt).toEqual(new Date(2026, 8, 19, 9));
+    expect(last()[0].fireAt).toEqual(new Date(2026, 8, 11, 9));
   });
 
-  it('sem atualizar há muito tempo: repete a cada 15 dias', async () => {
+  it('sem atualizar há muito tempo: repete a cada 7 dias', async () => {
     await saveToggle(db, 'notifyOdometer', true);
     await refresh(new Date(2026, 9, 20, 12));
-    expect(last()[0].body).toBe('Faz 60 dias sem atualizar o km do Gol');
-    expect(last()[0].fireAt).toEqual(new Date(2026, 9, 31, 9));
+    expect(last()[0].body).toBe('Faz 56 dias sem atualizar o km do Gol');
+    expect(last()[0].fireAt).toEqual(new Date(2026, 9, 27, 9));
   });
 
   it('sem veículo: não agenda nada', async () => {

@@ -131,13 +131,13 @@ São 22 telas, agrupadas por área.
 
 **Notificações (texto e ícone)**
 
-| Tipo                 | Exemplo de texto                        |
-| -------------------- | --------------------------------------- |
-| Manutenção por km    | "Troca de óleo do Gol em ~500 km"       |
-| Manutenção por tempo | "Alinhamento do Gol vence em 7 dias"    |
-| IPVA / licenciamento | "IPVA do Gol vence em 10 dias"          |
-| CNH                  | "Sua CNH vence em 30 dias"              |
-| Atualizar km         | "Faz 15 dias sem atualizar o km do Gol" |
+| Tipo                 | Exemplo de texto                       |
+| -------------------- | -------------------------------------- |
+| Manutenção por km    | "Troca de óleo do Gol em ~500 km"      |
+| Manutenção por tempo | "Alinhamento do Gol vence em 7 dias"   |
+| IPVA / licenciamento | "IPVA do Gol vence em 10 dias"         |
+| CNH                  | "Sua CNH vence em 30 dias"             |
+| Atualizar km         | "Faz 7 dias sem atualizar o km do Gol" |
 
 **Componentes**
 

@@ -28,7 +28,7 @@ Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
 - [x] **Alertas de documentos**: notificações locais 30 e 7 dias antes de cada vencimento (reagendar como nos avisos de manutenção), banner "Avisamos 30 e 7 dias antes" da tela 18, editar a antecedência ("editar lembrete"), documentos vencidos ou perto de vencer entrando em "Próximos alertas" do Início, no selo do cartão de Meus veículos e no valor "1 vencido" de Documentos e prazos na aba Mais.
 - [x] **Relatórios** (tela 14): [14](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1094).
 - [x] **Mais e Premium em breve** (telas 15, 21): [15](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1236), [21](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1521). Premium atrás de feature flag. Conta, Configurações e Ajuda avisam "Em breve" até chegarem.
-- [x] **Configurações** (tela 20): [20](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1446). Interruptores de notificação (manutenções, documentos, lembrar de atualizar o km a cada 15 dias), antecedência padrão dos prazos, unidades (km e litros) e "Exportar dados" (Em breve). Sem o seletor de aparência: o app é só tema claro (`apps/mobile/CLAUDE.md`).
+- [x] **Configurações** (tela 20): [20](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1446). Interruptores de notificação (manutenções, documentos, lembrar de atualizar o km a cada 7 dias), antecedência padrão dos prazos, unidades (km e litros) e "Exportar dados" (Em breve). Sem o seletor de aparência: o app é só tema claro (`apps/mobile/CLAUDE.md`).
 
 ## Fase B — Com API
 
@@ -58,7 +58,7 @@ Escolhas tomadas sobre os itens 3.9 a 3.23 de `docs/07-validacao-e-decisoes.md`.
 
 ### Para implementar
 
-- [ ] **Lembrar de atualizar o km a cada 7 dias**: trocar os 15 dias por 7 (primeiro aviso e repetição; texto "Faz 7 dias sem atualizar o km do <veículo>"; valor em `shared`, se existir). Atualizar também o checklist 2.8 de `docs/07-validacao-e-decisoes.md`.
+- [x] **Lembrar de atualizar o km a cada 7 dias**: trocar os 15 dias por 7 (primeiro aviso e repetição; texto "Faz 7 dias sem atualizar o km do <veículo>"; valor em `shared`, se existir). Atualizar também o checklist 2.8 de `docs/07-validacao-e-decisoes.md`.
 - [ ] **Ajuda e contato, Termos e Privacidade**: trocar o "Em breve" por telas ou links. Depende do dono: e-mail ou página de suporte e as URLs públicas (`docs/05-privacidade-lgpd.md`, checklist antes de publicar).
 - [ ] **Cartão "Valor na FIPE"** (tela 17): cartão com o selo "Em breve" de Premium, igual ao Figma. Sem consulta real (Fase 2). Atrás de feature flag.
 

@@ -13,8 +13,8 @@ import { lastKmUpdateAt } from './lastUpdate';
 export const ODOMETER_REMINDER_PREFIX = 'odometer:';
 
 /**
- * Reagenda o lembrete de atualizar o km do veículo ativo: um aviso às 9h, 15 dias depois da última
- * atualização (ou o próximo múltiplo de 15 dias). Desligado em Configurações, cancela o aviso.
+ * Reagenda o lembrete de atualizar o km do veículo ativo: um aviso às 9h, 7 dias depois da última
+ * atualização (ou o próximo múltiplo de 7 dias). Desligado em Configurações, cancela o aviso.
  * Sem permissão não agenda nada (e não pede). Nunca lança erro.
  */
 export async function refreshOdometerReminder(
