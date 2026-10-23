@@ -9,6 +9,8 @@ export type Plan = 'free' | 'premium';
 export interface FeatureFlags {
   'vehicles.max': number | null;
   'sync.cloud': boolean;
+  /** Sincroniza também quem não fez login (usuário anônimo). Desligada até o dono decidir (docs/07). */
+  'sync.anonymous': boolean;
   'reports.advanced': boolean;
   'export.pdf': boolean;
   'geo.fuelReminder': boolean;
@@ -23,6 +25,7 @@ export const DEFAULT_FLAGS: Record<Plan, FeatureFlags> = {
   free: {
     'vehicles.max': 1,
     'sync.cloud': true,
+    'sync.anonymous': false,
     'reports.advanced': true,
     'export.pdf': false,
     'geo.fuelReminder': false,
@@ -32,6 +35,7 @@ export const DEFAULT_FLAGS: Record<Plan, FeatureFlags> = {
   premium: {
     'vehicles.max': null,
     'sync.cloud': true,
+    'sync.anonymous': false,
     'reports.advanced': true,
     'export.pdf': true,
     'geo.fuelReminder': true,

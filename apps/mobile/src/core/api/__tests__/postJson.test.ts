@@ -1,4 +1,4 @@
-import { postJson } from '../postJson';
+import { getJson, postJson } from '../postJson';
 
 const response = (status: number, body: unknown) =>
   ({
@@ -75,5 +75,41 @@ describe('postJson', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+});
+
+describe('token e GET', () => {
+  it('com accessToken, manda Authorization: Bearer; sem ele, não manda', async () => {
+    const fetchFn = jest.fn(async () => response(200, {}));
+    await postJson('https://api.test', '/v1/x', {}, fetchFn as unknown as typeof fetch, 'abc');
+    await postJson('https://api.test', '/v1/x', {}, fetchFn as unknown as typeof fetch);
+    const calls = fetchFn.mock.calls as unknown as [string, RequestInit][];
+    expect(calls[0][1].headers).toEqual({
+      'content-type': 'application/json',
+      authorization: 'Bearer abc',
+    });
+    expect(calls[1][1].headers).toEqual({ 'content-type': 'application/json' });
+  });
+
+  it('getJson: GET sem corpo, com o mesmo tratamento de erros', async () => {
+    const ok = jest.fn(async () => response(200, { n: 1 }));
+    expect(
+      await getJson('https://api.test', '/v1/y?a=1', ok as unknown as typeof fetch, 'abc'),
+    ).toEqual({ kind: 'ok', body: { n: 1 } });
+    const [url, init] = ok.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/v1/y?a=1');
+    expect(init.method).toBe('GET');
+    expect(init.body).toBeUndefined();
+
+    const down = jest.fn(async () => response(503, {}));
+    expect(await getJson('https://api.test', '/v1/y', down as unknown as typeof fetch)).toEqual({
+      kind: 'unreachable',
+    });
+    const denied = jest.fn(async () => response(401, { code: 'UNAUTHORIZED' }));
+    expect(await getJson('https://api.test', '/v1/y', denied as unknown as typeof fetch)).toEqual({
+      kind: 'rejected',
+      status: 401,
+      code: 'UNAUTHORIZED',
+    });
   });
 });

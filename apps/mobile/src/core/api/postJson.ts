@@ -9,22 +9,22 @@ export type ApiResult =
 /** O serviço grátis da API dorme sem uso e leva cerca de 1 minuto para acordar. */
 export const API_TIMEOUT_MS = 60_000;
 
-/**
- * POST com corpo JSON. Nada do corpo nem da resposta vai para log ou erro (tem segredo e token).
- */
-export async function postJson(
+async function requestJson(
   apiUrl: string,
   path: string,
-  body: unknown,
-  fetchFn: typeof fetch = fetch,
+  init: { method: 'GET' | 'POST'; body?: unknown },
+  fetchFn: typeof fetch,
+  accessToken?: string,
 ): Promise<ApiResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
   try {
+    const headers: Record<string, string> = { 'content-type': 'application/json' };
+    if (accessToken) headers.authorization = `Bearer ${accessToken}`;
     const res = await fetchFn(`${apiUrl}${path}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
+      method: init.method,
+      headers,
+      ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
       signal: controller.signal,
     });
     if (res.ok) return { kind: 'ok', body: await res.json() };
@@ -41,4 +41,28 @@ export async function postJson(
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * POST com corpo JSON. Nada do corpo nem da resposta vai para log ou erro (tem segredo e token).
+ * Com `accessToken`, manda `Authorization: Bearer`.
+ */
+export function postJson(
+  apiUrl: string,
+  path: string,
+  body: unknown,
+  fetchFn: typeof fetch = fetch,
+  accessToken?: string,
+): Promise<ApiResult> {
+  return requestJson(apiUrl, path, { method: 'POST', body }, fetchFn, accessToken);
+}
+
+/** GET com resposta JSON; mesmas regras de `postJson` (nunca lança, nada vai para log). */
+export function getJson(
+  apiUrl: string,
+  path: string,
+  fetchFn: typeof fetch = fetch,
+  accessToken?: string,
+): Promise<ApiResult> {
+  return requestJson(apiUrl, path, { method: 'GET' }, fetchFn, accessToken);
 }

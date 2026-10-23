@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAnonymousSession } from '../core/auth';
 import { DatabaseProvider } from '../core/db';
 import { useReminderLifecycle } from '../core/reminders';
+import { useSyncLifecycle } from '../core/sync';
 import { LoginProvider, useLogin } from '../features/login/LoginProvider';
 import { OnboardingProvider, useOnboarding } from '../features/onboarding/OnboardingProvider';
 import { fontAssets } from '../ui';
@@ -30,6 +31,9 @@ function AppReady() {
 
   // Usuário anônimo na API: só tenta depois do "Continuar sem login"; o app funciona sem ele.
   useAnonymousSession(ready && done === true && loginDone === true);
+
+  // Sync com a API: liga com o resto, mas só roda para quem as flags `sync.*` liberam.
+  useSyncLifecycle(ready && done === true && loginDone === true);
 
   // Se a fonte falhar, o app abre com a fonte do sistema em vez de travar na splash.
   if (!ready) return null;

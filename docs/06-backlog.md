@@ -35,8 +35,8 @@ Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
 - [x] **API: usuário anônimo** (`POST /v1/auth/anonymous`): módulo `auth`, Prisma, migration `init`, guard JWT global.
 - [x] **App: chamar o usuário anônimo** quando houver internet: `core/api`, tokens no SecureStore, refazer a chamada se falhar.
 - [x] **API: sync** (`POST /v1/sync/push` e `GET /v1/sync/pull`): módulo `sync`, contrato em `shared`, contador `users.syncVersion`.
-- [ ] **App: motor de sync** (envia a `outbox`, aplica o pull, dispara ao abrir, ao voltar, ao recuperar internet e depois de gravar). Telas: [23](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1656), [24](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1688).
-- [ ] **Login com Google** (Android e iOS) e **Apple** (só iOS), e vincular conta. Telas: [19](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1349), [19b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1399).
+- [x] **App: motor de sync** (envia a `outbox`, aplica o pull, dispara ao abrir, ao voltar, ao recuperar internet e depois de gravar). Atrás das flags `sync.cloud` e `sync.anonymous` (desligada até o dono decidir). As telas 23 e 24 vêm com o login (item abaixo).
+- [ ] **Login com Google** (Android e iOS) e **Apple** (só iOS), e vincular conta. Telas: [19](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1349), [19b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1399), e as do primeiro envio ao vincular: [23 "Enviando seus dados"](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1656) e [24 "Essa conta já tem dados"](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1688).
 - [ ] **Excluir conta** (tela 22): [22](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1598). App e API.
 - [ ] **Exportar meus dados** (LGPD, ver `docs/05-privacidade-lgpd.md`).
 
