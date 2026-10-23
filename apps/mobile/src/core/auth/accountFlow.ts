@@ -1,4 +1,5 @@
 import type { LinkConflictStrategy, LinkOutcome, SocialProvider } from '@ta-em-dia/shared';
+import { deleteJson } from '../api';
 import { setSetting, type Db } from '../db';
 import { refreshReminders } from '../reminders';
 import {
@@ -9,10 +10,10 @@ import {
 } from '../sync/accountData';
 import { syncNow } from '../sync/syncEngine';
 import { saveAccount, clearAccount, loadAccount } from './account';
-import type { SessionDeps } from './anonymousSession';
+import { ensureAnonymousSession, type SessionDeps } from './anonymousSession';
 import { clearInstallationCredentials } from './installation';
 import type { SignInResult } from './providers';
-import { clearSession, loadSession } from './session';
+import { clearSession, expireSession, loadSession } from './session';
 import { emitSignedOut } from './signOutEvents';
 import { linkWithSocial, loginWithSocial, type AccountData, type SocialCredential } from './social';
 
@@ -170,4 +171,36 @@ export async function signOut(deps: AccountFlowDeps): Promise<void> {
   await refreshReminders(deps.db);
   if (account) await deps.signOutProvider?.(account.provider);
   emitSignedOut();
+}
+
+/** `retry` = sem internet ou servidor fora (nada foi apagado); `rejected` = a API recusou. */
+export type DeleteAccountResult = 'done' | 'retry' | 'rejected';
+
+/**
+ * "Excluir minha conta" (tela 22): pede à API (`DELETE /v1/auth/account`) para apagar a conta e
+ * tudo dela e, só depois da resposta, faz o mesmo que "Sair da conta" neste aparelho. Sem internet
+ * não apaga nada, nem na API nem no aparelho: a pessoa tenta de novo.
+ */
+export async function deleteAccount(deps: AccountFlowDeps): Promise<DeleteAccountResult> {
+  try {
+    const ensured = await ensureAnonymousSession(deps);
+    if (ensured !== 'ready') return ensured === 'retry' ? 'retry' : 'rejected';
+    const token = await accessToken(deps);
+    if (!token) return 'retry';
+
+    const result = await deleteJson(deps.apiUrl, '/v1/auth/account', deps.fetchFn, token);
+    if (result.kind === 'unreachable') return 'retry';
+    if (result.kind === 'rejected') {
+      if (result.status === 401 && result.code === 'UNAUTHORIZED') {
+        // O acesso vale na data local mas a API o recusou: marca vencido para renovar na próxima.
+        await expireSession(deps.store);
+        return 'retry';
+      }
+      return 'rejected';
+    }
+  } catch {
+    return 'retry';
+  }
+  await signOut(deps);
+  return 'done';
 }

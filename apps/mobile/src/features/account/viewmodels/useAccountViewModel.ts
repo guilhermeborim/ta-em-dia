@@ -239,7 +239,7 @@ export function useAccountViewModel() {
       { label: 'Registros', value: String(local.records) },
     ],
     signOut: confirmSignOut,
-    deleteAccount: () => show({ title: 'Em breve' }),
+    deleteAccount: () => router.push('/excluir-conta'),
     conflict: conflict
       ? {
           body: conflictBody(conflict.account),
