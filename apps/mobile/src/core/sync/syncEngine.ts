@@ -8,7 +8,7 @@ import { getJson, postJson } from '../api';
 import type { Db } from '../db';
 import { applyPulledChanges } from './pullApply';
 import { readOutboxBatch, removeFromOutbox } from './outboxQueue';
-import { getSyncSince } from './syncState';
+import { getSyncSince, setLastSyncedAt } from './syncState';
 
 export type SyncOutcome =
   /** Tudo enviado e recebido. */
@@ -27,6 +27,8 @@ export interface SyncEngineDeps {
   fetchFn?: typeof fetch;
   /** Linhas por pull (padrão: o máximo da API). */
   pullLimit?: number;
+  /** Chamado a cada lote enviado, com quantas mudanças saíram da fila (para a barra de progresso). */
+  onPushed?: (count: number) => void;
 }
 
 export interface SyncResult {
@@ -75,6 +77,7 @@ export async function syncNow(deps: SyncEngineDeps): Promise<SyncResult> {
       }
       // Aceitas e rejeitadas saem da fila: a rejeitada perdeu para o servidor e volta no pull.
       await removeFromOutbox(db, batch.ids);
+      deps.onPushed?.(batch.ids.length);
     }
 
     const limit = deps.pullLimit ?? SYNC_PULL_MAX_LIMIT;
@@ -96,6 +99,7 @@ export async function syncNow(deps: SyncEngineDeps): Promise<SyncResult> {
       applied += await applyPulledChanges(db, page.data.changes, page.data.nextSince);
       if (!page.data.hasMore) break;
     }
+    await setLastSyncedAt(db, new Date());
     return { outcome: 'done', applied };
   } catch {
     // Erro do banco local ou algo inesperado: tenta de novo mais tarde, sem derrubar o app.

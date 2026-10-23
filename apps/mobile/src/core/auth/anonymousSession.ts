@@ -64,6 +64,9 @@ export async function ensureAnonymousSession(deps: SessionDeps): Promise<Session
     if (session) {
       const renewed = await renewSession(deps, session, now());
       if (renewed !== 'login') return renewed;
+      // Quem entrou com Google ou Apple não volta a ser anônimo sozinho: o aparelho é da conta, e
+      // o segredo dele não abre sessão anônima por cima. Fica sem sessão até entrar de novo.
+      if (!session.tokens.user.isAnonymous) return 'rejected';
     }
 
     const { installationId, secret } = await (deps.credentials ?? ensureInstallationCredentials)(

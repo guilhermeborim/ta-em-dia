@@ -8,18 +8,18 @@ O melhor jeito de proteger um dado é não ter o dado. O MVP **não guarda** nú
 
 ## Mapa dos dados
 
-| Dado                           | Onde fica                 | Sensibilidade | Tratamento                                                    |
-| ------------------------------ | ------------------------- | ------------- | ------------------------------------------------------------- |
-| E-mail e nome (Google/Apple)   | API (`users`)             | Média         | Só o que o provedor entrega; nunca em log                     |
-| Placa do veículo               | SQLite e API              | Média         | Opcional; nunca em log, analytics ou mensagem de erro         |
-| Marca, modelo, ano, km         | SQLite e API              | Baixa         | Texto simples                                                 |
-| Abastecimentos e manutenções   | SQLite e API              | Baixa         | Texto simples                                                 |
-| Validade da CNH (só a data)    | SQLite e API              | Média         | Sem número da CNH, sem foto                                   |
-| Tokens e segredo anônimo       | `expo-secure-store`       | Alta          | Keychain (iOS) / Keystore (Android)                           |
-| Refresh token                  | API (`refresh_tokens`)    | Alta          | Só o hash; revogável                                          |
-| Push token                     | API (`devices`)           | Média         | Apagado ao sair ou excluir a conta                            |
-| Fotos de nota (Premium futuro) | Armazenamento de arquivos | Média         | Bucket privado, URL assinada e curta, nunca público           |
-| Foto de documento (CNH, CRLV)  | **não coletamos**         | Alta          | Só entra com decisão nova (ver "Se um dia houver documentos") |
+| Dado                           | Onde fica                                                           | Sensibilidade | Tratamento                                                                   |
+| ------------------------------ | ------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------- |
+| E-mail e nome (Google/Apple)   | API (`users`) e aparelho (`app_settings`, só para mostrar na Conta) | Média         | Só o que o provedor entrega; nunca em log; some do aparelho ao sair da conta |
+| Placa do veículo               | SQLite e API                                                        | Média         | Opcional; nunca em log, analytics ou mensagem de erro                        |
+| Marca, modelo, ano, km         | SQLite e API                                                        | Baixa         | Texto simples                                                                |
+| Abastecimentos e manutenções   | SQLite e API                                                        | Baixa         | Texto simples                                                                |
+| Validade da CNH (só a data)    | SQLite e API                                                        | Média         | Sem número da CNH, sem foto                                                  |
+| Tokens e segredo anônimo       | `expo-secure-store`                                                 | Alta          | Keychain (iOS) / Keystore (Android)                                          |
+| Refresh token                  | API (`refresh_tokens`)                                              | Alta          | Só o hash; revogável                                                         |
+| Push token                     | API (`devices`)                                                     | Média         | Apagado ao sair ou excluir a conta                                           |
+| Fotos de nota (Premium futuro) | Armazenamento de arquivos                                           | Média         | Bucket privado, URL assinada e curta, nunca público                          |
+| Foto de documento (CNH, CRLV)  | **não coletamos**                                                   | Alta          | Só entra com decisão nova (ver "Se um dia houver documentos")                |
 
 ## Segurança
 

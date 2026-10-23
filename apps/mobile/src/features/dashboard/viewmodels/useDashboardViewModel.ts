@@ -1,5 +1,6 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
+import { loadAccount } from '../../../core/auth';
 import { useDb } from '../../../core/db';
 import { buildAverage } from '../../../core/fuel';
 import { useToast } from '../../../core/toast/useToast';
@@ -18,12 +19,16 @@ export function useDashboardViewModel() {
   const router = useRouter();
   const { saved } = useLocalSearchParams<{ saved?: string }>();
   const [state, setState] = useState<HomeState | null>(null);
+  const [loggedIn, setLoggedIn] = useState(false);
   const { toast, show: showToast } = useToast();
 
   // Recarrega ao voltar para a aba (ex.: depois de salvar um abastecimento).
   useFocusEffect(
     useCallback(() => {
       let active = true;
+      loadAccount(db).then((account) => {
+        if (active) setLoggedIn(account !== null);
+      });
       loadHomeState(db).then((value) => {
         if (!active) return;
         setState(value);
@@ -72,6 +77,8 @@ export function useDashboardViewModel() {
         : router.push({ pathname: '/plano-manutencao/[id]', params: { id: card.id } }),
     openPlan: (id: string) => router.push({ pathname: '/plano-manutencao/[id]', params: { id } }),
     addVehicle: () => router.push('/primeiro-veiculo'),
-    saveData: () => showToast({ title: 'Em breve' }),
+    /** Quem já entrou com Google ou Apple não vê o convite; o selo mostra "Sincronizado". */
+    loggedIn,
+    saveData: () => router.push('/conta'),
   };
 }

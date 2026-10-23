@@ -36,16 +36,21 @@ export function DashboardView() {
                 icon={vm.vehicle.icon}
                 details={vm.vehicle.details}
               />
-              <SyncPill state="local" label="No aparelho" />
+              <SyncPill
+                state={vm.loggedIn ? 'synced' : 'local'}
+                label={vm.loggedIn ? undefined : 'No aparelho'}
+              />
             </View>
 
-            <ActionCard
-              tone="soft"
-              icon="cloud"
-              title="Salve seus dados na nuvem"
-              text="Entre com Google ou Apple"
-              onPress={vm.saveData}
-            />
+            {vm.loggedIn ? null : (
+              <ActionCard
+                tone="soft"
+                icon="cloud"
+                title="Salve seus dados na nuvem"
+                text="Entre com Google ou Apple"
+                onPress={vm.saveData}
+              />
+            )}
 
             {vm.summary ? (
               <>

@@ -3,7 +3,7 @@ import type { Db } from '../../../core/db';
 const DONE_KEY = 'login_done';
 const MODE_KEY = 'login_mode';
 
-export type LoginMode = 'anonymous';
+export type LoginMode = 'anonymous' | 'google' | 'apple';
 
 /** O Login só aparece uma vez: o aviso fica salvo no SQLite do aparelho. */
 export async function isLoginDone(db: Db): Promise<boolean> {
@@ -27,4 +27,9 @@ export async function markLoginDone(db: Db, mode: LoginMode): Promise<void> {
       '1',
     );
   });
+}
+
+/** Sair da conta: o Login volta a aparecer (e o modo guardado some). */
+export async function resetLogin(db: Db): Promise<void> {
+  await db.runAsync('DELETE FROM app_settings WHERE key IN (?, ?)', DONE_KEY, MODE_KEY);
 }

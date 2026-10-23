@@ -39,6 +39,7 @@ describe('postJson', () => {
       kind: 'rejected',
       status: 401,
       code: 'INVALID_CREDENTIALS',
+      body: { code: 'INVALID_CREDENTIALS', message: 'x' },
     });
   });
 
@@ -110,6 +111,7 @@ describe('token e GET', () => {
       kind: 'rejected',
       status: 401,
       code: 'UNAUTHORIZED',
+      body: { code: 'UNAUTHORIZED' },
     });
   });
 });
