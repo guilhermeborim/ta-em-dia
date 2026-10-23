@@ -9,7 +9,9 @@
       "distribution": "internal",
       "channel": "development",
       "env": {
-        "APP_ENV": "development"
+        "APP_ENV": "development",
+        "EXPO_PUBLIC_API_URL": "https://ta-em-dia-api-staging.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "1032713267792-tbjph5m17m9fp00m41i20ea4qnr89vm7.apps.googleusercontent.com"
       }
     },
     "staging": {
