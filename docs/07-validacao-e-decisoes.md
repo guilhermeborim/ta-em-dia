@@ -256,6 +256,12 @@ Exige um **development build novo** (`@react-native-community/datetimepicker` é
 - [ ] Android e iOS: ao tocar em "Posto", a tela sobe, o campo e os chips ficam visíveis acima do teclado e dá para rolar (`KeyboardAvoidingView` agora usa `padding` nos dois sistemas).
 - [ ] Chips quebram em linhas com fonte grande, sem cortar o nome longo e sem empurrar o botão Salvar para fora da tela; o teclado não cobre os chips.
 
+### 2.22 API: excluir conta (`DELETE /v1/auth/account`)
+
+- [ ] Com Postgres real (`docker compose up -d`, `pnpm db:migrate`): crie um usuário com veículo, abastecimento, manutenção, prazo e aparelho; chame `DELETE /v1/auth/account` com o token dele e confira que `users`, `auth_identities`, `devices`, `refresh_tokens`, `vehicles` e as tabelas filhas ficaram sem nenhuma linha dele (inclusive as com `deleted_at`).
+- [ ] Chamar de novo com o mesmo token responde 200 (idempotente).
+- [ ] Sem token: 401.
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
@@ -321,6 +327,12 @@ Recomendação: **A** agora; revisar quando o login existir. Se escolher B, o te
 - **Sem frame no Figma:** as sugestões são chips (o `Chip` do app) logo abaixo do campo "Posto" (obrigatório), até 5, os mais usados primeiro; sem texto digitado, mostram os mais usados. Alternativa: lista suspensa sobre o teclado. Recomendação: manter e desenhar no Figma depois.
 - **Nomes antigos não são reescritos:** abastecimentos já gravados com grafias diferentes ("shell" e "Shell") continuam como estão; só os novos reaproveitam o nome mais usado. Alternativa: migration que unifica os antigos. Recomendação: manter até existir "Seus postos".
 - **Só reaproveita nome igual:** "Shell" e "Shell Centro" são postos diferentes (sem aproximação por semelhança). Recomendação: manter.
+
+### 3.28 Excluir conta: escolhas que fiz na API
+
+- **Sem revogar o token da Apple:** `docs/05` pede revogar o token via API da Apple, mas isso exige a chave privada da conta Apple Developer (paga), que ainda não existe. A exclusão apaga tudo na API; a revogação entra junto com o login Apple real. Recomendação: manter por ora e fazer antes de publicar no iPhone.
+- **Sem confirmação extra no servidor:** o token de acesso basta (a confirmação fica no app). Alternativa: pedir login recente. Recomendação: manter.
+- **Backups do provedor** expiram em até 30 dias (já dito em `docs/05`); a Política precisa dizer isso.
 
 ### 3.27 Login no app: escolhas que fiz
 
