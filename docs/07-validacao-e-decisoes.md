@@ -267,6 +267,11 @@ Precisa do login com Google funcionando e da API no ar com `DELETE /v1/auth/acco
 - [ ] Cancelar e a seta voltam para a Conta sem apagar nada.
 - [ ] Os avisos de manutenção e de documentos deixam de chegar depois de excluir.
 - [ ] Fonte grande: título e linhas do cartão quebram sem cortar.
+### 2.22 API: excluir conta (`DELETE /v1/auth/account`)
+
+- [ ] Com Postgres real (`docker compose up -d`, `pnpm db:migrate`): crie um usuário com veículo, abastecimento, manutenção, prazo e aparelho; chame `DELETE /v1/auth/account` com o token dele e confira que `users`, `auth_identities`, `devices`, `refresh_tokens`, `vehicles` e as tabelas filhas ficaram sem nenhuma linha dele (inclusive as com `deleted_at`).
+- [ ] Chamar de novo com o mesmo token responde 200 (idempotente).
+- [ ] Sem token: 401.
 
 ### 2.12 O que veio antes (não revisado aqui)
 
@@ -342,6 +347,11 @@ Recomendação: **A** agora; revisar quando o login existir. Se escolher B, o te
 - **Falha mostra aviso temporário** (sem frame no Figma): "Sem conexão com o servidor. Nada foi apagado. Tente de novo em instantes." e "Não foi possível excluir a conta agora. Nada foi apagado. Tente de novo." Textos meus. Recomendação: manter.
 - **Digitar EXCLUIR** vale em minúsculas e com espaços nas pontas (o campo já abre em maiúsculas). Recomendação: manter.
 - **Conta anônima não tem o botão:** quem não entrou com login só tem dados no aparelho; "Sair" não existe para ela. Para apagar tudo, basta desinstalar o app (a API apaga a conta anônima após 12 meses sem uso). Recomendação: manter.
+### 3.28 Excluir conta: escolhas que fiz na API
+
+- **Sem revogar o token da Apple:** `docs/05` pede revogar o token via API da Apple, mas isso exige a chave privada da conta Apple Developer (paga), que ainda não existe. A exclusão apaga tudo na API; a revogação entra junto com o login Apple real. Recomendação: manter por ora e fazer antes de publicar no iPhone.
+- **Sem confirmação extra no servidor:** o token de acesso basta (a confirmação fica no app). Alternativa: pedir login recente. Recomendação: manter.
+- **Backups do provedor** expiram em até 30 dias (já dito em `docs/05`); a Política precisa dizer isso.
 
 ### 3.27 Login no app: escolhas que fiz
 
