@@ -3,6 +3,7 @@ export {
   addFuelEntry,
   deleteFuelEntry,
   listFuelEntries,
+  listStationNames,
   type NewFuelEntry,
 } from './fuelEntries.repository';
 export { toFuelListItem, type FuelListItem } from './fuelItem';

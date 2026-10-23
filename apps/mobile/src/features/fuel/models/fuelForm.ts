@@ -1,4 +1,8 @@
-import { calculateMissingFuelAmount, type FuelAmountField } from '@ta-em-dia/shared';
+import {
+  calculateMissingFuelAmount,
+  resolveStationName,
+  type FuelAmountField,
+} from '@ta-em-dia/shared';
 import {
   atNoon,
   MONTH_NAMES_SHORT,
@@ -114,11 +118,11 @@ export function entryDateFor(picked: Date | null, now: Date = new Date()): Date 
 
 /**
  * Valida o formulário: km é obrigatório e dois dos três valores precisam estar
- * preenchidos. Posto é opcional.
+ * preenchidos. Posto é opcional e reaproveita o nome de um posto já usado.
  */
 export function buildFuelEntryInput(
   form: FuelForm,
-  ctx: { vehicleId: string; date: Date },
+  ctx: { vehicleId: string; date: Date; stations?: readonly string[] },
 ): { value: NewFuelEntry; errors?: undefined } | { value?: undefined; errors: FuelFormErrors } {
   const errors: FuelFormErrors = {};
 
@@ -137,7 +141,6 @@ export function buildFuelEntryInput(
     return { errors };
   }
 
-  const station = form.station.trim();
   return {
     value: {
       vehicleId: ctx.vehicleId,
@@ -148,7 +151,7 @@ export function buildFuelEntryInput(
       pricePerLiter,
       total,
       fullTank: form.fullTank,
-      stationName: station === '' ? undefined : station,
+      stationName: resolveStationName(ctx.stations ?? [], form.station),
     },
   };
 }

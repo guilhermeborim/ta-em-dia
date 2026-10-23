@@ -144,6 +144,19 @@ describe('entryDateFor', () => {
 });
 
 describe('buildFuelEntryInput', () => {
+  it('reaproveita o nome de um posto já usado', () => {
+    const result = buildFuelEntryInput(
+      form({
+        total: '240',
+        liters: '40',
+        amountOrder: ['total', 'liters'],
+        station: 'posto ipiranga ',
+      }),
+      { vehicleId: 'v1', date: new Date('2026-10-21T12:00:00Z'), stations: ['Posto Ipiranga'] },
+    );
+    expect(result.value?.stationName).toBe('Posto Ipiranga');
+  });
+
   it('monta o abastecimento com o terceiro valor calculado', () => {
     const result = buildFuelEntryInput(
       form({

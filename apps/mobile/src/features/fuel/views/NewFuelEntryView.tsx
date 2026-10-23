@@ -139,6 +139,13 @@ export function NewFuelEntryView() {
                 autoCapitalize="words"
                 maxLength={80}
               />
+              {vm.stationSuggestions.length > 0 ? (
+                <View style={styles.chips}>
+                  {vm.stationSuggestions.map((name) => (
+                    <Chip key={name} label={name} onPress={() => vm.setStation(name)} />
+                  ))}
+                </View>
+              ) : null}
             </>
           ) : (
             <EmptyState

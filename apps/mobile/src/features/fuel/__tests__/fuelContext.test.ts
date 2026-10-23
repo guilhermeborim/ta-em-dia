@@ -2,7 +2,7 @@ import { migrate } from '../../../core/db/migrations';
 import { createTestDb } from '../../../core/db/testing/testDb';
 import type { Db } from '../../../core/db';
 import { loadFuelFormContext } from '../models/fuelContext';
-import { addFuelEntry, listFuelEntries } from '../../../core/fuel';
+import { addFuelEntry, listFuelEntries, listStationNames } from '../../../core/fuel';
 
 const VEHICLE_ID = '018bcfe5-6800-7000-8000-000000000001';
 const NOW = '2026-10-21T12:00:00.000Z';
@@ -71,5 +71,24 @@ describe('loadFuelFormContext', () => {
 
     expect((await loadFuelFormContext(db)).suggestedKm).toBe(48320);
     expect(await listFuelEntries(db, VEHICLE_ID)).toEqual([]);
+  });
+});
+
+describe('listStationNames', () => {
+  const at = (km: number, date: string, stationName?: string) => ({
+    ...entry(km, 'gasoline', date),
+    stationName,
+  });
+
+  it('ordena do mais usado ao menos usado e ignora vazios e excluídos', async () => {
+    await insertVehicle(1000);
+    await addFuelEntry(db, at(1100, '2026-10-01T10:00:00.000Z', 'Shell'));
+    await addFuelEntry(db, at(1200, '2026-10-02T10:00:00.000Z', 'Ipiranga'));
+    await addFuelEntry(db, at(1300, '2026-10-03T10:00:00.000Z', 'Ipiranga'));
+    await addFuelEntry(db, at(1400, '2026-10-04T10:00:00.000Z'));
+    const gone = await addFuelEntry(db, at(1500, '2026-10-05T10:00:00.000Z', 'Br'));
+    await db.runAsync('UPDATE fuel_entries SET deleted_at = ? WHERE id = ?', NOW, gone.id);
+
+    expect(await listStationNames(db)).toEqual(['Ipiranga', 'Shell']);
   });
 });
