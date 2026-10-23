@@ -7,7 +7,9 @@ import {
   isOnboardingDone,
   markOnboardingDone,
 } from '../../onboarding/models/onboarding.repository';
+import { addDocument } from '../../../core/documents';
 import { addFuelEntry } from '../../../core/fuel';
+import { addManualReading } from '../../../core/odometer';
 import { activatePlan } from '../../maintenance/models/plans.repository';
 import { registerMaintenance } from '../../maintenance/models/register.repository';
 import { createVehicle, listVehicles } from '../../vehicles/models/vehicles.repository';
@@ -64,6 +66,10 @@ describe('resetApp', () => {
       km: 300,
     });
 
+    await addManualReading(db, { vehicleId: vehicle.id, km: 350 });
+    await addDocument(db, { vehicleId: vehicle.id, kind: 'ipva', dueDate: '2026-11-20' });
+    await addDocument(db, { kind: 'cnh', dueDate: '2027-05-01' });
+
     await resetApp(db, store);
 
     expect(await isOnboardingDone(db)).toBe(false);
@@ -71,7 +77,7 @@ describe('resetApp', () => {
     expect(data.size).toBe(0);
     expect(await listVehicles(db)).toEqual([]);
     const left = await db.getFirstAsync<{ total: number }>(
-      `SELECT (SELECT COUNT(*) FROM fuel_entries) + (SELECT COUNT(*) FROM maintenance_plans) + (SELECT COUNT(*) FROM maintenance_records) + (SELECT COUNT(*) FROM outbox) AS total`,
+      `SELECT (SELECT COUNT(*) FROM fuel_entries) + (SELECT COUNT(*) FROM maintenance_plans) + (SELECT COUNT(*) FROM maintenance_records) + (SELECT COUNT(*) FROM odometer_readings) + (SELECT COUNT(*) FROM documents) + (SELECT COUNT(*) FROM outbox) + (SELECT COUNT(*) FROM sync_state) AS total`,
     );
     expect(left?.total).toBe(0);
   });
