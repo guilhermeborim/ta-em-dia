@@ -54,6 +54,8 @@ model User {
   name        String?
   plan        Plan           @default(free)
   isAnonymous Boolean        @default(true)
+  // Contador do sync: cada mudança aceita pega o próximo número (`version` da linha). Só o servidor mexe.
+  syncVersion BigInt         @default(0)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   identities  AuthIdentity[]

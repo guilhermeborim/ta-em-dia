@@ -174,15 +174,15 @@ O app grava sempre no SQLite primeiro e sincroniza depois; a API é o backup e a
 **Push (app → API)**
 
 1. Toda gravação local escreve a linha e uma entrada na tabela `outbox` (tabela, id, operação, payload, updated_at).
-2. O motor de sync envia lotes de até 100 mudanças para `POST /v1/sync/push`.
-3. A API aplica cada mudança se o `updated_at` recebido for maior ou igual ao do servidor, grava `version` e responde aceitas e rejeitadas.
-4. O app apaga da `outbox` as aceitas; rejeitadas são substituídas pela versão do servidor no pull.
+2. O motor de sync envia lotes de até 100 mudanças (`SYNC_PUSH_MAX_CHANGES`), na ordem da `outbox`, para `POST /v1/sync/push` com `{ protocol, changes: [{ table, id, op, updatedAt, payload }] }`. O `payload` é o do schema da tabela em `shared` (`SYNC_UPSERT_SCHEMAS`); em `delete`, `{ id, deletedAt }`.
+3. A API aplica o lote numa transação só, mudança por mudança (módulo `sync`, `SyncService`). Vale se o `updatedAt` recebido for maior ou igual ao do servidor (última escrita vence, a linha inteira é substituída; escrita mais nova que uma exclusão recria a linha). Cada aceita ganha o próximo `version` do usuário. Responde `{ protocol, results: [{ table, id, status, reason? }] }` na mesma ordem. Rejeitadas: `STALE` (o servidor tem versão mais nova), `INVALID` (payload fora do schema, id diferente do payload ou id de outro usuário; para quem pede, não revela que o id existe) e `PARENT_MISSING` (veículo ou plano que não é do usuário). Uma rejeitada não derruba as outras.
+4. O app apaga da `outbox` todas as do `results` (aceitas e rejeitadas); a versão do servidor das rejeitadas chega no pull.
 
 **Pull (API → app)**
 
-1. O app chama `GET /v1/sync/pull?since=<última version>`.
-2. A API devolve tudo do usuário com `version` maior, incluindo exclusões (`deleted_at`).
-3. O app aplica numa única transação e guarda a nova `version`.
+1. O app chama `GET /v1/sync/pull?protocol=1&since=<última version>&limit=<até 500>` (`since` 0 no primeiro pull).
+2. A API devolve tudo do usuário com `version` maior, de todas as tabelas, do menor para o maior: `{ protocol, changes: [{ table, id, op, version, updatedAt, payload }], nextSince, hasMore }`. Exclusões vêm como `op: 'delete'` com `{ id, deletedAt }`; o resto, como `upsert` com a linha no schema da tabela. Com `hasMore`, o app chama de novo com `since = nextSince`.
+3. O app aplica numa única transação e guarda a nova `version` (`nextSince`).
 
 **Quando sincroniza:** ao abrir o app, ao voltar do segundo plano, depois de cada gravação (debounce de ~5 s), ao recuperar internet e em background fetch quando o sistema permitir.
 
@@ -190,7 +190,11 @@ O app grava sempre no SQLite primeiro e sincroniza depois; a API é o backup e a
 
 - IDs nascem no app (UUID v7), então nada depende do servidor para existir.
 - Nunca apagar de verdade no app: exclusão lógica, senão a exclusão não chega no outro aparelho.
-- O relógio do celular pode estar errado: a API usa o próprio relógio para `version` e só usa `updated_at` do app para desempate.
+- O relógio do celular pode estar errado: a API usa o próprio relógio para `version` e só usa `updated_at` do app para desempate. Um `updatedAt` mais de 5 minutos adiantado em relação ao servidor vale como a hora do servidor, para um relógio errado não ganhar de tudo para sempre.
+- **`version`:** um contador por usuário (`users.syncVersion`, só o servidor mexe). Cada mudança aceita faz `syncVersion + 1` na mesma transação do lote; a primeira trava a linha do usuário, então dois pushes dele nunca se cruzam e o pull por `since` não perde linha que ainda ia ser confirmada.
+- **Dono:** o `userId` vem do token (nunca do corpo). Veículo e documento têm `userId`; as outras tabelas chegam ao dono pelo veículo, que precisa existir e ser do usuário (e o plano, no serviço). O dono de uma linha nunca muda.
+- Um push ou pull atualiza `devices.lastSyncAt` do usuário (o job de limpeza só apaga conta sem uso).
+- A API não confere a flag `sync.cloud`: hoje ela é `true` em todos os planos.
 - O schema local tem migrations próprias; o protocolo de sync tem número de versão para app antigo não quebrar a API.
 - Alternativa pronta se o sync caseiro der trabalho: PowerSync ou ElectricSQL sobre o mesmo Postgres (avaliar custo antes).
 

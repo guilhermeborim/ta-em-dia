@@ -6,4 +6,5 @@ export * from './maintenance';
 export * from './odometer';
 export * from './reports';
 export * from './schemas';
+export * from './sync';
 export * from './uuidv7';
