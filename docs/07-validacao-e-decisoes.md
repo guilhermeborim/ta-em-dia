@@ -161,6 +161,16 @@ Precisa da API de staging no ar (PR #36 e o de segurança, 2.14, aplicados) e de
 - [ ] "Reiniciar App" (Status) apaga a sessão e, ao refazer o login, cria um usuário novo.
 - [ ] Nenhum token, segredo ou id de aparelho aparece em `adb logcat`.
 
+### 2.16 API: sync (PR da API de sync)
+
+Testado contra um Postgres local (Docker): push dos seis tipos de linha, pull com paginação, isolamento entre usuários, última escrita vence, exclusão e seis pushes ao mesmo tempo (versões 1 a 12, sem repetir). No CI só há testes com banco falso. Nunca no Render nem no Neon.
+
+- [ ] Depois do merge, o workflow "Deploy da API" aplica a migration `user_sync_version` (só adiciona `users.syncVersion`) no staging e o `/health` responde.
+- [ ] No staging, com o `accessToken` de `POST /v1/auth/anonymous`: `POST /v1/sync/push` com um veículo (`{"protocol":1,"changes":[{"table":"vehicles","id":"<uuid>","op":"upsert","updatedAt":"<agora ISO>","payload":{"id":"<uuid>","name":"Gol","type":"flex","initialKm":1000}}]}`) devolve `accepted`; `GET /v1/sync/pull?protocol=1&since=0` devolve o veículo com `version` "1" e `nextSince` "1".
+- [ ] Repetir o push com `updatedAt` mais antigo devolve `rejected` com `STALE`; com o token de outro usuário (outro `installationId`), o mesmo id devolve `INVALID` e o pull dele vem vazio.
+- [ ] No Neon: `users.syncVersion` do usuário bate com a última `version` e `devices.lastSyncAt` foi preenchido.
+- [ ] `protocol` 2 devolve 400 `SYNC_PROTOCOL_UNSUPPORTED`; sem token, 401.
+
 ### 2.15 Seletor de data
 
 Exige um **development build novo** (`@react-native-community/datetimepicker` é módulo nativo). No iOS, só quando houver build.
@@ -216,3 +226,10 @@ Sem development build para iOS, nenhum aviso agenda. Quando houver, apague `sche
 ### 3.20 `GET /v1/config` continua público
 
 Devolve sempre o plano `free`. Com o guard global agora existindo, ele ficou marcado `@Public()`. Quando o app mandar o token, a rota deve passar a ler o plano do usuário. Nada a decidir agora; só não esquecer no PR do app ou do sync.
+
+### 3.24 Sync: regras que assumi na API
+
+- **Relógio adiantado:** um `updatedAt` mais de 5 minutos à frente do servidor vale como a hora do servidor. Alternativa: rejeitar a mudança. Recomendação: manter.
+- **Exclusão e edição:** uma edição mais nova que a exclusão recria a linha (a linha inteira vale); uma exclusão mais antiga que uma edição do servidor é ignorada (`STALE`). Alternativa: exclusão sempre vence. Recomendação: manter, é a mesma regra para tudo.
+- **`sync.cloud` não é conferida:** todos os usuários, anônimos ou não, sincronizam (a flag é `true` em todos os planos). Se algum dia o sync virar Premium, a API passa a checar. Recomendação: manter até lá.
+- **Limite de chamadas:** o sync usa o limite padrão (100 por minuto por IP). Com push depois de cada gravação (~5 s) e pull, um uso intenso chega perto de 25 chamadas por minuto por aparelho; atrás do CGNAT, vários aparelhos dividem o IP. Alternativa: limite próprio mais folgado para `/v1/sync/*`. Recomendação: manter e olhar os 429 depois do lançamento (como em 3.23).
