@@ -10,11 +10,19 @@ interface VehicleSelectorProps {
   details: string;
   /** Ícone do tipo de veículo: `car` (padrão) ou `motorbike`. */
   icon?: IconName;
+  /** Premium (vários veículos): mostra a seta de trocar veículo. */
+  premium?: boolean;
   onPress?: () => void;
 }
 
 /** Veículo selecionado, no topo das telas. Toque abre a troca de veículo. */
-export function VehicleSelector({ name, details, icon = 'car', onPress }: VehicleSelectorProps) {
+export function VehicleSelector({
+  name,
+  details,
+  icon = 'car',
+  premium = false,
+  onPress,
+}: VehicleSelectorProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -34,7 +42,7 @@ export function VehicleSelector({ name, details, icon = 'car', onPress }: Vehicl
           <Text variant="h2" numberOfLines={1} style={styles.name}>
             {name}
           </Text>
-          <Icon name="chevron-down" size={20} color={colors.text} />
+          {premium && <Icon name="chevron-down" size={20} color={colors.text} />}
         </View>
         <Text variant="small" color="text2" numberOfLines={1}>
           {details}

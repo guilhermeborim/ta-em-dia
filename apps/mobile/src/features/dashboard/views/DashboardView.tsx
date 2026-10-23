@@ -35,6 +35,7 @@ export function DashboardView() {
                 name={vm.vehicle.name}
                 icon={vm.vehicle.icon}
                 details={vm.vehicle.details}
+                premium={vm.canSwitchVehicle}
               />
               <SyncPill
                 state={vm.loggedIn ? 'synced' : 'local'}

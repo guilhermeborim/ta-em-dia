@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { loadAccount } from '../../../core/auth';
 import { useDb } from '../../../core/db';
 import { buildAverage } from '../../../core/fuel';
+import { useFlag } from '../../../core/flags/useFlag';
 import { useToast } from '../../../core/toast/useToast';
 import { loadHomeState, type HomeState } from '../models/home.repository';
 import { buildHomeAlerts, type HomeAlertCard } from '../models/homeAlerts';
@@ -18,6 +19,7 @@ export function useDashboardViewModel() {
   const db = useDb();
   const router = useRouter();
   const { saved } = useLocalSearchParams<{ saved?: string }>();
+  const maxVehicles = useFlag('vehicles.max');
   const [state, setState] = useState<HomeState | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
   const { toast, show: showToast } = useToast();
@@ -62,6 +64,8 @@ export function useDashboardViewModel() {
       icon: vehicleIcon(vehicle.type),
       details: vehicleDetails(vehicle),
     },
+    // Com mais de um veículo liberado (Premium), a seta mostra que dá para trocar.
+    canSwitchVehicle: maxVehicles === null || maxVehicles > 1,
     showEmptyFuel: vehicle !== null && !hasFuelEntries,
     summary,
     average,
