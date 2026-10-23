@@ -246,6 +246,14 @@ Exige um **development build novo** (`@react-native-community/datetimepicker` é
 
 **Decisão aberta:** a tela "Todos os alertas" não tem frame no Figma; usei o layout do Início (barra de topo + cartões). Alternativa: pedir o frame ao designer. Recomendo manter até lá.
 
+### 2.21 Posto padronizado no abastecimento (tela 9)
+
+- [ ] Novo abastecimento sem postos salvos: nenhum chip aparece sob "Posto".
+- [ ] Depois de um abastecimento com "Posto Ipiranga", ao abrir o campo e digitar "ipi" aparece o chip "Posto Ipiranga"; tocar nele preenche o campo.
+- [ ] Digitar "posto ípiranga" (outra grafia) e salvar grava "Posto Ipiranga" (confira em Histórico ou na lista de abastecimentos).
+- [ ] Digitar um nome novo salva o nome novo e ele aparece nas sugestões do próximo abastecimento.
+- [ ] Chips quebram em linhas com fonte grande, sem cortar o nome longo e sem empurrar o botão Salvar para fora da tela; o teclado não cobre os chips.
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
@@ -305,6 +313,12 @@ Recomendação: **A** agora; revisar quando o login existir. Se escolher B, o te
 - **Mesmo e-mail em Google e Apple:** são contas separadas (não juntamos por e-mail, que o usuário pode esconder na Apple). Recomendação: manter.
 - **Sem `nonce`:** a API não confere `nonce` no `id_token`. Um token roubado só serve nos poucos minutos em que vale. Alternativa: o app gera um `nonce` e a API confere. Recomendação: manter por ora.
 - **Apple adiada:** sem conta Apple Developer (paga), `APPLE_CLIENT_ID` fica vazio e não há build de iOS. O login com Apple está pronto na API e no app, mas sem teste real. Lembrete: a App Store exige "Entrar com Apple" quando há login com Google (Guideline 4.8), então a conta paga é pré-requisito para publicar no iPhone. O Google precisa de um projeto no Google Cloud (grátis); ponha o client ID web em `GOOGLE_CLIENT_IDS` em cada ambiente do Render.
+
+### 3.28 Posto padronizado: escolhas que fiz
+
+- **Sem frame no Figma:** as sugestões são chips (o `Chip` do app) logo abaixo do campo "Posto (opcional)", até 5, os mais usados primeiro; sem texto digitado, mostram os mais usados. Alternativa: lista suspensa sobre o teclado. Recomendação: manter e desenhar no Figma depois.
+- **Nomes antigos não são reescritos:** abastecimentos já gravados com grafias diferentes ("shell" e "Shell") continuam como estão; só os novos reaproveitam o nome mais usado. Alternativa: migration que unifica os antigos. Recomendação: manter até existir "Seus postos".
+- **Só reaproveita nome igual:** "Shell" e "Shell Centro" são postos diferentes (sem aproximação por semelhança). Recomendação: manter.
 
 ### 3.27 Login no app: escolhas que fiz
 

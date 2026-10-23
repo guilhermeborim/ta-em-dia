@@ -63,7 +63,7 @@ Escolhas tomadas sobre os itens 3.9 a 3.23 de `docs/07-validacao-e-decisoes.md`.
 - [x] **Lembrar de atualizar o km a cada 7 dias**: trocar os 15 dias por 7 (primeiro aviso e repetição; texto "Faz 7 dias sem atualizar o km do <veículo>"; valor em `shared`, se existir). Atualizar também o checklist 2.8 de `docs/07-validacao-e-decisoes.md`.
 - [ ] **Ajuda e contato, Termos e Privacidade**: trocar o "Em breve" por telas ou links. Depende do dono: e-mail ou página de suporte e as URLs públicas (`docs/05-privacidade-lgpd.md`, checklist antes de publicar).
 - [x] **Cartão "Valor na FIPE"** (tela 17): cartão com o selo "Em breve" de Premium, igual ao Figma. Sem consulta real (Fase 2). Atrás de feature flag.
-- [ ] **Posto padronizado no abastecimento** (tela 9): o campo "Posto" sugere os postos que o usuário já usou (sem diferenciar maiúsculas e acentos) e reaproveita o mesmo nome; digitar um nome novo cria o posto. Sem localização e sem permissão nova; grava em `station_name`, sem migration destrutiva. Regra de normalização em `packages/shared`, com teste. Prepara "Seus postos" e o mapa de postos (`docs/08-mapa-de-postos.md`, Futuro). Sem frame no Figma: registrar em `docs/07-validacao-e-decisoes.md`.
+- [x] **Posto padronizado no abastecimento** (tela 9): o campo "Posto" sugere os postos que o usuário já usou (sem diferenciar maiúsculas e acentos) e reaproveita o mesmo nome; digitar um nome novo cria o posto. Sem localização e sem permissão nova; grava em `station_name`, sem migration destrutiva. Regra de normalização em `packages/shared`, com teste. Prepara "Seus postos" e o mapa de postos (`docs/08-mapa-de-postos.md`, Futuro). Sem frame no Figma: registrar em `docs/07-validacao-e-decisoes.md`.
 
 ### Decididas, sem trabalho
 
