@@ -2,7 +2,7 @@
 export type ApiResult =
   | { kind: 'ok'; body: unknown }
   /** A API respondeu que o pedido está errado (4xx, menos 429). Tentar de novo igual não adianta. */
-  | { kind: 'rejected'; status: number; code?: string }
+  | { kind: 'rejected'; status: number; code?: string; body?: unknown }
   /** Sem internet, timeout, erro do servidor (5xx) ou limite de chamadas (429). Tentar mais tarde. */
   | { kind: 'unreachable' };
 
@@ -35,6 +35,8 @@ async function requestJson(
       kind: 'rejected',
       status: res.status,
       code: typeof error?.code === 'string' ? error.code : undefined,
+      // O corpo do erro serve a quem precisa de mais que o código (ex.: `ACCOUNT_EXISTS`).
+      body: error ?? undefined,
     };
   } catch {
     return { kind: 'unreachable' };

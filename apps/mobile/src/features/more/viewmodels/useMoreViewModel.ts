@@ -1,5 +1,6 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { displayName, loadAccount } from '../../../core/auth';
 import { useDb } from '../../../core/db';
 import { appEnv } from '../../../core/env/appEnv';
 import { useToast } from '../../../core/toast/useToast';
@@ -13,6 +14,7 @@ export function useMoreViewModel() {
   const isDev = appEnv !== 'production';
   const { toast, show } = useToast();
   const [vehicleCount, setVehicleCount] = useState<number | null>(null);
+  const [accountName, setAccountName] = useState<string | null>(null);
   const [documents, setDocuments] = useState<ReturnType<typeof documentsBadge>>(null);
 
   // Recarrega ao voltar para a aba (ex.: depois de adicionar um veículo ou mudar um prazo).
@@ -24,25 +26,30 @@ export function useMoreViewModel() {
         setVehicleCount(summary.vehicleCount);
         setDocuments(documentsBadge(summary.documents));
       });
+      loadAccount(db).then((account) => {
+        if (active) setAccountName(account ? displayName(account) : null);
+      });
       return () => {
         active = false;
       };
     }, [db]),
   );
 
-  // Conta e ajuda ainda não existem: avisam, como o "Salve seus dados" do Início.
+  // Ajuda ainda não existe: avisa, como o "Salve seus dados" do Início.
   const comingSoon = useCallback(() => show({ title: 'Em breve' }), [show]);
 
   return {
     showDevTools: isDev,
     toast,
-    /** Sem login: os dados ficam só no aparelho. */
-    account: { name: 'Sem login', sync: 'local' as const },
+    /** Sem login: os dados ficam só no aparelho. Com Google ou Apple: o nome e "Sincronizado". */
+    account: accountName
+      ? { name: accountName, sync: 'synced' as const }
+      : { name: 'Sem login', sync: 'local' as const },
     /** Número de veículos ao lado de Meus veículos; some enquanto carrega ou sem veículos. */
     vehicleCount: vehicleCount ? String(vehicleCount) : undefined,
     /** "1 vencido" ao lado de Documentos e prazos; `null` quando está tudo em dia. */
     documentsBadge: documents,
-    openAccount: comingSoon,
+    openAccount: () => router.push('/conta'),
     openSettings: () => router.push('/configuracoes'),
     openHelp: comingSoon,
     openVehicles: () => router.push('/veiculos'),

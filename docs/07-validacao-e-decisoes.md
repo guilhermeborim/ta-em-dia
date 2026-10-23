@@ -195,6 +195,25 @@ Testado contra um Postgres local (Docker): criar conta social, vincular ao anôn
 - [ ] `POST /v1/auth/link` com o token de um usuário anônimo e um login novo: 200 `outcome: linked`, o mesmo `user.id`, `users.isAnonymous = false` e `auth_identities` com a linha do Google no Neon. Com um login que já tem conta: 409 `ACCOUNT_EXISTS` com `account.vehicles` e `account.records`; repetir com `onConflict: "merge"` devolve `merged` e o usuário anônimo some do Neon.
 - [ ] No Neon, `auth_identities.email` e `users.email` têm só o e-mail confirmado; nenhum `id_token` aparece nos logs do Render.
 
+### 2.19 App: login com Google e Apple, Conta e vincular (telas 3, 19, 19b, 23 e 24)
+
+Testado só com testes automáticos (API de mentira, SQLite em memória). Nunca contra a API real, nem com um Google ou Apple de verdade, nem no aparelho. **Exige development build** (`@react-native-google-signin/google-signin` e `expo-apple-authentication` são módulos nativos): no Expo Go, os botões avisam "ainda não está disponível". Pré-requisitos: PR da API (2.18) no ar, `GOOGLE_CLIENT_IDS` e `APPLE_CLIENT_ID` no Render e os `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` e `GOOGLE_IOS_URL_SCHEME` no perfil do `eas.json` (ver 3.27).
+
+- [ ] **Android, Login (tela 3):** "Entrar com Google" abre a janela do Google, entra e leva ao "Primeiro veículo". Fechar a janela não mostra erro. Sem internet mostra "Sem conexão com o servidor...". Não aparece botão da Apple.
+- [ ] **iPhone, Login:** "Entrar com Apple" abre a folha da Apple, pede nome e e-mail e entra. Com "Ocultar e-mail", a Conta mostra o começo do e-mail de retransmissão ou "Sua conta".
+- [ ] **Conta que já tem veículo (outro celular):** entrar no Login com ela leva direto ao pedido de notificações, e Início, Veículos e Abastecimentos mostram os dados.
+- [ ] **Conta (tela 19, sem login):** cartão roxo, botão do Google (e da Apple só no iPhone), linhas Modo, Dados salvos, Veículos e Registros iguais ao frame. Início e Mais levam a ela.
+- [ ] **Vincular conta nova (19 → 23):** com veículos e abastecimentos locais, entrar com Google mostra "Enviando seus dados", o contador sobe ("N de M registros") e termina com "Tudo salvo!"; volta sozinho para a Conta logada (19b): nome, e-mail, "Sincronizado", Último sync "hoje, HH:MM", Veículos e Registros certos. No Neon, `users.isAnonymous = false` e os dados estão lá.
+- [ ] **Conta que já tem dados (tela 24):** entrar com uma conta que tem dados de outro celular abre a folha "Essa conta já tem dados" com os números certos e "Juntar dados" marcado. "Juntar dados" envia o que é do aparelho e a conta fica com a soma; "Usar só os da conta" apaga os dados do aparelho e mostra os da conta. Fechar a folha (toque fora ou voltar) não muda nada e o botão do Google volta a funcionar.
+- [ ] **Conta vazia que já existe:** vincular a ela junta direto, sem a folha.
+- [ ] **Fonte grande:** folha da tela 24 e linhas da Conta não cortam texto; o botão "Continuar" da folha fica visível.
+- [ ] **Sair da conta (19b):** com tudo enviado, o alerta diz que os dados continuam na conta; depois do "Sair", o app volta ao Login sem dados. Com o modo avião e dados novos (não enviados), o alerta avisa quantos registros se perdem. Entrar de novo com a mesma conta traz tudo de volta. "Continuar sem login" depois de sair cria um usuário anônimo novo (sem erro).
+- [ ] **Avisos:** depois de sair (e depois de "Usar só os da conta"), nenhum aviso do veículo antigo chega; depois de entrar numa conta com dados, os avisos dela são agendados.
+- [ ] **Segundo aparelho:** entrar com a mesma conta em outro celular traz tudo; um abastecimento novo em um aparece no outro depois de abrir o app (o sync roda ao abrir e depois de gravar).
+- [ ] **Refresh recusado:** apagar `refresh_tokens` da conta no Neon e esperar o acesso vencer: o app continua abrindo com os dados locais e não vira anônimo sozinho (confira em Status: sessão ausente). Falta uma tela que peça para entrar de novo (3.27).
+- [ ] **Nada em log:** nenhum `id_token`, e-mail ou nome aparece em `adb logcat` nem no log do Render.
+- [ ] "Excluir conta" mostra "Em breve" (a tela 22 é outro item).
+
 ### 2.15 Seletor de data
 
 Exige um **development build novo** (`@react-native-community/datetimepicker` é módulo nativo). No iOS, só quando houver build.
@@ -275,3 +294,16 @@ Recomendação: **A** agora; revisar quando o login existir. Se escolher B, o te
 - **Mesmo e-mail em Google e Apple:** são contas separadas (não juntamos por e-mail, que o usuário pode esconder na Apple). Recomendação: manter.
 - **Sem `nonce`:** a API não confere `nonce` no `id_token`. Um token roubado só serve nos poucos minutos em que vale. Alternativa: o app gera um `nonce` e a API confere. Recomendação: manter por ora.
 - **Contas e chaves de terceiros:** o login precisa de um projeto no Google Cloud (grátis) e de uma conta Apple Developer (paga, a exceção do projeto para as lojas). Dependem de você: criar os client IDs e pôr em `GOOGLE_CLIENT_IDS` e `APPLE_CLIENT_ID` em cada ambiente do Render.
+
+### 3.27 Login no app: escolhas que fiz
+
+- **Pré-requisitos que dependem de você:** projeto no Google Cloud (client IDs web, Android e iOS, com o SHA-1 do build de cada ambiente) e App ID com "Sign in with Apple" na conta Apple Developer; depois, pôr os IDs no `eas.json` (perfis `development`, `staging` e `production`) e `GOOGLE_CLIENT_IDS` e `APPLE_CLIENT_ID` no Render. Sem eles o app abre normalmente e o botão avisa que o login não está disponível.
+- **Excluir conta usa o botão "danger":** o Figma (19b) tem um botão sem fundo com texto vermelho; o app só tem o `danger` (fundo rosa claro), que já é o usado em "Excluir veículo". Alternativa: criar a variante no catálogo. Recomendação: manter.
+- **"Tudo salvo!" some sozinho:** depois do envio, o cartão verde da tela 23 fica ~2 s e a tela volta para a Conta (o Figma mostra o cartão como "exemplo", sem botão). Se algo não for enviado, o cartão âmbar "Conta conectada / Não deu para terminar agora. Continuamos assim que houver internet." aparece no lugar. Texto meu. Alternativa: botão "Continuar". Recomendação: manter.
+- **"Usar só os da conta" reaproveita a tela 23** com o título "Buscando seus dados" e anel parado (o Figma só tem o envio, e o fluxo 6 cita uma tela "Baixando seus dados" sem frame). No Login, trazer os dados da conta só desabilita os botões enquanto espera. Recomendação: pedir esses dois frames ao designer.
+- **Conta vazia junta direto**, sem perguntar. Alternativa: sempre perguntar. Recomendação: manter.
+- **Sair da conta apaga os dados do aparelho** (exclusão física: a cópia vale na conta) e as credenciais do aparelho. Alternativa: manter os dados no aparelho como anônimo (mistura de pessoas no mesmo celular; mais complexo). Recomendação: manter. O texto do alerta é meu.
+- **Sessão da conta recusada:** quem entrou com login não vira anônimo sozinho, mas o app ainda não mostra aviso nem leva ao Login ("sua sessão expirou"). Falta o texto e a tela. Recomendação: fazer num PR pequeno depois.
+- **Sem rota de logout na API:** sair só apaga a sessão do aparelho; o refresh token fica válido até vencer (90 dias). Recomendação: revogar o token do aparelho junto com "Excluir conta" (próximo item).
+- **Nome e e-mail ficam no aparelho** (`app_settings`) para a tela Conta; somem ao sair. `docs/05` foi atualizado.
+- **Registros da Conta** são abastecimentos e serviços de manutenção (sem leituras de km nem prazos), a mesma conta da API na tela 24.

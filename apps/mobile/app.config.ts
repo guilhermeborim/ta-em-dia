@@ -13,6 +13,13 @@ const variants: Record<AppEnv, { name: string; id: string }> = {
 
 const variant = variants[APP_ENV];
 
+// Login com Google: o client ID web é o `aud` do id_token que a API confere; o do iOS e o esquema
+// de URL (`com.googleusercontent.apps.<id>`) vêm do projeto do Google Cloud de cada ambiente.
+// O plugin recusa o build do iOS sem o esquema, então só entra quando ele está definido.
+const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
+const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '';
+const googleIosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME ?? '';
+
 // Roxo da marca: fundo da splash e do ícone adaptativo do Android.
 const PURPLE = '#4637EB';
 
@@ -27,6 +34,8 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: variant.id,
     supportsTablet: false,
+    // "Entrar com Apple" (só no iPhone); exige o recurso ligado no App ID da conta Apple Developer.
+    usesAppleSignIn: true,
   },
   android: {
     package: variant.id,
@@ -41,6 +50,15 @@ const config: ExpoConfig = {
     'expo-secure-store',
     'expo-notifications',
     'expo-updates',
+    'expo-apple-authentication',
+    ...(googleIosUrlScheme
+      ? [
+          ['@react-native-google-signin/google-signin', { iosUrlScheme: googleIosUrlScheme }] as [
+            string,
+            { iosUrlScheme: string },
+          ],
+        ]
+      : []),
     [
       'expo-splash-screen',
       {
@@ -57,6 +75,8 @@ const config: ExpoConfig = {
     eas: { projectId: 'ccd0ca56-3132-4ae9-b6e0-b6e858af14cb' },
     appEnv: APP_ENV,
     apiUrl: process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000',
+    googleWebClientId,
+    googleIosClientId,
   },
 };
 

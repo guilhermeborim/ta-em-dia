@@ -58,8 +58,10 @@ export function LoginView() {
 
         <View style={styles.spacer} />
 
-        <SocialButton provider="google" onPress={vm.onGoogle} />
-        {vm.showApple ? <SocialButton provider="apple" onPress={vm.onApple} /> : null}
+        <SocialButton provider="google" disabled={vm.busy} onPress={vm.onGoogle} />
+        {vm.showApple ? (
+          <SocialButton provider="apple" disabled={vm.busy} onPress={vm.onApple} />
+        ) : null}
 
         <View style={styles.divider}>
           <View style={styles.line} />

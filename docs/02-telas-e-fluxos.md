@@ -80,7 +80,7 @@ São 22 telas, agrupadas por área.
 **1. Primeiro uso**
 
 1. Splash → Boas-vindas → Login.
-2. Usuário escolhe Google (ou Apple, no iPhone), ou "Continuar sem login" (vê o aviso da tela 4).
+2. Usuário escolhe Google (ou Apple, no iPhone), ou "Continuar sem login" (vê o aviso da tela 4). Com a conta já cheia de dados (outro celular), o app traz tudo e pula o passo 3.
 3. Cadastra o primeiro veículo (pode pular).
 4. Tela prévia de notificações → pedido do sistema.
 5. Cai no Início com estado vazio orientando "Registre seu primeiro abastecimento".
@@ -109,10 +109,11 @@ São 22 telas, agrupadas por área.
 
 **5. Sair do modo anônimo**
 
-1. Banner no Início ou Mais → Conta: "Salve seus dados na nuvem".
+1. Banner no Início ou Mais → Conta (tela 19): "Salve seus dados na nuvem".
 2. Entrar com Google (ou Apple, no iPhone).
-3. Tela de progresso "Enviando seus dados" e confirmação "Tudo salvo".
-4. Se já existe conta com dados (outro celular): perguntar "Juntar dados" ou "Usar só os da conta".
+3. Se já existe conta com dados (outro celular), a folha da tela 24 pergunta "Juntar dados" ou "Usar só os da conta". Conta vazia junta direto.
+4. Tela de progresso "Enviando seus dados" (tela 23) e confirmação "Tudo salvo!"; depois volta à Conta já logada (tela 19b). "Usar só os da conta" mostra a mesma tela como "Buscando seus dados".
+5. Logado, a Conta tem "Sair da conta" (apaga os dados do aparelho; avisa se algo não foi enviado) e "Excluir conta" (item do backlog; hoje mostra "Em breve").
 
 **6. Trocar de celular**
 

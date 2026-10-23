@@ -103,6 +103,19 @@ describe('ensureAnonymousSession', () => {
     }
   });
 
+  it('quem entrou com Google ou Apple e teve o refresh recusado não vira anônimo: fica sem sessão', async () => {
+    const fetchFn = jest.fn<Promise<Response>, [string]>(async () =>
+      json(401, { code: 'INVALID_REFRESH_TOKEN' }),
+    );
+    const { store, deps } = setup(fetchFn);
+    const account = { ...tokens, user: { ...tokens.user, isAnonymous: false } };
+    await saveSession(store, { tokens: account, expiresAt: NOW.getTime() - 1000 });
+
+    expect(await ensureAnonymousSession(deps)).toBe('rejected');
+    // Só tentou renovar; não chamou /auth/anonymous.
+    expect(fetchFn.mock.calls.map(([url]) => url)).toEqual(['https://api.test/v1/auth/refresh']);
+  });
+
   it('refresh sem rede, 5xx ou 429: tentar de novo, sem cair para o login e sem perder a sessão', async () => {
     for (const fetchFn of [
       jest.fn(async () => {
