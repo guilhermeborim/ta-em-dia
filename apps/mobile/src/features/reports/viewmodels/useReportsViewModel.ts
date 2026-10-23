@@ -17,7 +17,7 @@ export function useReportsViewModel() {
   const router = useRouter();
   const advanced = useFlag('reports.advanced');
   const [data, setData] = useState<ReportData | null>(null);
-  const [selected, setSelected] = useState<ReportPeriod>('6months');
+  const [selected, setSelected] = useState<ReportPeriod>('month');
 
   // Recarrega ao voltar para a aba (ex.: depois de registrar um abastecimento).
   useFocusEffect(

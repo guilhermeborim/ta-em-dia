@@ -24,11 +24,7 @@ export function VehicleListView() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TopBar
-        title="Meus veículos"
-        onBack={vm.back}
-        action={{ icon: 'plus', label: 'Adicionar veículo', onPress: vm.addVehicle }}
-      />
+      <TopBar title="Meus veículos" onBack={vm.back} />
       {vm.loading ? null : (
         <ScrollView contentContainerStyle={styles.content}>
           {vm.isEmpty ? (

@@ -5,7 +5,7 @@ import { buildAlertCards, type PlanCardView } from '../../../core/maintenance';
 import type { IconName } from '../../../ui';
 import type { HomeState } from './home.repository';
 
-/** Quantos alertas o Início mostra (o resto fica na aba Manutenção, em "Ver todos"). */
+/** Quantos alertas o Início mostra (o resto fica em "Ver todos", a tela /alertas). */
 export const HOME_ALERTS_LIMIT = 2;
 
 /** Cartão do Início: item de manutenção ou prazo de documento. */
@@ -67,10 +67,14 @@ function documentCards(state: HomeState, today: Date): HomeAlertCard[] {
 
 /**
  * "Próximos alertas" do Início: o que está perto de vencer (80% do intervalo ou mais, para a
- * manutenção; dentro do aviso, para documentos) ou vencido, no máximo `HOME_ALERTS_LIMIT`.
+ * manutenção; dentro do aviso, para documentos) ou vencido, no máximo `limit` (padrão `HOME_ALERTS_LIMIT`).
  * Itens em dia e itens só de histórico não entram. Vencidos vêm antes dos que estão perto.
  */
-export function buildHomeAlerts(state: HomeState, today: Date = new Date()): HomeAlerts {
+export function buildHomeAlerts(
+  state: HomeState,
+  today: Date = new Date(),
+  limit: number = HOME_ALERTS_LIMIT,
+): HomeAlerts {
   const reminders = state.plans.filter(
     (plan) => plan.enabled && (plan.intervalKm || plan.intervalMonths),
   );
@@ -86,7 +90,7 @@ export function buildHomeAlerts(state: HomeState, today: Date = new Date()): Hom
   const severity = (card: HomeAlertCard) => (card.tone === 'danger' ? 0 : 1);
   const cards = [...planCards, ...documentCards(state, today)]
     .sort((a, b) => severity(a) - severity(b))
-    .slice(0, HOME_ALERTS_LIMIT);
+    .slice(0, limit);
 
   return { cards, hasReminders: reminders.length > 0 };
 }

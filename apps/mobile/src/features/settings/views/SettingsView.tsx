@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   colors,
   ListGroup,
@@ -18,6 +18,7 @@ import { useSettingsViewModel } from '../viewmodels/useSettingsViewModel';
  */
 export function SettingsView() {
   const vm = useSettingsViewModel();
+  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -69,7 +70,7 @@ export function SettingsView() {
       )}
 
       {vm.toast ? (
-        <View style={styles.toast}>
+        <View style={[styles.toast, { bottom: spacing.lg + insets.bottom }]}>
           <Toast title={vm.toast.title} message={vm.toast.message} />
         </View>
       ) : null}

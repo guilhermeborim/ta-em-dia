@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import { colors, fontFamily, typography } from '../theme/tokens';
 import { Text } from './Text';
 
@@ -26,7 +26,7 @@ export function NumberField({ label, prefix, error, ...input }: NumberFieldProps
         <TextInput
           {...input}
           accessibilityLabel={label}
-          keyboardType="decimal-pad"
+          keyboardType={Platform.OS === 'android' ? 'numeric' : 'decimal-pad'}
           placeholderTextColor={colors.text3}
           style={styles.input}
         />
