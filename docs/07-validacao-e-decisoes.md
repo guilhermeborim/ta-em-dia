@@ -216,13 +216,3 @@ Sem development build para iOS, nenhum aviso agenda. Quando houver, apague `sche
 ### 3.20 `GET /v1/config` continua público
 
 Devolve sempre o plano `free`. Com o guard global agora existindo, ele ficou marcado `@Public()`. Quando o app mandar o token, a rota deve passar a ler o plano do usuário. Nada a decidir agora; só não esquecer no PR do app ou do sync.
-
-### 3.24 Prazos por ano
-
-Sem frame no Figma (a lista, o "Histórico" e o botão "Renovar" seguem os componentes do app). Escolhas minhas:
-
-- **Ano = ano do vencimento.** Um seguro contratado em 2026 que vence em março de 2027 vira "Seguro 2027". Alternativa: campo "Ano" no formulário (dado novo e migration). Recomendação: manter.
-- **Histórico só nasce de "Renovar".** Não dá para cadastrar "IPVA 2025" à mão. Alternativa: liberar "Adicionar prazo" para tipos já cadastrados (anos passados). Recomendação: manter até alguém pedir.
-- **"Renovar para 2027" repete o mesmo dia e os mesmos avisos do prazo.** A pessoa ajusta a data depois, se mudou. Alternativa: abrir o formulário já preenchido antes de criar. Recomendação: manter (um toque).
-- **Selo "Renovado"** (cinza) nos itens do histórico, em vez de "Vencido": o IPVA de 2025 já foi pago. Texto escrito por mim.
-- **Excluir o prazo atual traz o do ano anterior de volta** (e ele pode aparecer "Vencido"). Alternativa: guardar o histórico fora da lista até a pessoa excluir tudo. Recomendação: manter.
