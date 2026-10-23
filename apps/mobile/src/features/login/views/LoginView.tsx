@@ -5,6 +5,7 @@ import {
   colors,
   IconAvatar,
   Logo,
+  ProgressSheet,
   SocialButton,
   spacing,
   Text,
@@ -77,6 +78,12 @@ export function LoginView() {
           Ao continuar você aceita os Termos de uso e a Política de privacidade.
         </Text>
       </ScrollView>
+
+      <ProgressSheet
+        visible={vm.downloading}
+        title="Baixando seus dados"
+        text="Trazendo tudo da sua conta. Não feche o app."
+      />
 
       {vm.toast ? (
         <View style={styles.toast} pointerEvents="none">

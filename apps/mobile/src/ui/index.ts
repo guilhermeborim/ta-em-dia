@@ -47,6 +47,7 @@ export { LicensePlate } from './components/LicensePlate';
 export { NotificationPreview } from './components/NotificationPreview';
 export { NumberField } from './components/NumberField';
 export { SegmentedControl } from './components/SegmentedControl';
+export { ProgressSheet } from './components/ProgressSheet';
 export { ProgressRing } from './components/ProgressRing';
 export { ReorderableList } from './components/ReorderableList';
 export { SocialButton } from './components/SocialButton';

@@ -112,13 +112,13 @@ São 22 telas, agrupadas por área.
 1. Banner no Início ou Mais → Conta (tela 19): "Salve seus dados na nuvem".
 2. Entrar com Google (ou Apple, no iPhone).
 3. Se já existe conta com dados (outro celular), a folha da tela 24 pergunta "Juntar dados" ou "Usar só os da conta". Conta vazia junta direto.
-4. Tela de progresso "Enviando seus dados" (tela 23) e confirmação "Tudo salvo!"; depois volta à Conta já logada (tela 19b). "Usar só os da conta" mostra a mesma tela como "Buscando seus dados".
+4. Tela de progresso "Enviando seus dados" (tela 23) e confirmação "Tudo salvo!"; depois volta à Conta já logada (tela 19b). "Usar só os da conta" mostra a folha "Baixando seus dados" (no estilo da tela 24), a mesma que aparece no Login quando a conta já tem dados. No plano grátis, "Juntar dados" fica bloqueado se a soma passar de 1 veículo ("No plano grátis, o app guarda 1 veículo").
 5. Logado, a Conta tem "Sair da conta" (apaga os dados do aparelho; avisa se algo não foi enviado) e "Excluir conta" (item do backlog; hoje mostra "Em breve").
 
 **6. Trocar de celular**
 
 1. Instala o app → Login com a mesma conta.
-2. Tela "Baixando seus dados" → Início com tudo restaurado.
+2. Folha "Baixando seus dados" → Início com tudo restaurado.
 
 ## Estados, notificações e componentes
 

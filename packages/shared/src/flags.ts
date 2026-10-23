@@ -54,9 +54,10 @@ export function canAddVehicle(count: number, max: number | null): boolean {
 }
 
 /**
- * Juntar os veículos do aparelho com os da conta cabe no plano? Sem veículo no aparelho não há o que
- * somar (os prazos e a CNH entram sempre). Arquivados contam, excluídos não. `max` nulo é sem limite.
+ * Juntar os veículos do aparelho com os da conta cabe no plano? Sem veículo no aparelho ou sem veículo
+ * na conta não há soma a conferir (os prazos e a CNH entram sempre; quem já tinha mais veículos que o
+ * limite os mantém). Arquivados contam, excluídos não. `max` nulo é sem limite.
  */
 export function canMergeVehicles(local: number, account: number, max: number | null): boolean {
-  return max === null || local === 0 || local + account <= max;
+  return max === null || local === 0 || account === 0 || local + account <= max;
 }

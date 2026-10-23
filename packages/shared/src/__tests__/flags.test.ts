@@ -50,11 +50,15 @@ describe('canMergeVehicles', () => {
   it('no plano grátis (1 veículo) só junta se a soma couber', () => {
     expect(canMergeVehicles(1, 0, 1)).toBe(true);
     expect(canMergeVehicles(1, 1, 1)).toBe(false);
-    expect(canMergeVehicles(2, 0, 1)).toBe(false);
+    expect(canMergeVehicles(2, 1, 1)).toBe(false);
   });
 
   it('sem veículo no aparelho não há o que somar, mesmo com a conta cheia', () => {
     expect(canMergeVehicles(0, 1, 1)).toBe(true);
     expect(canMergeVehicles(0, 5, 1)).toBe(true);
+  });
+
+  it('conta sem veículo: quem já tinha mais que o limite mantém os seus', () => {
+    expect(canMergeVehicles(2, 0, 1)).toBe(true);
   });
 });

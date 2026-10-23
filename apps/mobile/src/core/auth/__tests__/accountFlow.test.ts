@@ -148,7 +148,13 @@ describe('loginFlow (tela 3)', () => {
     const { fetchFn, calls } = setup({ '/v1/auth/google': () => json(200, account) });
     const { db, store, deps } = await newDeps(fetchFn, ok());
 
-    expect(await loginFlow(deps, 'google')).toEqual({ status: 'done', hasVehicles: false });
+    const onDownload = jest.fn();
+    expect(await loginFlow(deps, 'google', { onDownload })).toEqual({
+      status: 'done',
+      hasVehicles: false,
+    });
+    // Só avisa que está baixando depois do login dar certo.
+    expect(onDownload).toHaveBeenCalledTimes(1);
 
     expect(calls[0].body).toEqual({
       idToken: 'id-token-da-ana',
@@ -187,7 +193,9 @@ describe('loginFlow (tela 3)', () => {
     const { fetchFn, calls } = setup({});
     for (const kind of ['cancelled', 'unavailable', 'error'] as const) {
       const { db, store, deps } = await newDeps(fetchFn, async () => ({ kind }));
-      expect(await loginFlow(deps, 'google')).toEqual({ status: kind });
+      const onDownload = jest.fn();
+      expect(await loginFlow(deps, 'google', { onDownload })).toEqual({ status: kind });
+      expect(onDownload).not.toHaveBeenCalled();
       expect(await loadSession(store)).toBeNull();
       expect(await loadAccount(db)).toBeNull();
     }

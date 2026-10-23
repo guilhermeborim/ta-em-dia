@@ -57,6 +57,13 @@ export function mergeHint(
   return `Soma tudo: ${vehiclesText(local.vehicles + account.vehicles)} e ${recordsText(local.records + account.records)}`;
 }
 
+/** Subtítulo de "Juntar dados" quando o plano não comporta a soma de veículos. */
+export function mergeBlockedHint(max: number | null): string {
+  return max === 1
+    ? 'No plano grátis, o app guarda 1 veículo'
+    : `No plano grátis, o app guarda ${max} veículos`;
+}
+
 /** A conta que já existe está vazia: não há o que perguntar, junta direto. */
 export const isEmptyAccount = (account: { vehicles: number; records: number }): boolean =>
   account.vehicles === 0 && account.records === 0;

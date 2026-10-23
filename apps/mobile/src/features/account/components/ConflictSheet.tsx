@@ -7,13 +7,21 @@ import { ChoiceCard } from './ChoiceCard';
 interface ConflictSheetProps {
   body: string;
   mergeHint: string;
+  /** `false` quando juntar passaria do limite de veículos do plano: só "Usar só os da conta". */
+  canMerge: boolean;
   onConfirm: (strategy: LinkConflictStrategy) => void;
   onCancel: () => void;
 }
 
 /** Tela 24: a conta que entrou já tem dados; a pessoa escolhe juntar ou usar só os da conta. */
-export function ConflictSheet({ body, mergeHint, onConfirm, onCancel }: ConflictSheetProps) {
-  const [choice, setChoice] = useState<LinkConflictStrategy>('merge');
+export function ConflictSheet({
+  body,
+  mergeHint,
+  canMerge,
+  onConfirm,
+  onCancel,
+}: ConflictSheetProps) {
+  const [choice, setChoice] = useState<LinkConflictStrategy>(canMerge ? 'merge' : 'use_account');
 
   return (
     <Modal transparent animationType="slide" onRequestClose={onCancel}>
@@ -38,7 +46,8 @@ export function ConflictSheet({ body, mergeHint, onConfirm, onCancel }: Conflict
           <ChoiceCard
             title="Juntar dados"
             hint={mergeHint}
-            selected={choice === 'merge'}
+            selected={canMerge && choice === 'merge'}
+            disabled={!canMerge}
             onPress={() => setChoice('merge')}
           />
           <ChoiceCard

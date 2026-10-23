@@ -8,6 +8,7 @@ import {
   InfoCard,
   primaryGradient,
   ProgressRing,
+  ProgressSheet,
   radius,
   SocialButton,
   spacing,
@@ -148,10 +149,17 @@ export function AccountView() {
         </View>
       ) : null}
 
+      <ProgressSheet
+        visible={vm.downloading}
+        title="Baixando seus dados"
+        text="Trazendo tudo da sua conta. Não feche o app."
+      />
+
       {vm.conflict ? (
         <ConflictSheet
           body={vm.conflict.body}
           mergeHint={vm.conflict.mergeHint}
+          canMerge={vm.conflict.canMerge}
           onConfirm={vm.conflict.confirm}
           onCancel={vm.conflict.cancel}
         />
