@@ -120,7 +120,7 @@ Aba Relatórios.
 - [ ] Ligar um interruptor sem a permissão de notificações do sistema mostra "Notificações desativadas"; com a permissão, não mostra nada.
 - [ ] **Manutenções** desligado: nenhum aviso de manutenção chega (os já agendados somem). Ligar de novo traz de volta.
 - [ ] **Documentos** desligado: idem para os vencimentos.
-- [ ] **Lembrar de atualizar o km** ligado: chega "Faz 15 dias sem atualizar o km do <veículo>" às 9h, 15 dias depois da última atualização (leitura, abastecimento ou serviço); tocar abre "Atualizar km" do veículo. Sem atualizar, repete a cada 15 dias ("Faz 30 dias..."). Para ver sem esperar, mude a data do aparelho.
+- [ ] **Lembrar de atualizar o km** ligado: chega "Faz 7 dias sem atualizar o km do <veículo>" às 9h, 7 dias depois da última atualização (leitura, abastecimento ou serviço); tocar abre "Atualizar km" do veículo. Sem atualizar, repete a cada 7 dias ("Faz 14 dias..."). Para ver sem esperar, mude a data do aparelho. Em aparelho que já tinha o aviso de 15 dias agendado, abrir o app reagenda para 7.
 - [ ] Atualizar o km (ou abastecer) empurra o próximo lembrete.
 - [ ] **Antecedência** abre em modal, salva e a linha mostra o novo valor ao voltar. Prazo novo já vem com esses dias marcados; os prazos que já existem não mudam.
 - [ ] Sem nenhum dia marcado, "Salvar" mostra "Marque ao menos um dia".

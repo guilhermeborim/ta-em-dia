@@ -7,7 +7,7 @@ export interface AppSettings {
   notifyMaintenance: boolean;
   /** Avisos de vencimento de documentos (padrão: ligado). */
   notifyDocuments: boolean;
-  /** Lembrete de atualizar o km a cada 15 dias (padrão: desligado). */
+  /** Lembrete de atualizar o km a cada 7 dias (padrão: desligado). */
   notifyOdometer: boolean;
   /** Antecedência dos prazos novos, em dias, do maior para o menor (padrão: 30 e 7). */
   documentNotifyDays: number[];

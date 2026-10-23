@@ -4,28 +4,28 @@ import { odometerReminder } from '../odometer';
 describe('odometerReminder', () => {
   const last = new Date(2026, 9, 1, 18, 30);
 
-  it('avisa 15 dias depois, às 9h', () => {
+  it('avisa 7 dias depois, às 9h', () => {
     expect(odometerReminder(last, new Date(2026, 9, 5, 12))).toEqual({
-      fireAt: new Date(2026, 9, 16, 9),
-      daysWithout: 15,
+      fireAt: new Date(2026, 9, 8, 9),
+      daysWithout: 7,
     });
   });
 
-  it('no dia do aviso, antes das 9h, ainda é o de 15 dias', () => {
-    expect(odometerReminder(last, new Date(2026, 9, 16, 8)).daysWithout).toBe(15);
+  it('no dia do aviso, antes das 9h, ainda é o de 7 dias', () => {
+    expect(odometerReminder(last, new Date(2026, 9, 8, 8)).daysWithout).toBe(7);
   });
 
-  it('passou das 9h do dia do aviso: vai para os 30 dias', () => {
-    expect(odometerReminder(last, new Date(2026, 9, 16, 9))).toEqual({
-      fireAt: new Date(2026, 9, 31, 9),
-      daysWithout: 30,
+  it('passou das 9h do dia do aviso: vai para os 14 dias', () => {
+    expect(odometerReminder(last, new Date(2026, 9, 8, 9))).toEqual({
+      fireAt: new Date(2026, 9, 15, 9),
+      daysWithout: 14,
     });
   });
 
-  it('sem atualizar há muito tempo, pega o próximo múltiplo de 15 dias', () => {
+  it('sem atualizar há muito tempo, pega o próximo múltiplo de 7 dias', () => {
     expect(odometerReminder(last, new Date(2026, 11, 1, 12))).toEqual({
-      fireAt: new Date(2026, 11, 15, 9),
-      daysWithout: 75,
+      fireAt: new Date(2026, 11, 3, 9),
+      daysWithout: 63,
     });
   });
 

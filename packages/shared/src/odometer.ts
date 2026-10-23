@@ -6,18 +6,18 @@
 import { REMINDER_HOUR } from './maintenance';
 
 /** De quantos em quantos dias o lembrete chega. */
-export const ODOMETER_REMINDER_DAYS = 15;
+export const ODOMETER_REMINDER_DAYS = 7;
 
 export interface OdometerReminder {
   /** Quando o aviso aparece: sempre no futuro, às `REMINDER_HOUR` horas (fuso do aparelho). */
   fireAt: Date;
-  /** Dias sem atualizar o km nessa data (15, 30, 45...). */
+  /** Dias sem atualizar o km nessa data (7, 14, 21...). */
   daysWithout: number;
 }
 
 /**
- * Próximo aviso: `lastUpdateAt` + 15 dias, às 9h; se esse dia já passou, o próximo múltiplo de
- * 15 dias (30, 45...). É determinístico: reagendar várias vezes no mesmo dia dá o mesmo aviso.
+ * Próximo aviso: `lastUpdateAt` + 7 dias, às 9h; se esse dia já passou, o próximo múltiplo de
+ * 7 dias (14, 21...). É determinístico: reagendar várias vezes no mesmo dia dá o mesmo aviso.
  */
 export function odometerReminder(
   lastUpdateAt: Date,
