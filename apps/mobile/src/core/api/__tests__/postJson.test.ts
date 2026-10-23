@@ -1,4 +1,4 @@
-import { getJson, postJson } from '../postJson';
+import { deleteJson, getJson, postJson } from '../postJson';
 
 const response = (status: number, body: unknown) =>
   ({
@@ -113,5 +113,23 @@ describe('token e GET', () => {
       code: 'UNAUTHORIZED',
       body: { code: 'UNAUTHORIZED' },
     });
+  });
+});
+
+describe('deleteJson', () => {
+  it('manda DELETE com o token e sem corpo', async () => {
+    const fetchFn = jest.fn(async () => response(200, { deleted: true }));
+    const result = await deleteJson(
+      'https://api.test',
+      '/v1/auth/account',
+      fetchFn as unknown as typeof fetch,
+      'tok',
+    );
+    expect(result).toEqual({ kind: 'ok', body: { deleted: true } });
+    const [url, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/v1/auth/account');
+    expect(init.method).toBe('DELETE');
+    expect(init.body).toBeUndefined();
+    expect((init.headers as Record<string, string>).authorization).toBe('Bearer tok');
   });
 });

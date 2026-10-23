@@ -113,7 +113,7 @@ São 22 telas, agrupadas por área.
 2. Entrar com Google (ou Apple, no iPhone).
 3. Se já existe conta com dados (outro celular), a folha da tela 24 pergunta "Juntar dados" ou "Usar só os da conta". Conta vazia junta direto.
 4. Tela de progresso "Enviando seus dados" (tela 23) e confirmação "Tudo salvo!"; depois volta à Conta já logada (tela 19b). "Usar só os da conta" mostra a folha "Baixando seus dados" (no estilo da tela 24), a mesma que aparece no Login quando a conta já tem dados. No plano grátis, "Juntar dados" fica bloqueado se a soma passar de 1 veículo ("No plano grátis, o app guarda 1 veículo").
-5. Logado, a Conta tem "Sair da conta" (apaga os dados do aparelho; avisa se algo não foi enviado) e "Excluir conta" (item do backlog; hoje mostra "Em breve").
+5. Logado, a Conta tem "Sair da conta" (apaga os dados do aparelho; avisa se algo não foi enviado) e "Excluir conta", que abre a tela 22: lista o que será apagado e só libera "Excluir minha conta" depois de digitar EXCLUIR. Sem internet, nada é apagado e um aviso pede para tentar de novo; dando certo, o app volta ao Login.
 
 **6. Trocar de celular**
 

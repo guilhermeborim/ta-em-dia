@@ -1,6 +1,6 @@
+import * as SecureStore from 'expo-secure-store';
 import * as Updates from 'expo-updates';
 import { useCallback, useEffect, useState } from 'react';
-import * as SecureStore from 'expo-secure-store';
 import { loadSession } from '../../../core/auth';
 import { useDb } from '../../../core/db';
 import { apiUrl, appEnv } from '../../../core/env/appEnv';
@@ -36,7 +36,6 @@ export function useStatusViewModel() {
   }
 
   return {
-    title: 'Olá, mundo!',
     envLabel: `Ambiente do app: ${appEnv}`,
     apiUrlLabel: `API: ${apiUrl}`,
     apiLabel,

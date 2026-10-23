@@ -16,6 +16,7 @@ import {
   signOut,
   startLink,
   type AccountFlowDeps,
+  deleteAccount,
 } from '../accountFlow';
 import type { SecretStore } from '../installation';
 import type { SignInResult } from '../providers';
@@ -72,7 +73,7 @@ function setup(routes: Record<string, () => Response | Promise<Response>>) {
     if (handler) {
       calls.push({
         path,
-        body: JSON.parse(init.body as string) as Record<string, unknown>,
+        body: init.body ? (JSON.parse(init.body as string) as Record<string, unknown>) : {},
         token: (init.headers as Record<string, string>).authorization?.replace('Bearer ', ''),
       });
       return handler();
@@ -407,5 +408,60 @@ describe('signOut (Sair da conta)', () => {
     );
     await signOut(deps);
     expect(await getSetting(db, 'settings.notify_odometer')).toBe('1');
+  });
+});
+
+describe('deleteAccount (Excluir minha conta)', () => {
+  it('a API apagou: faz o mesmo que sair (dados, perfil, sessão e credenciais) e avisa o app', async () => {
+    const { fetchFn, calls } = setup({
+      '/v1/auth/account': () => json(200, { deleted: true }),
+    });
+    const { db, store, deps, signOutProvider } = await newDeps(fetchFn, ok(), { session: account });
+    await seed(db);
+    await saveAccount(db, { provider: 'google', name: 'Ana', email: 'a@b.c' });
+    store.data.set('installation_id', 'inst-1');
+
+    const signedOut = jest.fn();
+    const stop = onSignedOut(signedOut);
+    expect(await deleteAccount(deps)).toBe('done');
+    stop();
+
+    expect(calls).toEqual([{ path: '/v1/auth/account', body: {}, token: expect.any(String) }]);
+    expect(signedOut).toHaveBeenCalledTimes(1);
+    expect(await countRows(db, 'vehicles')).toBe(0);
+    expect(await loadAccount(db)).toBeNull();
+    expect(await loadSession(store)).toBeNull();
+    expect(store.data.has('installation_id')).toBe(false);
+    expect(signOutProvider).toHaveBeenCalledWith('google');
+  });
+
+  it('sem internet ou servidor fora: não apaga nada no aparelho', async () => {
+    const { fetchFn } = setup({ '/v1/auth/account': () => json(503, {}) });
+    const { db, store, deps } = await newDeps(fetchFn, ok(), { session: account });
+    await seed(db);
+    await saveAccount(db, { provider: 'google', name: 'Ana', email: 'a@b.c' });
+
+    const signedOut = jest.fn();
+    const stop = onSignedOut(signedOut);
+    expect(await deleteAccount(deps)).toBe('retry');
+    stop();
+
+    expect(signedOut).not.toHaveBeenCalled();
+    expect(await countRows(db, 'vehicles')).toBe(1);
+    expect(await loadAccount(db)).not.toBeNull();
+    expect(await loadSession(store)).not.toBeNull();
+  });
+
+  it('a API recusou: rejected e nada é apagado; 401 do acesso marca vencido e pede nova tentativa', async () => {
+    const refused = setup({ '/v1/auth/account': () => json(403, { code: 'FORBIDDEN' }) });
+    const first = await newDeps(refused.fetchFn, ok(), { session: account });
+    await seed(first.db);
+    expect(await deleteAccount(first.deps)).toBe('rejected');
+    expect(await countRows(first.db, 'vehicles')).toBe(1);
+
+    const expired = setup({ '/v1/auth/account': () => json(401, { code: 'UNAUTHORIZED' }) });
+    const second = await newDeps(expired.fetchFn, ok(), { session: account });
+    expect(await deleteAccount(second.deps)).toBe('retry');
+    expect((await loadSession(second.store))?.expiresAt).toBe(0);
   });
 });

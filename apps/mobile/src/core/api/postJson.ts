@@ -12,7 +12,7 @@ export const API_TIMEOUT_MS = 60_000;
 async function requestJson(
   apiUrl: string,
   path: string,
-  init: { method: 'GET' | 'POST'; body?: unknown },
+  init: { method: 'GET' | 'POST' | 'DELETE'; body?: unknown },
   fetchFn: typeof fetch,
   accessToken?: string,
 ): Promise<ApiResult> {
@@ -67,4 +67,14 @@ export function getJson(
   accessToken?: string,
 ): Promise<ApiResult> {
   return requestJson(apiUrl, path, { method: 'GET' }, fetchFn, accessToken);
+}
+
+/** DELETE com resposta JSON; mesmas regras de `postJson` (nunca lança, nada vai para log). */
+export function deleteJson(
+  apiUrl: string,
+  path: string,
+  fetchFn: typeof fetch = fetch,
+  accessToken?: string,
+): Promise<ApiResult> {
+  return requestJson(apiUrl, path, { method: 'DELETE' }, fetchFn, accessToken);
 }
