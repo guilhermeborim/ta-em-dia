@@ -92,8 +92,8 @@ describe('linkResultSchema e accountExistsSchema', () => {
     expect(linkResultSchema.safeParse({ ...tokens, outcome: 'outro' }).success).toBe(false);
   });
 
-  it('o 409 traz quantos veículos a conta tem', () => {
-    const body = { code: 'ACCOUNT_EXISTS', account: { vehicles: 2 } };
+  it('o 409 traz quantos veículos e registros a conta tem', () => {
+    const body = { code: 'ACCOUNT_EXISTS', account: { vehicles: 2, records: 22 } };
     expect(accountExistsSchema.safeParse(body).success).toBe(true);
     expect(accountExistsSchema.safeParse({ ...body, code: 'X' }).success).toBe(false);
   });

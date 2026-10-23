@@ -192,7 +192,7 @@ Testado contra um Postgres local (Docker): criar conta social, vincular ao anôn
 - [ ] No Render (staging), `GOOGLE_CLIENT_IDS` tem o client ID web do projeto do Google Cloud (e os client IDs de Android e iOS, se o `aud` do token vier deles) e `APPLE_CLIENT_ID` tem o bundle id (`com.guilhermeborim.taemdia.staging`). Sem eles, `POST /v1/auth/google` devolve 503 `PROVIDER_NOT_CONFIGURED`.
 - [ ] Com um `id_token` real do Google (pelo app do PR seguinte, ou pelo OAuth Playground com o client ID certo): `POST /v1/auth/google` devolve 200 com `user.isAnonymous: false`; repetir devolve o mesmo `user.id`; `aud` de outro app devolve 401 `INVALID_ID_TOKEN`.
 - [ ] Mesmo teste com o `identityToken` da Apple em um iPhone (precisa de conta Apple Developer paga e do bundle id com "Sign in with Apple").
-- [ ] `POST /v1/auth/link` com o token de um usuário anônimo e um login novo: 200 `outcome: linked`, o mesmo `user.id`, `users.isAnonymous = false` e `auth_identities` com a linha do Google no Neon. Com um login que já tem conta: 409 `ACCOUNT_EXISTS` com `account.vehicles`; repetir com `onConflict: "merge"` devolve `merged` e o usuário anônimo some do Neon.
+- [ ] `POST /v1/auth/link` com o token de um usuário anônimo e um login novo: 200 `outcome: linked`, o mesmo `user.id`, `users.isAnonymous = false` e `auth_identities` com a linha do Google no Neon. Com um login que já tem conta: 409 `ACCOUNT_EXISTS` com `account.vehicles` e `account.records`; repetir com `onConflict: "merge"` devolve `merged` e o usuário anônimo some do Neon.
 - [ ] No Neon, `auth_identities.email` e `users.email` têm só o e-mail confirmado; nenhum `id_token` aparece nos logs do Render.
 
 ### 2.15 Seletor de data

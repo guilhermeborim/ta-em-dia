@@ -193,9 +193,15 @@ export class AuthRepository {
     });
   }
 
-  /** Quantos veículos (sem os excluídos) o usuário tem na API. */
-  countVehicles(userId: string): Promise<number> {
-    return this.prisma.vehicle.count({ where: { userId, deletedAt: null } });
+  /** Quantos veículos e registros (abastecimentos e serviços de manutenção) o usuário tem, sem os excluídos. */
+  async countData(userId: string): Promise<{ vehicles: number; records: number }> {
+    const vehicle = { userId, deletedAt: null };
+    const [vehicles, fuel, maintenance] = await Promise.all([
+      this.prisma.vehicle.count({ where: vehicle }),
+      this.prisma.fuelEntry.count({ where: { deletedAt: null, vehicle } }),
+      this.prisma.maintenanceRecord.count({ where: { deletedAt: null, vehicle } }),
+    ]);
+    return { vehicles, records: fuel + maintenance };
   }
 
   /**

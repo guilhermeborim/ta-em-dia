@@ -230,7 +230,7 @@ Todo usuário tem conta na API desde o primeiro uso: quem toca "Continuar sem lo
 1. Usuário anônimo toca "Salvar meus dados" e faz login social.
 2. `POST /v1/auth/link` com o token anônimo + `{ provider, idToken, installationId, platform, name?, onConflict? }` (`linkRequestSchema`). O `installationId` precisa ser de um aparelho do usuário do token (senão 403 `DEVICE_MISMATCH`). Quem já tem login recebe 409 `ALREADY_LINKED`.
 3. Se o `sub` ainda não tem conta: adiciona a identidade ao usuário atual e `is_anonymous=false` (`outcome: 'linked'`). Nenhum dado muda de dono. A resposta traz tokens novos (`linkResultSchema`).
-4. Se já tem conta (outro celular): 409 `ACCOUNT_EXISTS` com `account.vehicles` (quantos veículos a conta tem; para a tela 24) e nada muda. O app pergunta "Juntar dados" ou "Usar só os da conta" e repete a chamada com `onConflict`:
+4. Se já tem conta (outro celular): 409 `ACCOUNT_EXISTS` com `account: { vehicles, records }` (quantos veículos e registros, abastecimentos e serviços, a conta tem; para a tela 24) e nada muda. O app pergunta "Juntar dados" ou "Usar só os da conta" e repete a chamada com `onConflict`:
    - `merge` (`outcome: 'merged'`): os dados que o anônimo já tinha na API (veículos, registros e prazos, inclusive os excluídos) passam para a conta, cada linha com um `version` novo do contador da conta (para os outros aparelhos dela puxarem). O que ficou só no aparelho vai pela `outbox`, no primeiro envio.
    - `use_account` (`outcome: 'switched'`): o que o anônimo tinha na API é descartado. O app apaga os dados locais e faz o pull completo.
    - Nos dois, o aparelho passa para a conta e o usuário anônimo é apagado, tudo numa transação. A junção não confere o limite de veículos do plano.

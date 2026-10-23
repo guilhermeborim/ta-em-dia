@@ -40,7 +40,7 @@ class FakeRepository {
   users = new Map<string, AuthUser>([[anon.id, anon]]);
   identities = new Map<string, AuthUser>(); // "provider:sub" -> usuário
   device: DeviceOwner | null = { id: 'device-1', userId: anon.id };
-  vehicles = new Map<string, number>([[account.id, 2]]);
+  data = new Map([[account.id, { vehicles: 2, records: 22 }]]);
   sessions: { userId: string; input: SessionInput }[] = [];
   created: (SocialProfile & { userId: string })[] = [];
   linked: { userId: string; profile: SocialProfile }[] = [];
@@ -59,8 +59,8 @@ class FakeRepository {
   async findDevice() {
     return this.device;
   }
-  async countVehicles(userId: string) {
-    return this.vehicles.get(userId) ?? 0;
+  async countData(userId: string) {
+    return this.data.get(userId) ?? { vehicles: 0, records: 0 };
   }
   async openSession(userId: string, input: SessionInput) {
     this.sessions.push({ userId, input });
@@ -180,12 +180,12 @@ describe('AuthService.link', () => {
     expect(repository.switched).toHaveLength(0);
   });
 
-  it('conta que já existe e sem escolha: 409 ACCOUNT_EXISTS com os veículos da conta, sem mexer em nada', async () => {
+  it('conta que já existe e sem escolha: 409 ACCOUNT_EXISTS com os veículos e registros da conta, sem mexer em nada', async () => {
     const { repository, service } = setup();
     repository.identities.set('google:sub-ana', account);
     await expect(service.link(anon.id, link, NOW)).rejects.toMatchObject({
       status: 409,
-      response: { code: 'ACCOUNT_EXISTS', account: { vehicles: 2 } },
+      response: { code: 'ACCOUNT_EXISTS', account: { vehicles: 2, records: 22 } },
     });
     expect(repository.switched).toHaveLength(0);
     expect(repository.sessions).toHaveLength(0);

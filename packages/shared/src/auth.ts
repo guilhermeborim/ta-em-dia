@@ -81,10 +81,16 @@ export type LinkOutcome = z.infer<typeof linkOutcomeSchema>;
 export const linkResultSchema = authTokensSchema.extend({ outcome: linkOutcomeSchema });
 export type LinkResult = z.infer<typeof linkResultSchema>;
 
-/** Corpo do 409 `ACCOUNT_EXISTS`: o que a conta que já existe tem (para a tela 24). */
+/**
+ * Corpo do 409 `ACCOUNT_EXISTS`: o que a conta que já existe tem (para a tela 24). `records` são
+ * abastecimentos e serviços de manutenção (os "registros" da tela); excluídos não contam.
+ */
 export const accountExistsSchema = z.object({
   code: z.literal('ACCOUNT_EXISTS'),
-  account: z.object({ vehicles: z.number().int().nonnegative() }),
+  account: z.object({
+    vehicles: z.number().int().nonnegative(),
+    records: z.number().int().nonnegative(),
+  }),
 });
 
 export type AccountExists = z.infer<typeof accountExistsSchema>;

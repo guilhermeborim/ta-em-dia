@@ -153,7 +153,7 @@ export class AuthService {
       throw new ConflictException({
         code: 'ACCOUNT_EXISTS',
         message: 'Essa conta já tem dados.',
-        account: { vehicles: await this.repository.countVehicles(existing.id) },
+        account: await this.repository.countData(existing.id),
       });
     }
     const merge = request.onConflict === 'merge';
