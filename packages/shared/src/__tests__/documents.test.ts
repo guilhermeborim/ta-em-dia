@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  currentDocuments,
+  documentHistory,
   documentReminders,
+  documentYear,
   lateDocumentReminder,
   documentStatus,
   isVehicleDocument,
+  nextYearDueDate,
   parseDueDate,
   toDueDate,
 } from '../documents';
@@ -172,5 +176,54 @@ describe('lateDocumentReminder', () => {
     expect(lateDocumentReminder(input({ dueDate: '2026-10-15' }), now)).toBeNull();
     expect(lateDocumentReminder(input({ notifyDays: [] }), now)).toBeNull();
     expect(lateDocumentReminder(input({ dueDate: 'xx' }), now)).toBeNull();
+  });
+});
+
+describe('prazos por ano', () => {
+  const GOL = '018bcfe5-6800-7000-8000-000000000001';
+  const UNO = '018bcfe5-6800-7000-8000-000000000002';
+  const item = (kind: 'ipva' | 'cnh', dueDate: string, vehicleId?: string) => ({
+    kind,
+    dueDate,
+    vehicleId,
+  });
+
+  it('o ano é o do vencimento', () => {
+    expect(documentYear('2026-11-20')).toBe(2026);
+    expect(() => documentYear('2026-02-30')).toThrow();
+  });
+
+  it('o ano seguinte guarda o dia; 29/02 cai em 28/02 se não for bissexto', () => {
+    expect(nextYearDueDate('2026-11-20')).toBe('2027-11-20');
+    expect(nextYearDueDate('2028-02-29')).toBe('2029-02-28');
+    expect(nextYearDueDate('2027-12-31')).toBe('2028-12-31');
+    expect(() => nextYearDueDate('2026-13-01')).toThrow();
+  });
+
+  it('o prazo atual de cada tipo é o de vencimento mais recente, por veículo', () => {
+    const list = [
+      item('ipva', '2025-11-20', GOL),
+      item('ipva', '2027-11-20', GOL),
+      item('ipva', '2026-11-20', GOL),
+      item('ipva', '2025-11-20', UNO),
+      item('cnh', '2024-05-01'),
+      item('cnh', '2029-05-01'),
+    ];
+    expect(currentDocuments(list)).toEqual([list[1], list[3], list[5]]);
+  });
+
+  it('o histórico é o resto, do mais novo ao mais antigo', () => {
+    const list = [
+      item('ipva', '2025-11-20', GOL),
+      item('ipva', '2027-11-20', GOL),
+      item('ipva', '2026-11-20', GOL),
+      item('cnh', '2029-05-01'),
+    ];
+    expect(documentHistory(list).map((d) => d.dueDate)).toEqual(['2026-11-20', '2025-11-20']);
+  });
+
+  it('um prazo só, ou nenhum: não há histórico', () => {
+    expect(currentDocuments([])).toEqual([]);
+    expect(documentHistory([item('ipva', '2026-11-20', GOL)])).toEqual([]);
   });
 });

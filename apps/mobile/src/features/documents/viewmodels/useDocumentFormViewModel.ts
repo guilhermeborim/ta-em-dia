@@ -1,4 +1,4 @@
-import { DOCUMENT_LABELS } from '@ta-em-dia/shared';
+import { DOCUMENT_LABELS, documentYear } from '@ta-em-dia/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
@@ -6,7 +6,15 @@ import { useDb } from '../../../core/db';
 import { dateFromInput, toDateInput } from '../../../core/format';
 import { refreshReminders } from '../../../core/reminders';
 import { loadSettings } from '../../../core/settings';
-import { addDocument, deleteDocument, findDocument, updateDocument } from '../../../core/documents';
+import {
+  addDocument,
+  deleteDocument,
+  DuplicateDocumentError,
+  findDocument,
+  listDocuments,
+  renewDocument,
+  updateDocument,
+} from '../../../core/documents';
 import {
   buildDocumentInput,
   dueInputFrom,
@@ -31,6 +39,8 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
   const { id, vehicleId } = useLocalSearchParams<{ id?: string; vehicleId?: string }>();
   const [data, setData] = useState<DocumentsData | null>(null);
   const [title, setTitle] = useState('');
+  // Ano do vencimento do prazo aberto, se for o atual do tipo (só ele pode ser renovado).
+  const [renewableYear, setRenewableYear] = useState<number | null>(null);
   // `undefined` = carregando; `null` = não existe (ou foi excluído).
   const [found, setFound] = useState<boolean | undefined>(mode === 'edit' ? undefined : true);
   const [form, setForm] = useState<DocumentForm>(emptyDocumentForm);
@@ -46,7 +56,12 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
         if (!active) return;
         setFound(document !== null);
         if (document) {
-          setTitle(DOCUMENT_LABELS[document.kind]);
+          setTitle(`${DOCUMENT_LABELS[document.kind]} ${documentYear(document.dueDate)}`);
+          const current = await listDocuments(db, document.vehicleId);
+          if (!active) return;
+          setRenewableYear(
+            current.some((d) => d.id === document.id) ? documentYear(document.dueDate) : null,
+          );
           setForm({
             kind: document.kind,
             dueDate: dueInputFrom(document.dueDate),
@@ -92,10 +107,25 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
       // O prazo mudou: os avisos dele também.
       void refreshReminders(db);
       router.back();
+    } catch (error) {
+      if (!(error instanceof DuplicateDocumentError)) throw error;
+      setErrors({ dueDate: `Já existe ${DOCUMENT_LABELS[error.kind]} de ${error.year}` });
     } finally {
       setBusy(false);
     }
   }, [busy, data, db, form, id, mode, router]);
+
+  const renew = useCallback(async () => {
+    if (busy || !id) return;
+    setBusy(true);
+    try {
+      await renewDocument(db, id);
+      void refreshReminders(db);
+      router.back();
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, db, id, router]);
 
   const remove = useCallback(async () => {
     if (busy || !id) return;
@@ -128,6 +158,9 @@ export function useDocumentFormViewModel(mode: 'add' | 'edit') {
     form,
     errors,
     busy,
+    /** Ano do novo prazo ("Renovar para 2027"); `null` se este prazo não é o atual do tipo. */
+    renewYear: renewableYear === null ? null : renewableYear + 1,
+    renew,
     selectKind: (kind: NonNullable<DocumentForm['kind']>) => {
       setForm((prev) => ({ ...prev, kind }));
       setErrors((prev) => ({ ...prev, kind: undefined }));

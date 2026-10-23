@@ -1,6 +1,7 @@
 import {
   DOCUMENT_KINDS,
   DOCUMENT_LABELS,
+  documentYear,
   isVehicleDocument,
   parseDueDate,
   type DocumentKind,
@@ -13,11 +14,15 @@ import type { IconName, StatusTone } from '../../../ui';
 export interface DocumentsData {
   /** Veículo ativo (dono dos prazos do carro). `null` se não há veículo. */
   vehicle: { id: string; name: string; plate?: string } | null;
+  /** Os prazos atuais: de cada tipo, o de vencimento mais recente. */
   documents: DocumentRecord[];
+  /** Prazos de anos anteriores (IPVA 2025...), do mais novo ao mais antigo. */
+  history: DocumentRecord[];
 }
 
 export interface DocumentItemView {
   id: string;
+  /** Ex.: "IPVA 2026". */
   title: string;
   /** Ex.: "Vence em 20/11/2026". */
   subtitle: string;
@@ -59,6 +64,10 @@ function subtitle(kind: DocumentKind, dueDate: string, overdue: boolean): string
   return `${kind === 'insurance' ? 'Renova' : 'Vence'} em ${date}`;
 }
 
+/** "IPVA 2026": o tipo e o ano do vencimento. */
+const titleOf = (document: Pick<DocumentRecord, 'kind' | 'dueDate'>) =>
+  `${DOCUMENT_LABELS[document.kind]} ${documentYear(document.dueDate)}`;
+
 export function toDocumentItem(
   document: DocumentRecord,
   today: Date = new Date(),
@@ -66,7 +75,7 @@ export function toDocumentItem(
   const status = statusOfDocument(document, today);
   return {
     id: document.id,
-    title: DOCUMENT_LABELS[document.kind],
+    title: titleOf(document),
     subtitle: subtitle(document.kind, document.dueDate, status.tone === 'overdue'),
     icon: icons[document.kind],
     tone: tones[status.tone],
@@ -105,6 +114,21 @@ export function buildDocumentSections(
     });
   }
   return sections;
+}
+
+/**
+ * Prazos de anos anteriores, no pé da lista: "IPVA 2025 · Vencimento em 20/11/2025 · Renovado".
+ * Sem histórico, vazio.
+ */
+export function buildHistory(data: DocumentsData): DocumentItemView[] {
+  return data.history.map((document) => ({
+    id: document.id,
+    title: titleOf(document),
+    subtitle: `Vencimento em ${toDateInput(parseDueDate(document.dueDate)!)}`,
+    icon: icons[document.kind],
+    tone: 'none',
+    status: 'Renovado',
+  }));
 }
 
 /** Tipos que ainda podem ser cadastrados: um por veículo, a CNH uma só; sem veículo, só a CNH. */

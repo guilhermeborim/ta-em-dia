@@ -1,9 +1,12 @@
 export {
   addDocument,
   deleteDocument,
+  DuplicateDocumentError,
   findDocument,
   listAllDocuments,
+  listDocumentHistory,
   listDocuments,
+  renewDocument,
   updateDocument,
   type DocumentWithVehicle,
   type NewDocument,

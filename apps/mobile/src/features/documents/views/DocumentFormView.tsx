@@ -128,6 +128,20 @@ function DocumentFormView({ mode }: { mode: 'add' | 'edit' }) {
                 </Text>
               </View>
 
+              {vm.renewYear !== null ? (
+                <View style={styles.danger}>
+                  <Button
+                    label={`Renovar para ${vm.renewYear}`}
+                    variant="outline"
+                    onPress={vm.renew}
+                    disabled={vm.busy}
+                  />
+                  <Text variant="small" color="text3" style={styles.renewHint}>
+                    Cria o prazo do ano seguinte e guarda este no histórico.
+                  </Text>
+                </View>
+              ) : null}
+
               {vm.isEdit ? (
                 <View style={styles.danger}>
                   <Button
@@ -184,5 +198,6 @@ const styles = StyleSheet.create({
   kinds: { gap: spacing.sm },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   danger: { paddingTop: spacing.md },
+  renewHint: { paddingTop: spacing.sm },
   footer: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm },
 });

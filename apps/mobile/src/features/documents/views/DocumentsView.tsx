@@ -52,6 +52,27 @@ export function DocumentsView() {
                 </View>
               ))
             )}
+            {vm.history.length > 0 ? (
+              <View style={styles.section}>
+                <Text variant="caption" color="text3">
+                  HISTÓRICO
+                </Text>
+                <View style={styles.group}>
+                  {vm.history.map((item) => (
+                    <DocumentItem
+                      key={item.id}
+                      flat
+                      icon={item.icon}
+                      title={item.title}
+                      subtitle={item.subtitle}
+                      tone={item.tone}
+                      status={item.status}
+                      onPress={() => vm.open(item.id)}
+                    />
+                  ))}
+                </View>
+              </View>
+            ) : null}
             {vm.notice ? <InfoBanner icon="bell" text={vm.notice} /> : null}
           </ScrollView>
 

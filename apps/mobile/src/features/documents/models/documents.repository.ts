@@ -1,5 +1,5 @@
 import type { Db } from '../../../core/db';
-import { listDocuments } from '../../../core/documents';
+import { listDocumentHistory, listDocuments } from '../../../core/documents';
 import { findActiveVehicle } from '../../../core/vehicle';
 import type { DocumentsData } from './documentsList';
 
@@ -15,7 +15,13 @@ export async function loadDocuments(db: Db, vehicleId?: string): Promise<Documen
       )
     : null;
   const vehicle = requested ?? (await findActiveVehicle(db));
-  if (!vehicle) return { vehicle: null, documents: await listDocuments(db) };
+  if (!vehicle) {
+    return {
+      vehicle: null,
+      documents: await listDocuments(db),
+      history: await listDocumentHistory(db),
+    };
+  }
 
   const row = await db.getFirstAsync<{ plate: string | null }>(
     'SELECT plate FROM vehicles WHERE id = ?',
@@ -24,5 +30,6 @@ export async function loadDocuments(db: Db, vehicleId?: string): Promise<Documen
   return {
     vehicle: { id: vehicle.id, name: vehicle.name, plate: row?.plate ?? undefined },
     documents: await listDocuments(db, vehicle.id),
+    history: await listDocumentHistory(db, vehicle.id),
   };
 }

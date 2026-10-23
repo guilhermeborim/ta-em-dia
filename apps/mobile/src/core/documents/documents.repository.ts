@@ -1,7 +1,11 @@
 import {
+  currentDocuments,
   DEFAULT_DOCUMENT_NOTIFY_DAYS,
+  documentHistory,
   documentSchema,
+  documentYear,
   isVehicleDocument,
+  nextYearDueDate,
   type DocumentKind,
   type DocumentRecord,
 } from '@ta-em-dia/shared';
@@ -29,11 +33,18 @@ function toDocument(row: DocumentRow): DocumentRecord {
   };
 }
 
-/**
- * Prazos do veículo e a CNH (que é da pessoa), em ordem de vencimento. Sem veículo, só a CNH.
- * Não traz os excluídos.
- */
-export async function listDocuments(db: Db, vehicleId?: string): Promise<DocumentRecord[]> {
+/** Um prazo por ano (IPVA 2026, IPVA 2027...) e o mesmo ano não se repete no tipo. */
+export class DuplicateDocumentError extends Error {
+  constructor(
+    readonly kind: DocumentKind,
+    readonly year: number,
+  ) {
+    super('Esse prazo já está cadastrado');
+  }
+}
+
+/** Todos os prazos do veículo e a CNH, dos anos atuais e anteriores, por vencimento. */
+async function queryDocuments(db: Db, vehicleId?: string): Promise<DocumentRecord[]> {
   const rows = await db.getAllAsync<DocumentRow>(
     `SELECT ${COLUMNS}
        FROM documents
@@ -44,12 +55,27 @@ export async function listDocuments(db: Db, vehicleId?: string): Promise<Documen
   return rows.map(toDocument);
 }
 
+/**
+ * Os prazos atuais do veículo e a CNH (que é da pessoa), em ordem de vencimento: de cada tipo, o
+ * de vencimento mais recente (`currentDocuments`). Sem veículo, só a CNH. Não traz os excluídos
+ * nem os de anos anteriores (ver `listDocumentHistory`).
+ */
+export async function listDocuments(db: Db, vehicleId?: string): Promise<DocumentRecord[]> {
+  return currentDocuments(await queryDocuments(db, vehicleId));
+}
+
+/** Os prazos de anos anteriores do veículo e da CNH, do mais novo ao mais antigo. */
+export async function listDocumentHistory(db: Db, vehicleId?: string): Promise<DocumentRecord[]> {
+  return documentHistory(await queryDocuments(db, vehicleId));
+}
+
 /** Um prazo com o nome do veículo (a CNH não tem). */
 export type DocumentWithVehicle = DocumentRecord & { vehicleName?: string };
 
 /**
- * Os prazos de todos os veículos ativos (não arquivados nem excluídos) e a CNH, em ordem de
- * vencimento. É o que os avisos usam: arquivar um veículo cala os avisos dele.
+ * Os prazos atuais de todos os veículos ativos (não arquivados nem excluídos) e a CNH, em ordem
+ * de vencimento. É o que os avisos usam: arquivar um veículo cala os avisos dele, e prazos de anos
+ * anteriores não avisam.
  */
 export async function listAllDocuments(db: Db): Promise<DocumentWithVehicle[]> {
   const rows = await db.getAllAsync<DocumentRow & { vehicle_name: string | null }>(
@@ -60,7 +86,9 @@ export async function listAllDocuments(db: Db): Promise<DocumentWithVehicle[]> {
         AND (d.vehicle_id IS NULL OR (v.deleted_at IS NULL AND v.archived = 0))
       ORDER BY d.due_date, d.kind`,
   );
-  return rows.map((row) => ({ ...toDocument(row), vehicleName: row.vehicle_name ?? undefined }));
+  return currentDocuments(
+    rows.map((row) => ({ ...toDocument(row), vehicleName: row.vehicle_name ?? undefined })),
+  );
 }
 
 /** Um prazo (não excluído), ou `null`. */
@@ -82,9 +110,27 @@ export interface NewDocument {
   notifyDays?: number[];
 }
 
+/** Já existe outro prazo do tipo, do mesmo dono, que vence no mesmo ano? `exceptId` é o que está sendo editado. */
+async function hasSameYear(
+  db: Db,
+  document: Pick<DocumentRecord, 'kind' | 'vehicleId' | 'dueDate'>,
+  exceptId?: string,
+): Promise<boolean> {
+  const duplicate = await db.getFirstAsync<{ id: string }>(
+    `SELECT id FROM documents
+      WHERE kind = ? AND deleted_at IS NULL AND vehicle_id IS ?
+        AND substr(due_date, 1, 4) = ? AND id IS NOT ?`,
+    document.kind,
+    document.vehicleId ?? null,
+    String(documentYear(document.dueDate)),
+    exceptId ?? null,
+  );
+  return duplicate !== null;
+}
+
 /**
- * Valida, grava e enfileira o prazo, na mesma transação. Cada tipo tem um prazo só por
- * veículo (a CNH, um só por pessoa): o próximo vencimento. Repetir o tipo lança erro.
+ * Valida, grava e enfileira o prazo, na mesma transação. Cada tipo tem um prazo por ano e por
+ * veículo (a CNH, por pessoa); o ano é o do vencimento. Repetir o ano lança `DuplicateDocumentError`.
  */
 export async function addDocument(
   db: Db,
@@ -104,13 +150,9 @@ export async function addDocument(
   const at = (ctx.now ?? new Date()).toISOString();
 
   await db.withTransactionAsync(async () => {
-    const duplicate = await db.getFirstAsync<{ id: string }>(
-      `SELECT id FROM documents
-        WHERE kind = ? AND deleted_at IS NULL AND vehicle_id IS ?`,
-      document.kind,
-      document.vehicleId ?? null,
-    );
-    if (duplicate) throw new Error('Esse prazo já está cadastrado');
+    if (await hasSameYear(db, document)) {
+      throw new DuplicateDocumentError(document.kind, documentYear(document.dueDate));
+    }
 
     await db.runAsync(
       `INSERT INTO documents
@@ -138,7 +180,7 @@ export interface DocumentPatch {
   notifyDays: number[];
 }
 
-/** Grava a edição e enfileira o upsert. `null` se o prazo não existe. */
+/** Grava a edição e enfileira o upsert. `null` se o prazo não existe; ano já cadastrado lança `DuplicateDocumentError`. */
 export async function updateDocument(
   db: Db,
   id: string,
@@ -152,6 +194,9 @@ export async function updateDocument(
     const current = await findDocument(db, id);
     if (!current) return;
     updated = documentSchema.parse({ ...current, ...patch });
+    if (await hasSameYear(db, updated, id)) {
+      throw new DuplicateDocumentError(updated.kind, documentYear(updated.dueDate));
+    }
     await db.runAsync(
       'UPDATE documents SET due_date = ?, notify_days = ?, updated_at = ? WHERE id = ?',
       updated.dueDate,
@@ -163,6 +208,30 @@ export async function updateDocument(
   });
 
   return updated;
+}
+
+/**
+ * Renova o prazo: um novo para o ano seguinte, no mesmo dia e com os mesmos avisos. O de agora
+ * fica no histórico. `null` se o prazo não existe; se o ano seguinte já existe, lança
+ * `DuplicateDocumentError`.
+ */
+export async function renewDocument(
+  db: Db,
+  id: string,
+  ctx: { id?: string; now?: Date } = {},
+): Promise<DocumentRecord | null> {
+  const current = await findDocument(db, id);
+  if (!current) return null;
+  return addDocument(
+    db,
+    {
+      vehicleId: current.vehicleId,
+      kind: current.kind,
+      dueDate: nextYearDueDate(current.dueDate),
+      notifyDays: current.notifyDays,
+    },
+    ctx,
+  );
 }
 
 /** Exclusão lógica: a linha fica com deleted_at para o sync propagar. */
