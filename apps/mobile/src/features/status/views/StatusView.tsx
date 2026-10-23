@@ -8,7 +8,6 @@ export function StatusView() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>{vm.title}</Text>
         <Text style={styles.line}>{vm.envLabel}</Text>
         <Text style={styles.line}>{vm.apiUrlLabel}</Text>
         <Text style={styles.status}>{vm.apiLabel}</Text>
