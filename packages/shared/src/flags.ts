@@ -52,3 +52,11 @@ export function flagsFor(plan: Plan, overrides: Partial<FeatureFlags> = {}): Fea
 export function canAddVehicle(count: number, max: number | null): boolean {
   return max === null || count < max;
 }
+
+/**
+ * Juntar os veículos do aparelho com os da conta cabe no plano? Sem veículo no aparelho não há o que
+ * somar (os prazos e a CNH entram sempre). Arquivados contam, excluídos não. `max` nulo é sem limite.
+ */
+export function canMergeVehicles(local: number, account: number, max: number | null): boolean {
+  return max === null || local === 0 || local + account <= max;
+}

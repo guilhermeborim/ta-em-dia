@@ -191,8 +191,8 @@ Testado contra um Postgres local (Docker): criar conta social, vincular ao anôn
 - [ ] Depois do merge, o deploy sobe sem migration nova (nada mudou no schema) e o `/health` responde.
 - [ ] No Render (staging), `GOOGLE_CLIENT_IDS` tem o client ID web do projeto do Google Cloud (e os client IDs de Android e iOS, se o `aud` do token vier deles) e `APPLE_CLIENT_ID` tem o bundle id (`com.guilhermeborim.taemdia.staging`). Sem eles, `POST /v1/auth/google` devolve 503 `PROVIDER_NOT_CONFIGURED`.
 - [ ] Com um `id_token` real do Google (pelo app do PR seguinte, ou pelo OAuth Playground com o client ID certo): `POST /v1/auth/google` devolve 200 com `user.isAnonymous: false`; repetir devolve o mesmo `user.id`; `aud` de outro app devolve 401 `INVALID_ID_TOKEN`.
-- [ ] Mesmo teste com o `identityToken` da Apple em um iPhone (precisa de conta Apple Developer paga e do bundle id com "Sign in with Apple").
-- [ ] `POST /v1/auth/link` com o token de um usuário anônimo e um login novo: 200 `outcome: linked`, o mesmo `user.id`, `users.isAnonymous = false` e `auth_identities` com a linha do Google no Neon. Com um login que já tem conta: 409 `ACCOUNT_EXISTS` com `account.vehicles` e `account.records`; repetir com `onConflict: "merge"` devolve `merged` e o usuário anônimo some do Neon.
+- [ ] **Adiado (sem conta Apple Developer):** o mesmo teste com o `identityToken` da Apple em um iPhone. Com `APPLE_CLIENT_ID` vazio, `POST /v1/auth/apple` devolve 503 `PROVIDER_NOT_CONFIGURED`; confira isso no staging.
+- [ ] `POST /v1/auth/link` com o token de um usuário anônimo e um login novo: 200 `outcome: linked`, o mesmo `user.id`, `users.isAnonymous = false` e `auth_identities` com a linha do Google no Neon. Com um login que já tem conta: 409 `ACCOUNT_EXISTS` com `account.vehicles` e `account.records`; repetir com `onConflict: "merge"` devolve `merged` e o usuário anônimo some do Neon. Se o anônimo tiver veículo na API e a conta também (soma maior que 1), `merge` devolve 409 `VEHICLE_LIMIT_REACHED` e nada muda; `use_account` funciona.
 - [ ] No Neon, `auth_identities.email` e `users.email` têm só o e-mail confirmado; nenhum `id_token` aparece nos logs do Render.
 
 ### 2.19 App: login com Google e Apple, Conta e vincular (telas 3, 19, 19b, 23 e 24)
@@ -290,10 +290,9 @@ Recomendação: **A** agora; revisar quando o login existir. Se escolher B, o te
 
 ### 3.26 Login social: regras que assumi na API
 
-- **Junção passa do limite grátis:** `merge` leva todos os veículos do aparelho para a conta mesmo que a soma passe de 1 (`vehicles.max`). O app já aceita quem tem 2 ou mais veículos de antes do limite; a junção segue a mesma regra. Alternativa: recusar a junção quando passar. Recomendação: manter, perder veículo do usuário é pior.
 - **Mesmo e-mail em Google e Apple:** são contas separadas (não juntamos por e-mail, que o usuário pode esconder na Apple). Recomendação: manter.
 - **Sem `nonce`:** a API não confere `nonce` no `id_token`. Um token roubado só serve nos poucos minutos em que vale. Alternativa: o app gera um `nonce` e a API confere. Recomendação: manter por ora.
-- **Contas e chaves de terceiros:** o login precisa de um projeto no Google Cloud (grátis) e de uma conta Apple Developer (paga, a exceção do projeto para as lojas). Dependem de você: criar os client IDs e pôr em `GOOGLE_CLIENT_IDS` e `APPLE_CLIENT_ID` em cada ambiente do Render.
+- **Apple adiada:** sem conta Apple Developer (paga), `APPLE_CLIENT_ID` fica vazio e não há build de iOS. O login com Apple está pronto na API e no app, mas sem teste real. Lembrete: a App Store exige "Entrar com Apple" quando há login com Google (Guideline 4.8), então a conta paga é pré-requisito para publicar no iPhone. O Google precisa de um projeto no Google Cloud (grátis); ponha o client ID web em `GOOGLE_CLIENT_IDS` em cada ambiente do Render.
 
 ### 3.27 Login no app: escolhas que fiz
 

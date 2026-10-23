@@ -233,7 +233,7 @@ Todo usuário tem conta na API desde o primeiro uso: quem toca "Continuar sem lo
 4. Se já tem conta (outro celular): 409 `ACCOUNT_EXISTS` com `account: { vehicles, records }` (quantos veículos e registros, abastecimentos e serviços, a conta tem; para a tela 24) e nada muda. O app pergunta "Juntar dados" ou "Usar só os da conta" e repete a chamada com `onConflict`:
    - `merge` (`outcome: 'merged'`): os dados que o anônimo já tinha na API (veículos, registros e prazos, inclusive os excluídos) passam para a conta, cada linha com um `version` novo do contador da conta (para os outros aparelhos dela puxarem). O que ficou só no aparelho vai pela `outbox`, no primeiro envio.
    - `use_account` (`outcome: 'switched'`): o que o anônimo tinha na API é descartado. O app apaga os dados locais e faz o pull completo.
-   - Nos dois, o aparelho passa para a conta e o usuário anônimo é apagado, tudo numa transação. A junção não confere o limite de veículos do plano.
+   - Nos dois, o aparelho passa para a conta e o usuário anônimo é apagado, tudo numa transação. A junção respeita o limite de veículos do plano (`canMergeVehicles`, em `shared`): no grátis (`vehicles.max` = 1) só junta se o aparelho não tiver veículo ou se a soma com os da conta couber (arquivados contam); senão a API responde 409 `VEHICLE_LIMIT_REACHED` e o app só deixa "Usar só os da conta". A API só enxerga o que o anônimo já enviou; a checagem do que está só no aparelho é do app (a API ainda não confere o limite no `sync/push`).
 
 **No app: login com Google e Apple**
 
