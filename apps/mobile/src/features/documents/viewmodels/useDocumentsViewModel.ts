@@ -4,6 +4,7 @@ import { useDb } from '../../../core/db';
 import {
   availableKinds,
   buildDocumentSections,
+  buildHistory,
   noticeText,
   type DocumentsData,
 } from '../models/documentsList';
@@ -30,10 +31,13 @@ export function useDocumentsViewModel() {
   );
 
   const sections = useMemo(() => (data ? buildDocumentSections(data) : []), [data]);
+  const history = useMemo(() => (data ? buildHistory(data) : []), [data]);
 
   return {
     loading: data === null,
     sections,
+    /** Prazos de anos anteriores, no pé da lista. */
+    history,
     notice: data ? noticeText(data.documents) : null,
     isEmpty: data !== null && data.documents.length === 0,
     /** Sem tipo para cadastrar (todos já têm prazo), o botão some. */

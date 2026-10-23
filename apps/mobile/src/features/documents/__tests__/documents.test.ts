@@ -5,8 +5,12 @@ import type { Db } from '../../../core/db';
 import {
   addDocument,
   deleteDocument,
+  DuplicateDocumentError,
   findDocument,
+  listAllDocuments,
+  listDocumentHistory,
   listDocuments,
+  renewDocument,
   updateDocument,
 } from '../../../core/documents';
 import { createVehicle, deleteVehicle } from '../../vehicles/models/vehicles.repository';
@@ -20,6 +24,7 @@ import {
 import {
   availableKinds,
   buildDocumentSections,
+  buildHistory,
   noticeText,
   toDocumentItem,
 } from '../models/documentsList';
@@ -42,7 +47,7 @@ const doc = (
 describe('toDocumentItem', () => {
   it('vencido: data, selo vermelho e ícone de arquivo', () => {
     expect(toDocumentItem(doc({ kind: 'ipva', dueDate: '2026-10-15' }), TODAY)).toMatchObject({
-      title: 'IPVA',
+      title: 'IPVA 2026',
       subtitle: 'Venceu em 15/10/2026',
       icon: 'file',
       tone: 'danger',
@@ -88,23 +93,23 @@ describe('buildDocumentSections', () => {
   ];
 
   it('veículo (IPVA, licenciamento, seguro) e "Você" (CNH)', () => {
-    const sections = buildDocumentSections({ vehicle, documents }, TODAY);
+    const sections = buildDocumentSections({ vehicle, documents, history: [] }, TODAY);
     expect(sections.map((s) => [s.title, s.items.map((i) => i.title)])).toEqual([
-      ['GOLZINHO · BRA2E19', ['IPVA', 'Licenciamento', 'Seguro']],
-      ['VOCÊ', ['CNH']],
+      ['GOLZINHO · BRA2E19', ['IPVA 2026', 'Licenciamento 2027', 'Seguro 2026']],
+      ['VOCÊ', ['CNH 2026']],
     ]);
   });
 
   it('sem placa, só o nome; grupo vazio não aparece; sem veículo, só a CNH', () => {
     const noPlate = buildDocumentSections(
-      { vehicle: { id: GOL, name: 'Gol' }, documents: [documents[2]] },
+      { vehicle: { id: GOL, name: 'Gol' }, documents: [documents[2]], history: [] },
       TODAY,
     );
     expect(noPlate.map((s) => s.title)).toEqual(['GOL']);
-    expect(buildDocumentSections({ vehicle: null, documents }, TODAY).map((s) => s.title)).toEqual([
-      'VOCÊ',
-    ]);
-    expect(buildDocumentSections({ vehicle, documents: [] }, TODAY)).toEqual([]);
+    expect(
+      buildDocumentSections({ vehicle: null, documents, history: [] }, TODAY).map((s) => s.title),
+    ).toEqual(['VOCÊ']);
+    expect(buildDocumentSections({ vehicle, documents: [], history: [] }, TODAY)).toEqual([]);
   });
 });
 
@@ -113,11 +118,15 @@ describe('availableKinds', () => {
 
   it('só os tipos ainda sem prazo', () => {
     const documents = [doc({ kind: 'ipva', dueDate: '2026-10-15' })];
-    expect(availableKinds({ vehicle, documents })).toEqual(['licensing', 'insurance', 'cnh']);
+    expect(availableKinds({ vehicle, documents, history: [] })).toEqual([
+      'licensing',
+      'insurance',
+      'cnh',
+    ]);
   });
 
   it('sem veículo, só a CNH', () => {
-    expect(availableKinds({ vehicle: null, documents: [] })).toEqual(['cnh']);
+    expect(availableKinds({ vehicle: null, documents: [], history: [] })).toEqual(['cnh']);
   });
 });
 
@@ -194,7 +203,7 @@ describe('prazos no SQLite', () => {
     ).rejects.toThrow();
     await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2026-11-20' });
     await expect(
-      addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2027-11-20' }),
+      addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2026-12-01' }),
     ).rejects.toThrow('já está cadastrado');
     expect(await listDocuments(db, GOL)).toHaveLength(1);
   });
@@ -253,6 +262,130 @@ describe('prazos no SQLite', () => {
     await deleteVehicle(db, GOL, NOW);
 
     expect((await listDocuments(db)).map((d) => d.kind)).toEqual(['cnh']);
+  });
+});
+
+describe('prazos por ano', () => {
+  let db: Db;
+
+  beforeEach(async () => {
+    db = createTestDb();
+    await migrate(db);
+    await createVehicle(
+      db,
+      { name: 'Gol', type: 'flex', initialKm: 1000, plate: 'BRA2E19' },
+      { id: GOL, now: NOW },
+    );
+    await db.runAsync('DELETE FROM outbox');
+  });
+
+  const outbox = () =>
+    db.getAllAsync<{ table_name: string; op: string }>(
+      'SELECT table_name, op FROM outbox ORDER BY id',
+    );
+
+  it('o mesmo tipo guarda um prazo por ano; o do ano repetido dá erro com o ano', async () => {
+    await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2026-11-20' });
+    await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2027-11-20' });
+    await expect(
+      addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2027-01-10' }),
+    ).rejects.toMatchObject({ kind: 'ipva', year: 2027 });
+    await expect(
+      addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2027-01-10' }),
+    ).rejects.toBeInstanceOf(DuplicateDocumentError);
+    // Outro tipo, outro veículo e a CNH não entram na conta.
+    await addDocument(db, { vehicleId: GOL, kind: 'licensing', dueDate: '2027-11-20' });
+    await addDocument(db, { kind: 'cnh', dueDate: '2027-11-20' });
+  });
+
+  it('só o prazo mais recente de cada tipo é o atual; o resto é histórico', async () => {
+    const old = await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2025-11-20' });
+    const now = await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2026-11-20' });
+    const oldest = await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2024-11-20' });
+
+    expect((await listDocuments(db, GOL)).map((d) => d.id)).toEqual([now.id]);
+    expect((await listDocumentHistory(db, GOL)).map((d) => d.id)).toEqual([old.id, oldest.id]);
+    expect((await listAllDocuments(db)).map((d) => d.id)).toEqual([now.id]);
+
+    const loaded = await loadDocuments(db);
+    expect(loaded.documents.map((d) => d.id)).toEqual([now.id]);
+    expect(loaded.history.map((d) => d.id)).toEqual([old.id, oldest.id]);
+  });
+
+  it('o histórico lista os anos anteriores com título, data e "Renovado"', async () => {
+    await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2025-11-20' });
+    await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2026-11-20' });
+
+    expect(buildHistory(await loadDocuments(db))).toEqual([
+      expect.objectContaining({
+        title: 'IPVA 2025',
+        subtitle: 'Vencimento em 20/11/2025',
+        tone: 'none',
+        status: 'Renovado',
+      }),
+    ]);
+    expect(buildHistory({ vehicle: null, documents: [], history: [] })).toEqual([]);
+  });
+
+  it('renovar cria o prazo do ano seguinte, com a mesma data e os mesmos avisos', async () => {
+    const ipva = await addDocument(db, {
+      vehicleId: GOL,
+      kind: 'ipva',
+      dueDate: '2026-11-20',
+      notifyDays: [15, 3],
+    });
+    await db.runAsync('DELETE FROM outbox');
+
+    const renewed = await renewDocument(db, ipva.id);
+    expect(renewed).toMatchObject({
+      vehicleId: GOL,
+      kind: 'ipva',
+      dueDate: '2027-11-20',
+      notifyDays: [15, 3],
+    });
+    expect(renewed?.id).not.toBe(ipva.id);
+    expect(await outbox()).toEqual([{ table_name: 'documents', op: 'upsert' }]);
+
+    // O antigo vai para o histórico, sem mudar.
+    expect((await listDocuments(db, GOL)).map((d) => d.id)).toEqual([renewed?.id]);
+    expect(await findDocument(db, ipva.id)).toEqual(ipva);
+    expect((await listDocumentHistory(db, GOL)).map((d) => d.id)).toEqual([ipva.id]);
+  });
+
+  it('renovar a CNH não leva veículo; renovar duas vezes ou prazo inexistente', async () => {
+    const cnh = await addDocument(db, { kind: 'cnh', dueDate: '2026-05-01' });
+    expect(await renewDocument(db, cnh.id)).toMatchObject({ kind: 'cnh', dueDate: '2027-05-01' });
+    await expect(renewDocument(db, cnh.id)).rejects.toBeInstanceOf(DuplicateDocumentError);
+    expect(await renewDocument(db, '018bcfe5-6800-7000-8000-0000000000ff')).toBeNull();
+  });
+
+  it('editar a data para um ano que já existe dá erro; o próprio ano vale', async () => {
+    const a = await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2026-11-20' });
+    await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2027-11-20' });
+
+    await expect(
+      updateDocument(db, a.id, { dueDate: '2027-01-05', notifyDays: [30] }),
+    ).rejects.toBeInstanceOf(DuplicateDocumentError);
+    expect(
+      await updateDocument(db, a.id, { dueDate: '2026-12-31', notifyDays: [30] }),
+    ).toMatchObject({ dueDate: '2026-12-31' });
+  });
+
+  it('excluir o prazo atual traz o do ano anterior de volta', async () => {
+    const old = await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2025-11-20' });
+    const now = await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2026-11-20' });
+    await deleteDocument(db, now.id, NOW);
+
+    expect((await listDocuments(db, GOL)).map((d) => d.id)).toEqual([old.id]);
+    expect(await listDocumentHistory(db, GOL)).toEqual([]);
+  });
+
+  it('excluir o veículo apaga também o histórico', async () => {
+    await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2025-11-20' });
+    await addDocument(db, { vehicleId: GOL, kind: 'ipva', dueDate: '2026-11-20' });
+    await deleteVehicle(db, GOL, NOW);
+
+    expect(await listDocumentHistory(db, GOL)).toEqual([]);
   });
 });
 

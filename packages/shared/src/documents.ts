@@ -44,6 +44,54 @@ export function parseDueDate(text: string): Date | null {
   return real ? date : null;
 }
 
+/** Ano do vencimento ("2026-11-20" é 2026): o ano do prazo, como em "IPVA 2026". */
+export function documentYear(dueDate: string): number {
+  const due = parseDueDate(dueDate);
+  if (!due) throw new Error(`Data de vencimento inválida: ${dueDate}`);
+  return due.getFullYear();
+}
+
+/** O mesmo dia do ano seguinte; 29/02 vira 28/02 quando o ano seguinte não é bissexto. */
+export function nextYearDueDate(dueDate: string): string {
+  const due = parseDueDate(dueDate);
+  if (!due) throw new Error(`Data de vencimento inválida: ${dueDate}`);
+  const year = due.getFullYear() + 1;
+  const lastDay = new Date(year, due.getMonth() + 1, 0).getDate();
+  return toDueDate(new Date(year, due.getMonth(), Math.min(due.getDate(), lastDay), 12));
+}
+
+interface DatedDocument {
+  vehicleId?: string;
+  kind: DocumentKind;
+  dueDate: string;
+}
+
+const ownerKey = (document: DatedDocument) => `${document.vehicleId ?? ''}:${document.kind}`;
+
+/** Do mais recente ao mais antigo; a data "aaaa-mm-dd" ordena como texto. */
+const byNewest = (a: DatedDocument, b: DatedDocument) =>
+  a.dueDate < b.dueDate ? 1 : a.dueDate > b.dueDate ? -1 : 0;
+
+/**
+ * Cada tipo guarda um prazo por ano (IPVA 2026, IPVA 2027...). O prazo atual de cada tipo, por
+ * veículo (a CNH, por pessoa), é o de vencimento mais recente: é ele que avisa e aparece na lista.
+ * Mantém a ordem recebida.
+ */
+export function currentDocuments<T extends DatedDocument>(documents: T[]): T[] {
+  const latest = new Map<string, T>();
+  for (const document of documents) {
+    const best = latest.get(ownerKey(document));
+    if (!best || byNewest(document, best) < 0) latest.set(ownerKey(document), document);
+  }
+  return documents.filter((document) => latest.get(ownerKey(document)) === document);
+}
+
+/** Os prazos de anos anteriores (o que sobra depois de `currentDocuments`), do mais novo ao mais antigo. */
+export function documentHistory<T extends DatedDocument>(documents: T[]): T[] {
+  const current = new Set(currentDocuments(documents));
+  return documents.filter((document) => !current.has(document)).sort(byNewest);
+}
+
 export type DocumentTone = 'ok' | 'soon' | 'overdue';
 
 export interface DocumentStatus {

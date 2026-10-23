@@ -65,15 +65,15 @@ São 22 telas, agrupadas por área.
 
 ### Veículos, documentos e conta
 
-| #   | Tela                   | Conteúdo                                                                                                             | Ações                                   |
-| --- | ---------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| 16  | Meus veículos          | Cartões com ícone (carro ou moto), apelido, modelo, km atual                                                         | Adicionar, abrir, reordenar (arrastar)  |
-| 17  | Detalhe/editar veículo | Dados completos, placa, km atual, média diária de km calculada                                                       | Atualizar km, editar, arquivar, excluir |
-| 18  | Documentos e prazos    | IPVA, licenciamento, seguro (por veículo) e CNH (por pessoa), com data e status (em dia / vence em X dias / vencido) | Adicionar data, editar lembrete         |
-| 19  | Conta                  | Modo anônimo: chamada "Salve seus dados" com Google (e Apple, no iPhone). Logado: nome, e-mail, último sync          | Vincular conta, sair, excluir conta     |
-| 20  | Configurações          | Notificações por tipo, antecedência dos alertas, unidades (só km e litros), exportar dados (Fase B)                  | Alterar                                 |
-| 21  | Premium (em breve)     | Lista de recursos Premium com selo, sem preço                                                                        | Tenho interesse                         |
-| 22  | Excluir conta          | Aviso claro do que será apagado, confirmação                                                                         | Confirmar exclusão                      |
+| #   | Tela                   | Conteúdo                                                                                                             | Ações                                    |
+| --- | ---------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| 16  | Meus veículos          | Cartões com ícone (carro ou moto), apelido, modelo, km atual                                                         | Adicionar, abrir, reordenar (arrastar)   |
+| 17  | Detalhe/editar veículo | Dados completos, placa, km atual, média diária de km calculada                                                       | Atualizar km, editar, arquivar, excluir  |
+| 18  | Documentos e prazos    | IPVA, licenciamento, seguro (por veículo) e CNH (por pessoa), com data e status (em dia / vence em X dias / vencido) | Adicionar data, editar lembrete, renovar |
+| 19  | Conta                  | Modo anônimo: chamada "Salve seus dados" com Google (e Apple, no iPhone). Logado: nome, e-mail, último sync          | Vincular conta, sair, excluir conta      |
+| 20  | Configurações          | Notificações por tipo, antecedência dos alertas, unidades (só km e litros), exportar dados (Fase B)                  | Alterar                                  |
+| 21  | Premium (em breve)     | Lista de recursos Premium com selo, sem preço                                                                        | Tenho interesse                          |
+| 22  | Excluir conta          | Aviso claro do que será apagado, confirmação                                                                         | Confirmar exclusão                       |
 
 ## Fluxos principais
 
@@ -105,6 +105,7 @@ São 22 telas, agrupadas por área.
 1. Mais → Documentos e prazos.
 2. Usuário adiciona a data de vencimento e escolhe a antecedência (ex.: 30 e 7 dias antes).
 3. Status aparece no Início quando estiver perto de vencer.
+4. Ao renovar (IPVA 2026 → IPVA 2027), o prazo novo vira o atual e o antigo vai para o "Histórico" no pé da tela.
 
 **5. Sair do modo anônimo**
 
