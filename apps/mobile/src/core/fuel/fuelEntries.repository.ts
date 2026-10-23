@@ -94,3 +94,15 @@ export async function deleteFuelEntry(db: Db, id: string, now: Date = new Date()
     await enqueue(db, 'fuel_entries', id, 'delete', { id, deletedAt: at }, at);
   });
 }
+
+/** Nomes de posto já usados (qualquer veículo), do mais usado ao menos; empate: o mais recente. */
+export async function listStationNames(db: Db): Promise<string[]> {
+  const rows = await db.getAllAsync<{ station_name: string }>(
+    `SELECT station_name
+       FROM fuel_entries
+      WHERE deleted_at IS NULL AND station_name IS NOT NULL AND station_name <> ''
+      GROUP BY station_name
+      ORDER BY COUNT(*) DESC, MAX(date) DESC`,
+  );
+  return rows.map((row) => row.station_name);
+}

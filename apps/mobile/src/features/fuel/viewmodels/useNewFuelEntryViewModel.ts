@@ -1,10 +1,10 @@
-import type { FuelAmountField } from '@ta-em-dia/shared';
+import { suggestStations, type FuelAmountField } from '@ta-em-dia/shared';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatKm } from '../../../core/format';
 import { useDb } from '../../../core/db';
 import { loadFuelFormContext, type FuelFormContext } from '../models/fuelContext';
-import { addFuelEntry } from '../../../core/fuel';
+import { addFuelEntry, listStationNames } from '../../../core/fuel';
 import { refreshReminders } from '../../../core/reminders';
 import {
   buildFuelEntryInput,
@@ -24,6 +24,7 @@ import {
 export function useNewFuelEntryViewModel() {
   const db = useDb();
   const router = useRouter();
+  const [stations, setStations] = useState<string[]>([]);
   const [context, setContext] = useState<FuelFormContext | null>(null);
   const [form, setForm] = useState<FuelForm>(emptyFuelForm);
   const [kmTouched, setKmTouched] = useState(false);
@@ -44,12 +45,19 @@ export function useNewFuelEntryViewModel() {
         km: value.suggestedKm === null ? '' : formatKm(String(value.suggestedKm)),
       }));
     });
+    listStationNames(db).then((names) => {
+      if (active) setStations(names);
+    });
     return () => {
       active = false;
     };
   }, [db]);
 
   const amounts = useMemo(() => deriveAmounts(form), [form]);
+  const stationSuggestions = useMemo(
+    () => suggestStations(stations, form.station),
+    [stations, form.station],
+  );
 
   const setAmount = useCallback((field: FuelAmountField, text: string) => {
     setForm((prev) => ({
@@ -65,6 +73,7 @@ export function useNewFuelEntryViewModel() {
     const result = buildFuelEntryInput(form, {
       vehicleId: context.vehicle.id,
       date: entryDateFor(pickedDate),
+      stations,
     });
     if (result.errors) {
       setErrors(result.errors);
@@ -79,7 +88,7 @@ export function useNewFuelEntryViewModel() {
     } finally {
       setBusy(false);
     }
-  }, [context, db, form, pickedDate, router]);
+  }, [context, db, form, pickedDate, router, stations]);
 
   return {
     loading: context === null,
@@ -97,6 +106,7 @@ export function useNewFuelEntryViewModel() {
     form,
     amounts,
     errors,
+    stationSuggestions,
     busy,
     fuelTypes: fuelTypeOptions,
     kmLabel: kmTouched ? 'Km no painel' : 'Km no painel (sugerido)',
@@ -111,7 +121,10 @@ export function useNewFuelEntryViewModel() {
       setErrors((prev) => ({ ...prev, km: undefined }));
     },
     setFullTank: (fullTank: boolean) => setForm((prev) => ({ ...prev, fullTank })),
-    setStation: (station: string) => setForm((prev) => ({ ...prev, station })),
+    setStation: (station: string) => {
+      setForm((prev) => ({ ...prev, station }));
+      setErrors((prev) => ({ ...prev, station: undefined }));
+    },
     close: () => router.back(),
     addVehicle: () => router.replace('/primeiro-veiculo'),
     save,

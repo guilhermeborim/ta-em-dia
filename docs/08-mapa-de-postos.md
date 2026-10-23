@@ -102,7 +102,7 @@ Cada fase entrega valor sozinha e custa R$ 0.
 
 **Fase A, só o seu histórico (sem comunidade)**
 
-- Hoje o abastecimento guarda o posto só como texto livre e opcional ("Shell", "shell", "Posto Shell Centro" viram três postos). Por isso, o **MVP** passa a pedir o posto de forma padronizada (ver `docs/01-roadmap.md`): o campo sugere os postos que o usuário já usou e reaproveita o mesmo nome, sem pedir localização.
+- Hoje o abastecimento guarda o posto só como texto livre e opcional (agora é obrigatório no formulário) ("Shell", "shell", "Posto Shell Centro" viram três postos). Por isso, o **MVP** passa a pedir o posto de forma padronizada (ver `docs/01-roadmap.md`): o campo sugere os postos que o usuário já usou e reaproveita o mesmo nome, sem pedir localização.
 - Com o posto padronizado, o app mostra "seus postos": preço mais barato que você achou, última vez, média.
 - Sem mapa, sem API nova.
 

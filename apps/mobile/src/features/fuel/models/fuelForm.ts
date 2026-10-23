@@ -1,4 +1,8 @@
-import { calculateMissingFuelAmount, type FuelAmountField } from '@ta-em-dia/shared';
+import {
+  calculateMissingFuelAmount,
+  resolveStationName,
+  type FuelAmountField,
+} from '@ta-em-dia/shared';
 import {
   atNoon,
   MONTH_NAMES_SHORT,
@@ -26,7 +30,7 @@ export interface FuelForm {
   station: string;
 }
 
-export type FuelFormErrors = Partial<Record<'amounts' | 'km', string>>;
+export type FuelFormErrors = Partial<Record<'amounts' | 'km' | 'station', string>>;
 
 export const emptyFuelForm: FuelForm = {
   fuelType: 'gasoline',
@@ -113,12 +117,12 @@ export function entryDateFor(picked: Date | null, now: Date = new Date()): Date 
 }
 
 /**
- * Valida o formulário: km é obrigatório e dois dos três valores precisam estar
- * preenchidos. Posto é opcional.
+ * Valida o formulário: km e posto são obrigatórios e dois dos três valores precisam estar
+ * preenchidos. O posto reaproveita o nome de um posto já usado.
  */
 export function buildFuelEntryInput(
   form: FuelForm,
-  ctx: { vehicleId: string; date: Date },
+  ctx: { vehicleId: string; date: Date; stations?: readonly string[] },
 ): { value: NewFuelEntry; errors?: undefined } | { value?: undefined; errors: FuelFormErrors } {
   const errors: FuelFormErrors = {};
 
@@ -133,11 +137,21 @@ export function buildFuelEntryInput(
     errors.amounts = 'Preencha 2 dos 3 valores: preço por litro, litros e total';
   }
 
-  if (errors.km || errors.amounts || km === null || !pricePerLiter || !liters || !total) {
+  const stationName = resolveStationName(ctx.stations ?? [], form.station);
+  if (stationName === undefined) errors.station = 'Informe o posto';
+
+  if (
+    errors.km ||
+    errors.amounts ||
+    stationName === undefined ||
+    km === null ||
+    !pricePerLiter ||
+    !liters ||
+    !total
+  ) {
     return { errors };
   }
 
-  const station = form.station.trim();
   return {
     value: {
       vehicleId: ctx.vehicleId,
@@ -148,7 +162,7 @@ export function buildFuelEntryInput(
       pricePerLiter,
       total,
       fullTank: form.fullTank,
-      stationName: station === '' ? undefined : station,
+      stationName,
     },
   };
 }

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -30,16 +31,18 @@ const decimalKeyboard = Platform.OS === 'android' ? 'numeric' : 'decimal-pad';
 
 export function NewFuelEntryView() {
   const vm = useNewFuelEntryViewModel();
+  const scroll = useRef<ScrollView>(null);
+  const stationFocused = useRef(false);
 
   if (vm.loading) return <SafeAreaView style={styles.container} />;
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         <ScrollView
+          ref={scroll}
+          // Com o posto em foco, o fim da tela (campo e sugestões) acompanha o teclado.
+          onContentSizeChange={() => stationFocused.current && scroll.current?.scrollToEnd()}
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -132,13 +135,29 @@ export function NewFuelEntryView() {
               </Text>
 
               <TextField
-                label="Posto (opcional)"
+                label="Posto"
+                required
+                error={vm.errors.station}
+                onFocus={() => {
+                  stationFocused.current = true;
+                  setTimeout(() => scroll.current?.scrollToEnd(), 300);
+                }}
+                onBlur={() => {
+                  stationFocused.current = false;
+                }}
                 value={vm.form.station}
                 onChangeText={vm.setStation}
                 placeholder="Ex.: Posto Ipiranga"
                 autoCapitalize="words"
                 maxLength={80}
               />
+              {vm.stationSuggestions.length > 0 ? (
+                <View style={styles.chips}>
+                  {vm.stationSuggestions.map((name) => (
+                    <Chip key={name} label={name} onPress={() => vm.setStation(name)} />
+                  ))}
+                </View>
+              ) : null}
             </>
           ) : (
             <EmptyState
