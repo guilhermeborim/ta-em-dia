@@ -274,7 +274,7 @@ Precisa do login com Google funcionando e da API no ar com `DELETE /v1/auth/acco
 - [ ] Chamar de novo com o mesmo token responde 200 (idempotente).
 - [ ] Sem token: 401.
 
-### 2.33 Rascunho de abastecimento (C1, PR a abrir)
+### 2.33 Rascunho de abastecimento (C1, PR #69)
 
 Sem frame no Figma. No Android, com um aparelho que já tem abastecimentos (atualizando de uma versão anterior):
 
