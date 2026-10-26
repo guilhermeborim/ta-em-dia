@@ -361,3 +361,62 @@ describe('frase sem nada útil', () => {
     expect(fields).toEqual({ fuelType: 'gasoline' });
   });
 });
+
+describe('posto falado', () => {
+  const station = (phrase: string, stations?: string[]) =>
+    parseFuelSpeech(phrase, { ...ctx, stations }).fields.stationName;
+
+  it('a frase do posto: valor, combustível, litros e "no posto Ipiranga"', () => {
+    const { fields, question } = parseFuelSpeech(
+      'abasteci 150 reais de gasolina e deu 25 litros no posto ipiranga',
+      ctx,
+    );
+    expect(question).toBeNull();
+    expect(fields).toMatchObject({
+      total: 150,
+      liters: 25,
+      pricePerLiter: 6,
+      fuelType: 'gasoline',
+      stationName: 'Ipiranga',
+    });
+    expect(fields.km).toBeUndefined();
+  });
+
+  it.each([
+    ['no posto Ipiranga', 'Ipiranga'],
+    ['posto shell, 150 reais', 'Shell'],
+    ['150 reais no posto br e deu 25 litros', 'BR'],
+    ['abasteci no posto da barra 150 reais', 'Posto da Barra'],
+    ['25 litros no posto Auto Sol de gasolina', 'Auto Sol'],
+    ['150 reais no posto do zé km 45300', 'Posto do Zé'],
+    ['posto de gasolina shell 150 reais', 'Shell'],
+    ['150 reais na shell', 'Shell'],
+    ['150 reais, 25 litros, abasteci na ipiranga', 'Ipiranga'],
+  ])('%s → %s', (phrase, expected) => {
+    expect(station(phrase)).toBe(expected);
+  });
+
+  it('sem posto na frase, não inventa', () => {
+    expect(station('150 reais, 25 litros, km 45300')).toBeUndefined();
+    expect(station('posto 24 horas')).toBeUndefined();
+    expect(station('abasteci no posto')).toBeUndefined();
+  });
+
+  it('posto já usado volta com a grafia gravada, com ou sem a palavra posto', () => {
+    expect(station('150 reais no posto ipiranga', ['Posto Ipiranga'])).toBe('Posto Ipiranga');
+    expect(station('150 reais no ipiranga', ['Ipiranga', 'Shell'])).toBe('Ipiranga');
+    expect(station('150 reais na auto sol', ['Auto Sol'])).toBe('Auto Sol');
+    expect(station('150 reais no posto são jorge', ['Posto São Jorge'])).toBe('Posto São Jorge');
+  });
+
+  it('o nome mais longo ganha do mais curto', () => {
+    expect(station('abasteci no posto shell select', ['Shell', 'Shell Select'])).toBe(
+      'Shell Select',
+    );
+  });
+
+  it('a palavra do posto não vira número nem combustível', () => {
+    const { fields } = parseFuelSpeech('posto sete 150 reais 25 litros', ctx);
+    expect(fields).toMatchObject({ total: 150, liters: 25 });
+  });
+});
