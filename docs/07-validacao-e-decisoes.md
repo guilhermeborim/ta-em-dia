@@ -300,7 +300,7 @@ Sem frame no Figma (botão de microfone, pontinhos, tela cheia de "ouvindo", car
 - [ ] iOS (quando houver development build): pedido de microfone e de reconhecimento de fala em português, Ditado/Siri desligado mostra "não está disponível".
 - [ ] Quem testou a versão com rascunhos: depois de atualizar, os rascunhos antigos somem da lista e do Histórico, nenhum aviso das 20h chega, e os abastecimentos completos continuam iguais (km/l, médias, totais). Conferir no outro aparelho, com sync, que os rascunhos também sumiram.
 
-### 2.36 Editar e excluir abastecimento (PR #PR)
+### 2.36 Editar e excluir abastecimento (PR #75)
 
 Sem frame no Figma (tela de edição, ação de arrastar, aviso de exclusão). Android, aba Abastecer, com alguns abastecimentos (de preferência um antigo, sem posto):
 
