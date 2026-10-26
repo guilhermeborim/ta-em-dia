@@ -300,6 +300,22 @@ Sem frame no Figma (botão de microfone, pontinhos, tela cheia de "ouvindo", car
 - [ ] iOS (quando houver development build): pedido de microfone e de reconhecimento de fala em português, Ditado/Siri desligado mostra "não está disponível".
 - [ ] Quem testou a versão com rascunhos: depois de atualizar, os rascunhos antigos somem da lista e do Histórico, nenhum aviso das 20h chega, e os abastecimentos completos continuam iguais (km/l, médias, totais). Conferir no outro aparelho, com sync, que os rascunhos também sumiram.
 
+### 2.36 Editar e excluir abastecimento (PR #PR)
+
+Sem frame no Figma (tela de edição, ação de arrastar, aviso de exclusão). Android, aba Abastecer, com alguns abastecimentos (de preferência um antigo, sem posto):
+
+- [ ] Tocar num registro abre "Editar abastecimento" já preenchido: data, combustível, litros, total, km, tanque cheio e posto; o preço por litro aparece calculado. Não aparece o microfone.
+- [ ] Mudar litros e salvar: volta para a lista; o item, o total do mês, o km/l do trecho e as médias do Início refletem a mudança; o abastecimento é o mesmo (não duplicou).
+- [ ] Editar sem mexer e salvar: nada muda (mesmo total, mesmo preço).
+- [ ] Mudar a data para outro dia: o registro muda de mês/posição na lista. Sem mexer na data, a hora original fica.
+- [ ] Abastecimento antigo sem posto: ao salvar pede o posto ("Informe o posto").
+- [ ] Apagar o km ou os valores mostra o erro do campo e não salva.
+- [ ] Arrastar um registro para a esquerda: aparece "Excluir" em vermelho com a lixeira; soltando, abre "Excluir abastecimento?". Cancelar (e tocar fora do aviso) fecha o registro de volta. Excluir: o item some, o resumo do mês, o km/l e as médias se refazem; o "km atual" volta ao anterior.
+- [ ] Rolar a lista na vertical não abre o "Excluir" sem querer; o botão flutuante "Abastecer" continua funcionando.
+- [ ] Com sync (conta com login): a edição e a exclusão aparecem no outro aparelho.
+- [ ] Leitor de tela (TalkBack): o registro lê "toque para editar" e oferece a ação "Excluir".
+- [ ] Fonte grande: a ação "Excluir" não corta o texto.
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
@@ -414,11 +430,22 @@ Alternativa: enviar a coordenada arredondada (~1 km). Recomendação: manter só
 - **Tanque cheio não dito vale "não":** a regra de completo do C1 exige sim ou não, e o formulário já vem desligado. Sem isso, quase toda fala pediria para marcar o tanque. Alternativa: perguntar "Encheu o tanque?". Recomendação: manter.
 - **Km sugerido não conta ao salvar sozinho:** com "Salvar pela fala" ligado e sem km falado ou digitado, a voz não salva: pede para confirmar o km ("Confirme o km do painel", cursor no campo). Desligado, o km sugerido vale, como no formulário. Alternativa: aceitar o sugerido também ao salvar sozinho. Recomendação: manter.
 - **Posto falado** (`parseSpokenStation`, em `shared`): vale um posto já usado citado pelo nome (volta a grafia gravada), o que vem depois de "posto" até uma palavra de outro assunto ("posto Ipiranga e deu 25 litros" → "Ipiranga"; "posto da barra" → "Posto da Barra") ou uma bandeira conhecida (Shell, Ipiranga, Petrobras, Texaco, Raízen). Sem posto na frase, vale o do formulário; sem nenhum, a voz não salva e o cursor vai ao Posto. Nome fora disso, sem a palavra "posto" (ex.: "abasteci no Auto Sol"), só é entendido se já foi usado antes. Pode errar nomes que o reconhecimento escreve diferente. Recomendação: manter e juntar frases reais de posto para ajustar; o C6 (localização) traz o posto sem falar.
-- **"Salvar pela fala" (decisão do dono, 26/10/2026):** interruptor em Configurações, grupo Abastecimento, **desligado por padrão**. Desligado, a fala só preenche e a pessoa toca em Salvar; ligado, salva sozinho quando está completo e válido. Sem cartão de sucesso e **sem Desfazer nem Editar** nos dois modos (saíram junto do cartão); quem salvou errado hoje não tem como desfazer pela tela, porque abastecimento completo ainda não tem tela de edição nem exclusão. Textos meus: "Salvar pela fala" e "Ao terminar de falar, salva sem você tocar em Salvar". Alternativa: pôr uma exclusão na lista de abastecimentos. Recomendação: fazer num PR pequeno, junto da edição de abastecimento.
+- **"Salvar pela fala" (decisão do dono, 26/10/2026):** interruptor em Configurações, grupo Abastecimento, **desligado por padrão**. Desligado, a fala só preenche e a pessoa toca em Salvar; ligado, salva sozinho quando está completo e válido. Sem cartão de sucesso e **sem Desfazer nem Editar** nos dois modos (saíram junto do cartão); quem salvou errado corrige pela edição ou exclui arrastando o registro na lista (ver 3.37). Textos meus: "Salvar pela fala" e "Ao terminar de falar, salva sem você tocar em Salvar".
 - **Validações (km, faixa de R$ 2 a R$ 12, 2%) só na voz:** o formulário manual continua aceitando, por exemplo, km menor que o último (registrar abastecimento antigo). Alternativa: aplicar também no formulário manual como aviso. Recomendação: manter.
 - **Rascunho removido (26/10/2026, decisão do dono):** saíram a etiqueta "Incompleto", o "Completar abastecimento", o lembrete das 20h e o botão "Salvar como rascunho". Ficaram, sem uso, a coluna `status` e os campos que aceitam nulo (SQLite e Postgres) e o schema de sync, para as versões antigas continuarem funcionando. A migration 10 do app exclui os rascunhos que já estavam no aparelho. Alternativa: migration que tira `status` e volta o `NOT NULL`. Recomendação: fazer depois que nenhuma versão antiga estiver em uso.
-- **Sem "Cancelar" enquanto ouve:** tocar nos pontinhos encerra e o que foi dito é interpretado. Com "Salvar pela fala" desligado nada é salvo até a pessoa tocar em Salvar; ligado, não há como desistir depois de falar. Alternativa: toque longo para cancelar. Recomendação: manter.
+- **Sem "Cancelar" enquanto ouve:** tocar nos pontinhos encerra e o que foi dito é interpretado. Com "Salvar pela fala" desligado nada é salvo até a pessoa tocar em Salvar; ligado, o que foi dito é salvo e só se corrige pela edição ou pela exclusão (3.37). Alternativa: toque longo para cancelar. Recomendação: manter.
 - **Sem aviso do app antes do primeiro uso (decisão do dono, 26/10/2026):** o toque em Falar já abre o pedido do sistema. O iPhone mostra o texto do `app.config.ts` (diz que o áudio vai à Apple e que o app não o guarda); o Android não aceita texto no pedido do microfone. Consequência: no Android só a Política de Privacidade avisa que o áudio vai ao Google (`docs/05`). Alternativa: uma linha pequena na tela de ouvindo ("O áudio vai ao Google para virar texto"). Recomendação: manter como está e conferir que a Política diga isso antes de publicar.
+
+### 3.37 Editar e excluir abastecimento: escolhas que fiz
+
+- **Mesma tela do novo**, com o título "Editar abastecimento" e o botão "Salvar alterações"; sem o botão de falar. Alternativa: tela própria. Recomendação: manter (menos código e o mesmo visual).
+- **Textos meus:** "Editar abastecimento", "Salvar alterações", "Excluir" (ação), "Excluir abastecimento?" e "Ele deixa de contar nos gastos e no consumo." (com a data e o posto na frente), "Toque para editar" (leitor de tela). Recomendação: manter.
+- **Excluir só arrastando** (como pedido): a tela de edição não tem botão "Excluir". Alternativa: botão "Excluir abastecimento" no fim do formulário, como no veículo e no prazo, que ajuda quem não consegue arrastar. Recomendação: acrescentar depois, se alguém sentir falta.
+- **A exclusão abre o aviso assim que o item é arrastado até abrir**, sem precisar tocar em "Excluir". Alternativa: deixar o botão vermelho aberto e só perguntar ao tocar nele. Recomendação: manter, mas observar se o aviso aparece sem querer ao rolar.
+- **Posto continua obrigatório na edição**, então um abastecimento antigo sem posto pede para informar um. Alternativa: aceitar sem posto na edição. Recomendação: manter (é o mesmo formulário).
+- **Sem as validações da voz** (km menor que o último, preço fora de R$ 2 a R$ 12) na edição: é o formulário manual. Ver 3.36.
+- **O preço por litro volta recalculado** de total ÷ litros (3 casas), não o digitado originalmente; pode diferir na terceira casa. O total e os litros ficam exatamente como estavam.
+- **Início e Histórico não abrem a edição:** só a lista da aba Abastecer, como pedido. Alternativa: tocar no "Último abastecimento" do Início e nos itens do Histórico também. Recomendação: fazer junto, depois.
 
 ### 3.35 Interpretador de fala: escolhas que fiz (C3)
 

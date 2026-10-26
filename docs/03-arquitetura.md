@@ -192,6 +192,11 @@ Decidido pelo dono em 26/10/2026; itens C1 a C7 do `docs/06-backlog.md`. C0 a C4
 - **Lembretes antigos:** `refreshReminders` cancela os avisos `fuel-draft:` que uma versão anterior deixou agendados (`cancelLegacyFuelDraftReminders`).
 - Tirar de vez a coluna `status` e voltar o `NOT NULL` fica para uma migration futura, depois que nenhuma versão do app em uso grave rascunho (regra: remover só depois).
 
+**Editar e excluir abastecimento**
+
+- **Rota:** `/abastecimento/[id]` (modal), a mesma View do Novo abastecimento (`NewFuelEntryView`); o ViewModel vira "Editar abastecimento" quando recebe o `id`. Lê com `getFuelRecord` (só `status = 'complete'`) e grava com `updateFuelRecord` (UPDATE + `upsert` na `outbox`, mesma transação; mesmo `id`). `fuelFormFromEntry` preenche o formulário: litros e total entram como valores digitados e o preço por litro é recalculado deles, para o total gravado não mudar por arredondamento. Sem botão de falar. Mantém a data e a hora originais, a menos que se escolha outro dia. Km e posto continuam obrigatórios; não há validação de faixa (como no formulário novo). Registro que sumiu (excluído por outro caminho) volta à lista.
+- **Excluir:** na lista, `SwipeToDelete` (em `src/ui`, sobre `ReanimatedSwipeable` do `react-native-gesture-handler`, que o app já usa) mostra a ação "Excluir" ao arrastar para a esquerda. Ao abrir, o ViewModel pergunta com `Alert` e só então chama `deleteFuelEntry` (exclusão lógica + `delete` na `outbox`), reagenda os avisos (`refreshReminders`) e recarrega a lista. Cancelar ou tocar fora fecha o item. Leitor de tela: ação "Excluir" no item (`accessibilityActions`).
+
 **Posto único (C5, C6)**
 
 - **API, módulo `places`:** `GET /v1/places?geohash=<5 caracteres>` (exige token, inclusive o anônimo; limite de chamadas). Devolve os postos do OpenStreetMap (`amenity=fuel`) da célula, buscados no Overpass e guardados em `place_cells` por 30 dias (o host grátis dorme, então o cache vai para o banco, não para a memória). Sem serviço pago; uma chamada ao Overpass por célula e por validade, nunca por usuário. O geohash não é ligado ao usuário nem vai para log.
