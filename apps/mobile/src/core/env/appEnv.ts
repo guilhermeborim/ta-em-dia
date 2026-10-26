@@ -24,3 +24,5 @@ export const googleIosClientId: string = extra.googleIosClientId ?? '';
 export const supportEmail: string = extra.supportEmail ?? '';
 export const termsUrl: string = extra.termsUrl ?? '';
 export const privacyUrl: string = extra.privacyUrl ?? '';
+/** Versão do app (`app.config.ts`), ex.: "0.1.0". */
+export const appVersion: string = Constants.expoConfig?.version ?? '';
