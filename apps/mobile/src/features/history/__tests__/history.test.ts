@@ -1,7 +1,7 @@
 import type { FuelEntry, MaintenanceRecord } from '@ta-em-dia/shared';
 import { migrate } from '../../../core/db/migrations';
 import { createTestDb } from '../../../core/db/testing/testDb';
-import { addFuelEntry } from '../../../core/fuel';
+import { addFuelDraft, addFuelEntry } from '../../../core/fuel';
 import { buildTimeline, type HistoryData } from '../models/history';
 import { loadHistory } from '../models/history.repository';
 
@@ -134,7 +134,12 @@ describe('loadHistory', () => {
   it('sem veículo, volta vazio', async () => {
     const db = createTestDb();
     await migrate(db);
-    expect(await loadHistory(db)).toEqual({ vehicle: null, entries: [], records: [] });
+    expect(await loadHistory(db)).toEqual({
+      vehicle: null,
+      entries: [],
+      drafts: [],
+      records: [],
+    });
   });
 
   it('traz abastecimentos e serviços do veículo, sem os excluídos', async () => {
@@ -171,5 +176,53 @@ describe('loadHistory', () => {
     expect(loaded.vehicle).toEqual({ id: VEHICLE_ID, name: 'Gol' });
     expect(loaded.entries.map((e) => e.id)).toEqual([data.entries[0].id, data.entries[2].id]);
     expect(loaded.records.map((r) => r.id)).toEqual([data.records[0].id]);
+  });
+});
+
+describe('rascunhos no histórico', () => {
+  const draft = {
+    id: '018bcfe5-6800-7000-8000-0000000000d1',
+    vehicleId: VEHICLE_ID,
+    status: 'draft' as const,
+    date: new Date(2026, 9, 15),
+    liters: 25,
+  };
+
+  it('aparece como abastecimento "Incompleto", na ordem da data, sem valor quando falta', () => {
+    const sections = buildTimeline({ ...data, drafts: [draft] }, 'all', 'all', TODAY);
+    const items = sections[0]!.items;
+    expect(items.map((item) => item.id)).toContain(draft.id);
+    expect(items.find((item) => item.id === draft.id)).toEqual({
+      id: draft.id,
+      kind: 'fuel',
+      title: 'Abastecimento',
+      details: '15 out · 25,0 L',
+      value: undefined,
+      incomplete: true,
+    });
+    // Os outros itens não ganham a marca.
+    expect(items.filter((item) => item.incomplete)).toHaveLength(1);
+  });
+
+  it('segue o filtro: some em Manutenções e aparece em Abastecimentos', () => {
+    const withDraft = { ...data, drafts: [draft] };
+    const ids = (filter: 'fuel' | 'maintenance') =>
+      buildTimeline(withDraft, filter, 'all', TODAY).flatMap((s) => s.items.map((i) => i.id));
+    expect(ids('maintenance')).not.toContain(draft.id);
+    expect(ids('fuel')).toContain(draft.id);
+  });
+
+  it('o repositório do histórico devolve os rascunhos', async () => {
+    const db = createTestDb();
+    await migrate(db);
+    await db.runAsync(
+      `INSERT INTO vehicles (id, name, type, initial_km, created_at, updated_at)
+       VALUES (?, 'Gol', 'flex', 0, ?, ?)`,
+      VEHICLE_ID,
+      TODAY.toISOString(),
+      TODAY.toISOString(),
+    );
+    const saved = await addFuelDraft(db, { vehicleId: VEHICLE_ID, date: TODAY });
+    expect((await loadHistory(db)).drafts).toEqual([saved]);
   });
 });

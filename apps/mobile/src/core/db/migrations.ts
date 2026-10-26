@@ -11,7 +11,7 @@ export type Migration = string | { sql: string; foreignKeysOff?: boolean };
  * Migrations do SQLite local, em ordem. A versão aplicada fica em PRAGMA user_version.
  * Regra: nunca editar uma migration já publicada; crie a próxima. Só adicione
  * (colunas, tabelas, índices) para o app novo e o antigo conviverem; a única exceção é recriar
- * uma tabela para mudar um CHECK (ver `foreignKeysOff`).
+ * uma tabela para mudar um CHECK ou tirar um NOT NULL (ver `foreignKeysOff`).
  *
  * Tabelas sincronizáveis (vehicles, fuel_entries, maintenance_plans, maintenance_records): id UUID v7 gerado no app,
  * datas em ISO 8601 UTC, exclusão lógica (deleted_at) e version (número do
@@ -202,6 +202,42 @@ export const MIGRATIONS: Migration[] = [
     FROM vehicles;
   DROP TABLE vehicles;
   ALTER TABLE vehicles_new RENAME TO vehicles;
+  `,
+  },
+  {
+    foreignKeysOff: true,
+    sql: `
+  -- Rascunho de abastecimento (Fase C). Ganha status ('complete' ou 'draft', padrão 'complete') e
+  -- km, combustível, litros, preço, total e tanque cheio passam a aceitar nulo, porque o rascunho só
+  -- guarda o que se sabe. O SQLite não tira NOT NULL de uma coluna, então a tabela é recriada com os
+  -- mesmos dados (receita de 12 passos); todos os abastecimentos que já existem ficam 'complete'.
+  CREATE TABLE fuel_entries_new (
+    id             TEXT PRIMARY KEY NOT NULL,
+    vehicle_id     TEXT NOT NULL REFERENCES vehicles(id),
+    date           TEXT NOT NULL,
+    km             INTEGER,
+    fuel_type      TEXT CHECK (fuel_type IN ('gasoline', 'ethanol', 'diesel', 'gnv')),
+    liters         REAL,
+    price_per_liter REAL,
+    total          REAL,
+    full_tank      INTEGER,
+    station_name   TEXT,
+    note           TEXT,
+    created_at     TEXT NOT NULL,
+    updated_at     TEXT NOT NULL,
+    deleted_at     TEXT,
+    version        INTEGER,
+    status         TEXT NOT NULL DEFAULT 'complete' CHECK (status IN ('complete', 'draft'))
+  );
+  INSERT INTO fuel_entries_new
+    (id, vehicle_id, date, km, fuel_type, liters, price_per_liter, total, full_tank,
+     station_name, note, created_at, updated_at, deleted_at, version, status)
+  SELECT id, vehicle_id, date, km, fuel_type, liters, price_per_liter, total, full_tank,
+         station_name, note, created_at, updated_at, deleted_at, version, 'complete'
+    FROM fuel_entries;
+  DROP TABLE fuel_entries;
+  ALTER TABLE fuel_entries_new RENAME TO fuel_entries;
+  CREATE INDEX idx_fuel_entries_vehicle_date ON fuel_entries (vehicle_id, date);
   `,
   },
 ];

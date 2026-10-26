@@ -1,9 +1,11 @@
 import {
+  buildFuelDraftInput,
   buildFuelEntryInput,
   deriveAmounts,
   emptyFuelForm,
   entryDateFor,
   formatDecimal,
+  fuelFormFromDraft,
   formatEntryDate,
   parseDecimal,
   sanitizeAmount,
@@ -210,6 +212,99 @@ describe('buildFuelEntryInput', () => {
     expect(result.errors).toEqual({
       km: 'Informe o km do painel',
       amounts: 'Preencha 2 dos 3 valores: preço por litro, litros e total',
+    });
+  });
+});
+
+describe('buildFuelDraftInput', () => {
+  const ctx = { vehicleId: VEHICLE_ID, date: DATE, kmTouched: false };
+
+  it('sem nenhum dado não há o que guardar', () => {
+    const result = buildFuelDraftInput({ ...emptyFuelForm, km: '48.910' }, ctx);
+    expect(result.errors?.draft).toBe('Preencha ao menos um dado para guardar o rascunho');
+  });
+
+  it('o km sugerido, sem ser tocado, não vai para o rascunho', () => {
+    const result = buildFuelDraftInput(form({ station: '', total: '150' }), ctx);
+    expect(result.value?.km).toBeUndefined();
+    expect(result.value?.total).toBe(150);
+  });
+
+  it('guarda o que foi preenchido, sem exigir o resto', () => {
+    const result = buildFuelDraftInput(form({ station: 'posto  ipiranga' }), {
+      ...ctx,
+      kmTouched: true,
+      stations: ['Posto Ipiranga'],
+    });
+    expect(result.value).toEqual({
+      vehicleId: VEHICLE_ID,
+      date: DATE,
+      km: 48910,
+      fuelType: 'gasoline',
+      liters: undefined,
+      pricePerLiter: undefined,
+      total: undefined,
+      fullTank: false,
+      stationName: 'Posto Ipiranga',
+    });
+  });
+
+  it('dois valores preenchem o terceiro', () => {
+    const result = buildFuelDraftInput(
+      form({
+        liters: '25',
+        total: '150',
+        amountOrder: ['liters', 'total'],
+      }),
+      ctx,
+    );
+    expect(result.value).toMatchObject({ liters: 25, total: 150, pricePerLiter: 6 });
+  });
+});
+
+describe('fuelFormFromDraft', () => {
+  const draft = {
+    id: '018bcfe5-6800-7000-8000-0000000000d1',
+    vehicleId: VEHICLE_ID,
+    status: 'draft' as const,
+    date: DATE,
+    stationName: 'Shell',
+    total: 150,
+    liters: 25,
+  };
+
+  it('preenche o que o rascunho tem e sugere o km que falta', () => {
+    expect(fuelFormFromDraft(draft, { fuelType: 'ethanol', suggestedKm: 48910 })).toEqual({
+      fuelType: 'ethanol',
+      pricePerLiter: '',
+      liters: '25,00',
+      total: '150,00',
+      amountOrder: ['liters', 'total'],
+      km: '48.910',
+      fullTank: false,
+      station: 'Shell',
+    });
+  });
+
+  it('usa o km, o combustível e o tanque cheio do rascunho quando existem', () => {
+    const result = fuelFormFromDraft(
+      { ...draft, km: 50000, fuelType: 'diesel', fullTank: true },
+      { fuelType: 'ethanol', suggestedKm: 48910 },
+    );
+    expect(result).toMatchObject({ km: '50.000', fuelType: 'diesel', fullTank: true });
+  });
+
+  it('o formulário do rascunho passa na validação de abastecimento completo', () => {
+    const filled = fuelFormFromDraft(
+      { ...draft, km: 50000, fuelType: 'diesel', fullTank: true },
+      { fuelType: null, suggestedKm: null },
+    );
+    expect(buildFuelEntryInput(filled, { vehicleId: VEHICLE_ID, date: DATE }).value).toMatchObject({
+      km: 50000,
+      liters: 25,
+      total: 150,
+      pricePerLiter: 6,
+      stationName: 'Shell',
     });
   });
 });

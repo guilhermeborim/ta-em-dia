@@ -66,6 +66,7 @@ describe('SYNC_SPECS', () => {
       id: ROW,
       vehicleId: VEHICLE,
       date: at,
+      status: 'complete',
       km: 48910,
       fuelType: 'ethanol',
       liters: decimal(32.456),
@@ -86,6 +87,72 @@ describe('SYNC_SPECS', () => {
       total: 139.54,
       fullTank: true,
       note: 'Posto da esquina',
+    });
+    expect(SYNC_SPECS.fuel_entries.schema.safeParse(payload).success).toBe(true);
+  });
+
+  it('abastecimento completo vira status complete; rascunho guarda só o que se sabe', () => {
+    const complete = SYNC_SPECS.fuel_entries.schema.parse({
+      id: ROW,
+      vehicleId: VEHICLE,
+      date: at.toISOString(),
+      km: 100,
+      fuelType: 'gasoline',
+      liters: 10,
+      pricePerLiter: 6,
+      total: 60,
+      fullTank: false,
+    });
+    expect(SYNC_SPECS.fuel_entries.toData(complete)).toMatchObject({
+      status: 'complete',
+      km: 100,
+      fullTank: false,
+    });
+
+    const draft = SYNC_SPECS.fuel_entries.schema.parse({
+      id: ROW,
+      vehicleId: VEHICLE,
+      status: 'draft',
+      date: at.toISOString(),
+      stationName: 'Shell',
+    });
+    expect(SYNC_SPECS.fuel_entries.toData(draft)).toEqual({
+      vehicleId: VEHICLE,
+      date: at,
+      status: 'draft',
+      km: null,
+      fuelType: null,
+      liters: null,
+      pricePerLiter: null,
+      total: null,
+      fullTank: null,
+      stationName: 'Shell',
+      note: null,
+    });
+  });
+
+  it('rascunho do banco volta como payload com status e sem os campos nulos', () => {
+    const payload = SYNC_SPECS.fuel_entries.toPayload({
+      id: ROW,
+      vehicleId: VEHICLE,
+      date: at,
+      status: 'draft',
+      km: null,
+      fuelType: null,
+      liters: null,
+      pricePerLiter: null,
+      total: decimal(150),
+      fullTank: null,
+      stationName: 'Shell',
+      note: null,
+    });
+    expect(payload).toEqual({
+      id: ROW,
+      vehicleId: VEHICLE,
+      status: 'draft',
+      date: '2026-10-20T15:30:00.000Z',
+      total: 150,
+      stationName: 'Shell',
     });
     expect(SYNC_SPECS.fuel_entries.schema.safeParse(payload).success).toBe(true);
   });

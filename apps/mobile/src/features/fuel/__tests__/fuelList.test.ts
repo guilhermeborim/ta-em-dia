@@ -1,7 +1,7 @@
 import type { FuelEntry } from '@ta-em-dia/shared';
 import { migrate } from '../../../core/db/migrations';
 import { createTestDb } from '../../../core/db/testing/testDb';
-import { addFuelEntry, buildAverage } from '../../../core/fuel';
+import { addFuelDraft, addFuelEntry, buildAverage } from '../../../core/fuel';
 import { buildFilterChips, buildSections } from '../models/fuelList';
 import { loadFuelList } from '../models/fuelList.repository';
 
@@ -120,7 +120,7 @@ describe('loadFuelList', () => {
   it('sem veículo, volta vazio', async () => {
     const db = createTestDb();
     await migrate(db);
-    expect(await loadFuelList(db)).toEqual({ vehicle: null, entries: [] });
+    expect(await loadFuelList(db)).toEqual({ vehicle: null, entries: [], drafts: [] });
   });
 
   it('traz o veículo e os abastecimentos do mais recente ao mais antigo', async () => {
@@ -140,5 +140,69 @@ describe('loadFuelList', () => {
     const list = await loadFuelList(db);
     expect(list.vehicle).toEqual({ id: VEHICLE_ID, name: 'Gol' });
     expect(list.entries.map((e) => e.km)).toEqual([10800, 10000]);
+  });
+});
+
+describe('rascunhos na lista', () => {
+  const draft = (date: Date, patch = {}) => ({
+    id: `018bcfe5-6800-7000-8000-${String(++n).padStart(12, '0')}`,
+    vehicleId: VEHICLE_ID,
+    status: 'draft' as const,
+    date,
+    ...patch,
+  });
+
+  it('entra na ordem da data, com a etiqueta, e fica fora da contagem e do total', () => {
+    const sections = buildSections(entries, 'all', TODAY, [
+      draft(new Date(2026, 9, 15), { stationName: 'Shell', liters: 25 }),
+    ]);
+    const october = sections[0]!;
+    expect(october.items.map((item) => item.incomplete ?? false)).toEqual([false, true, false]);
+    expect(october.items[1]).toMatchObject({
+      title: '15 out · Shell',
+      details: '25,0 L',
+      total: '—',
+      incomplete: true,
+    });
+    expect(october.summary).toBe('2 abast. · R$ 411,80 · 1 incompleto');
+    expect(october.items[1]!.kmPerLiter).toBeUndefined();
+  });
+
+  it('mês só com rascunho mostra só a contagem de incompletos', () => {
+    const sections = buildSections([], 'all', TODAY, [
+      draft(new Date(2026, 9, 15)),
+      draft(new Date(2026, 9, 16)),
+    ]);
+    expect(sections).toHaveLength(1);
+    expect(sections[0]!.summary).toBe('2 incompletos');
+    expect(sections[0]!.items[0]!.details).toBe('Faltam dados');
+  });
+
+  it('com filtro de combustível ou tanque cheio, o rascunho some', () => {
+    const drafts = [draft(new Date(2026, 9, 15), { fuelType: 'ethanol' as const })];
+    expect(buildSections(entries, 'ethanol', TODAY, drafts).flatMap((s) => s.items)).toHaveLength(
+      1,
+    );
+    expect(
+      buildSections(entries, 'full', TODAY, drafts)
+        .flatMap((s) => s.items)
+        .some((item) => item.incomplete),
+    ).toBe(false);
+  });
+
+  it('o repositório da lista devolve os rascunhos do veículo ativo', async () => {
+    const db = createTestDb();
+    await migrate(db);
+    await db.runAsync(
+      `INSERT INTO vehicles (id, name, type, initial_km, created_at, updated_at)
+       VALUES (?, 'Gol', 'flex', 0, ?, ?)`,
+      VEHICLE_ID,
+      TODAY.toISOString(),
+      TODAY.toISOString(),
+    );
+    const saved = await addFuelDraft(db, { vehicleId: VEHICLE_ID, date: TODAY, total: 99 });
+    const data = await loadFuelList(db);
+    expect(data.drafts).toEqual([saved]);
+    expect(data.entries).toEqual([]);
   });
 });

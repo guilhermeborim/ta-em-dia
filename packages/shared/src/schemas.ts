@@ -35,6 +35,29 @@ export const fuelEntrySchema = z.object({
   note: z.string().max(500).optional(),
 });
 
+/**
+ * Abastecimento incompleto (rascunho): só o que se sabe até agora. Vira `FuelEntry` quando passa
+ * na regra "completo" (`completeFuelDraft`). Vai pelo sync com `status: 'draft'`; o completo segue
+ * sem `status`, como sempre foi, para a versão anterior do app e da API continuarem entendendo.
+ */
+export const fuelDraftSchema = z.object({
+  id: z.uuid(),
+  vehicleId: z.uuid(),
+  status: z.literal('draft'),
+  date: z.coerce.date(),
+  km: z.number().int().nonnegative().optional(),
+  fuelType: fuelTypeSchema.optional(),
+  liters: z.number().positive().optional(),
+  pricePerLiter: z.number().positive().optional(),
+  total: z.number().positive().optional(),
+  fullTank: z.boolean().optional(),
+  stationName: z.string().max(80).optional(),
+  note: z.string().max(500).optional(),
+});
+
+/** O que o sync leva em `fuel_entries`: o rascunho (com `status`) ou o abastecimento completo. */
+export const fuelEntrySyncSchema = z.union([fuelDraftSchema, fuelEntrySchema]);
+
 export const maintenancePlanSchema = z.object({
   id: z.uuid(),
   vehicleId: z.uuid(),
@@ -89,6 +112,7 @@ export const odometerReadingSchema = z.object({
 
 export type Vehicle = z.infer<typeof vehicleSchema>;
 export type FuelEntry = z.infer<typeof fuelEntrySchema>;
+export type FuelDraft = z.infer<typeof fuelDraftSchema>;
 export type MaintenancePlan = z.infer<typeof maintenancePlanSchema>;
 export type MaintenanceRecord = z.infer<typeof maintenanceRecordSchema>;
 export type DocumentRecord = z.infer<typeof documentSchema>;

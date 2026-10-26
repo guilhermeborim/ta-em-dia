@@ -11,7 +11,8 @@ export async function lastKmUpdateAt(db: Db, vehicleId: string): Promise<Date | 
        SELECT read_at AS at FROM odometer_readings
         WHERE vehicle_id = ?1 AND deleted_at IS NULL
        UNION ALL
-       SELECT date FROM fuel_entries WHERE vehicle_id = ?1 AND deleted_at IS NULL
+       SELECT date FROM fuel_entries
+        WHERE vehicle_id = ?1 AND deleted_at IS NULL AND status = 'complete'
        UNION ALL
        SELECT date FROM maintenance_records WHERE vehicle_id = ?1 AND deleted_at IS NULL
      )`,

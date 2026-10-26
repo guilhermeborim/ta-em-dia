@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import {
   documentSchema,
-  fuelEntrySchema,
+  fuelEntrySyncSchema,
   maintenancePlanSchema,
   maintenanceRecordSchema,
   odometerReadingSchema,
@@ -35,7 +35,7 @@ export type SyncTable = z.infer<typeof syncTableSchema>;
 export const SYNC_UPSERT_SCHEMAS = {
   vehicles: vehicleSchema,
   odometer_readings: odometerReadingSchema,
-  fuel_entries: fuelEntrySchema,
+  fuel_entries: fuelEntrySyncSchema,
   maintenance_plans: maintenancePlanSchema,
   maintenance_records: maintenanceRecordSchema,
   documents: documentSchema,

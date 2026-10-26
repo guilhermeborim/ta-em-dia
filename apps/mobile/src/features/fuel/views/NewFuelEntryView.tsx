@@ -25,7 +25,10 @@ import {
 } from '../../../ui';
 import { useNewFuelEntryViewModel } from '../viewmodels/useNewFuelEntryViewModel';
 
-/** Tela 9: novo abastecimento (e 9b, com tanque cheio marcado). */
+/**
+ * Tela 9: novo abastecimento (e 9b, com tanque cheio marcado). Com `id` na rota, é o mesmo
+ * formulário para completar um rascunho (sem frame no Figma).
+ */
 /** Android: o teclado decimal esconde a vírgula em alguns aparelhos; o numérico mostra. */
 const decimalKeyboard = Platform.OS === 'android' ? 'numeric' : 'decimal-pad';
 
@@ -57,7 +60,7 @@ export function NewFuelEntryView() {
               <Icon name="close" size={22} color={colors.text} />
             </Pressable>
             <Text variant="h2" style={styles.flex}>
-              Novo abastecimento
+              {vm.title}
             </Text>
           </View>
 
@@ -172,7 +175,18 @@ export function NewFuelEntryView() {
 
         {vm.vehicle ? (
           <View style={styles.footer}>
+            {vm.errors.draft ? (
+              <Text variant="small" color="danger">
+                {vm.errors.draft}
+              </Text>
+            ) : null}
             <Button label="Salvar abastecimento" onPress={vm.save} loading={vm.busy} />
+            <Button
+              label="Salvar como rascunho"
+              variant="ghost"
+              onPress={vm.saveDraft}
+              disabled={vm.busy}
+            />
           </View>
         ) : null}
       </KeyboardAvoidingView>
@@ -208,5 +222,10 @@ const styles = StyleSheet.create({
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   pair: { flexDirection: 'row', gap: spacing.md },
-  footer: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm },
+  footer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
+  },
 });

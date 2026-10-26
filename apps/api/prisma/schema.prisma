@@ -35,6 +35,11 @@ enum FuelType {
   gnv
 }
 
+enum FuelEntryStatus {
+  complete
+  draft
+}
+
 enum OdometerSource {
   manual
   fuel
@@ -152,22 +157,24 @@ model OdometerReading {
 }
 
 model FuelEntry {
-  id            String    @id @db.Uuid
-  vehicleId     String    @db.Uuid
+  id            String          @id @db.Uuid
+  vehicleId     String          @db.Uuid
   date          DateTime
-  km            Int
-  fuelType      FuelType
-  liters        Decimal   @db.Decimal(8, 3)
-  pricePerLiter Decimal   @db.Decimal(8, 3)
-  total         Decimal   @db.Decimal(10, 2)
-  fullTank      Boolean
+  // Rascunho (`status = draft`) só guarda o que se sabe: os campos abaixo ficam nulos.
+  status        FuelEntryStatus @default(complete)
+  km            Int?
+  fuelType      FuelType?
+  liters        Decimal?        @db.Decimal(8, 3)
+  pricePerLiter Decimal?        @db.Decimal(8, 3)
+  total         Decimal?        @db.Decimal(10, 2)
+  fullTank      Boolean?
   stationName   String?
   note          String?
   createdAt     DateTime
   updatedAt     DateTime
   deletedAt     DateTime?
   version       BigInt
-  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicle       Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 
   @@index([vehicleId, version])
   @@map("fuel_entries")
