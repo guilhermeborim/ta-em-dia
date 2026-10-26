@@ -34,10 +34,12 @@ export type FuelVoiceState =
   | { step: 'idle' }
   /** Aviso de uma vez só: o áudio vai à Apple ou ao Google e o app o descarta. */
   | { step: 'notice' }
-  | { step: 'listening'; text: string }
+  /** O texto falado não aparece na tela: só os pontinhos no botão. */
+  | { step: 'listening' }
+  /** `text` fica guardado para repetir a interpretação com a resposta; não aparece na tela. */
   | { step: 'question'; text: string; question: FuelSpeechQuestion }
   /** Preencheu, mas algo ficou em vermelho: não salvou. */
-  | { step: 'invalid'; text: string }
+  | { step: 'invalid' }
   | { step: 'failed'; message: string }
   | { step: 'saved'; id: string; draft: boolean; title: string; summary: string };
 
@@ -66,7 +68,6 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
   const session = useRef<SpeechSession | null>(null);
   const transcript = useRef('');
   const failure = useRef<SpeechFailure | null>(null);
-  const cancelled = useRef(false);
   const answers = useRef<FuelSpeechAnswers>({});
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Os callbacks do reconhecimento chegam depois: leem sempre o formulário mais recente.
@@ -115,7 +116,7 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
     d.setKmTouched(kmTouched);
     if (outcome.kind === 'invalid') {
       d.setErrors(outcome.errors);
-      setState({ step: 'invalid', text });
+      setState({ step: 'invalid' });
       return;
     }
     d.setErrors({});
@@ -138,10 +139,6 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
 
   const finish = useCallback(() => {
     session.current = null;
-    if (cancelled.current) {
-      setState({ step: 'idle' });
-      return;
-    }
     const text = transcript.current.trim();
     if (text === '') {
       setState({ step: 'failed', message: speechFailureText(failure.current ?? 'no-speech') });
@@ -158,13 +155,11 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
     }
     transcript.current = '';
     failure.current = null;
-    cancelled.current = false;
     answers.current = {};
-    setState({ step: 'listening', text: '' });
+    setState({ step: 'listening' });
     session.current = startSpeech({
       onText: (text) => {
         transcript.current = text;
-        setState({ step: 'listening', text });
       },
       onError: (value) => {
         failure.current = value;
@@ -222,23 +217,16 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
   }, [state]);
 
   const stop = useCallback(() => session.current?.stop(), []);
-  const cancel = useCallback(() => {
-    cancelled.current = true;
-    if (session.current) session.current.abort();
-    else setState({ step: 'idle' });
-  }, []);
   const dismiss = useCallback(() => setState({ step: 'idle' }), []);
 
   return {
     state,
-    card: voiceCard(state, { talk, acceptNotice, stop, cancel, answer, undo, edit, dismiss }),
-    /** O botão "Falar" aparece quando nada da voz está na tela (ou depois de uma falha). */
-    showTalkButton: state.step === 'idle',
+    card: voiceCard(state, { talk, acceptNotice, answer, undo, edit, dismiss }),
+    talkButton: talkButton(state, { talk, stop }),
     talk,
     acceptNotice,
     /** Para de ouvir e interpreta o que já veio. */
     stop,
-    cancel,
     answer,
     undo,
     edit,
@@ -250,24 +238,39 @@ interface VoiceActions {
   talk: () => void;
   acceptNotice: () => void;
   stop: () => void;
-  cancel: () => void;
   answer: (field: FuelSpeechField) => void;
   undo: () => void;
   edit: () => void;
   dismiss: () => void;
 }
 
+/**
+ * Botão de falar ao lado de "Salvar abastecimento": microfone parado, pontinhos ouvindo (tocar
+ * para de ouvir). Some enquanto há aviso, pergunta ou resumo na tela.
+ */
+export function talkButton(
+  state: FuelVoiceState,
+  a: Pick<VoiceActions, 'talk' | 'stop'>,
+): { listening: boolean; label: string; onPress: () => void } | null {
+  if (state.step === 'listening') {
+    return { listening: true, label: 'Parar de ouvir', onPress: a.stop };
+  }
+  if (state.step === 'idle' || state.step === 'failed' || state.step === 'invalid') {
+    return { listening: false, label: 'Falar o abastecimento', onPress: a.talk };
+  }
+  return null;
+}
+
 /** Cartão da voz para cada passo (textos prontos para a tela); `null` quando não há nada. */
 export function voiceCard(
   state: FuelVoiceState,
-  a: VoiceActions,
+  a: Omit<VoiceActions, 'stop'>,
 ): {
   tone: SpeechCardTone;
   title: string;
   text?: string;
   actions: { label: string; onPress: () => void; variant?: ButtonVariant }[];
 } | null {
-  const quoted = (text: string) => `“${text}”`;
   switch (state.step) {
     case 'idle':
       return null;
@@ -282,23 +285,11 @@ export function voiceCard(
         ],
       };
     case 'listening':
-      return {
-        tone: 'listening',
-        title: 'Ouvindo…',
-        text:
-          state.text === ''
-            ? 'Fale o valor, os litros e o km. Ex.: “150 reais, 25 litros, km 45.300, encheu”.'
-            : quoted(state.text),
-        actions: [
-          { label: 'Pronto', onPress: a.stop, variant: 'primary' },
-          { label: 'Cancelar', onPress: a.cancel, variant: 'ghost' },
-        ],
-      };
+      return null;
     case 'question':
       return {
         tone: 'info',
         title: state.question.text,
-        text: quoted(state.text),
         actions: [
           ...answerOptions(state.question).map((option) => ({
             label: option.label,
@@ -311,17 +302,13 @@ export function voiceCard(
       return {
         tone: 'danger',
         title: 'Confira os campos em vermelho e salve',
-        text: quoted(state.text),
-        actions: [{ label: 'Falar de novo', onPress: a.talk, variant: 'outline' }],
+        actions: [],
       };
     case 'failed':
       return {
         tone: 'warning',
         title: state.message,
-        actions: [
-          { label: 'Falar de novo', onPress: a.talk, variant: 'outline' },
-          { label: 'Fechar', onPress: a.dismiss, variant: 'ghost' },
-        ],
+        actions: [{ label: 'Fechar', onPress: a.dismiss, variant: 'ghost' }],
       };
     case 'saved':
       return {

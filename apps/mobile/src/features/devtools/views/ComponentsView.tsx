@@ -53,6 +53,7 @@ import {
   TimelineItem,
   TopBar,
   ProgressSheet,
+  ListeningDots,
   SpeechCard,
   Toast,
   typography,
@@ -287,12 +288,11 @@ export function ComponentsView() {
 
         <Section title="Cartão da voz">
           <SpeechCard
-            tone="listening"
-            title="Ouvindo…"
-            text="150 reais, 25 litros, km 45.300, encheu"
+            tone="info"
+            title="50 é o valor ou os litros?"
             actions={[
-              { label: 'Pronto', onPress: () => {}, variant: 'primary' },
-              { label: 'Cancelar', onPress: () => {}, variant: 'ghost' },
+              { label: 'Valor', onPress: () => {} },
+              { label: 'Litros', onPress: () => {} },
             ]}
           />
           <SpeechCard
@@ -305,6 +305,10 @@ export function ComponentsView() {
             ]}
           />
           <SpeechCard tone="warning" title="Não ouvi nada. Toque em Falar de novo." />
+        </Section>
+
+        <Section title="Ouvindo (pontinhos)">
+          <ListeningDots />
         </Section>
 
         <Section title="Toast">

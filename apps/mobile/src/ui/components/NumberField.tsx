@@ -25,6 +25,9 @@ export function NumberField({ label, prefix, error, ...input }: NumberFieldProps
         ) : null}
         <TextInput
           {...input}
+          // Uma linha só, sem rolagem dentro da caixa (no Android o número grande rolava).
+          multiline={false}
+          scrollEnabled={false}
           accessibilityLabel={label}
           keyboardType={Platform.OS === 'android' ? 'numeric' : 'decimal-pad'}
           placeholderTextColor={colors.text3}
@@ -57,8 +60,11 @@ const styles = StyleSheet.create({
     padding: 0,
     fontFamily: fontFamily.display,
     fontSize: typography.display.fontSize,
-    lineHeight: typography.display.lineHeight,
+    // Altura fixa em vez de `lineHeight`: no Android, `lineHeight` menor que a fonte cria rolagem.
+    height: typography.display.lineHeight + 8,
     letterSpacing: typography.display.letterSpacing,
     color: colors.text,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
 });

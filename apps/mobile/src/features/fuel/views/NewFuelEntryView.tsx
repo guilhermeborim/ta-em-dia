@@ -19,6 +19,7 @@ import {
   NumberField,
   size,
   spacing,
+  ListeningDots,
   SpeechCard,
   SwitchRow,
   Text,
@@ -68,18 +69,6 @@ export function NewFuelEntryView() {
 
           {vm.vehicle ? (
             <>
-              {vm.canTalk && vm.voice.showTalkButton ? (
-                <Button label="Falar" icon="mic" variant="accent" onPress={vm.voice.talk} />
-              ) : null}
-              {vm.voice.card ? (
-                <SpeechCard
-                  tone={vm.voice.card.tone}
-                  title={vm.voice.card.title}
-                  text={vm.voice.card.text}
-                  actions={vm.voice.card.actions}
-                />
-              ) : null}
-
               <View style={styles.chips}>
                 <Chip label={vm.dateLabel} icon="calendar" onPress={vm.openDatePicker} />
                 <Chip label={vm.vehicle.name} icon="car" />
@@ -190,18 +179,36 @@ export function NewFuelEntryView() {
 
         {vm.vehicle ? (
           <View style={styles.footer}>
-            {vm.errors.draft ? (
-              <Text variant="small" color="danger">
-                {vm.errors.draft}
-              </Text>
+            {vm.voice.card ? (
+              <SpeechCard
+                tone={vm.voice.card.tone}
+                title={vm.voice.card.title}
+                text={vm.voice.card.text}
+                actions={vm.voice.card.actions}
+              />
             ) : null}
-            <Button label="Salvar abastecimento" onPress={vm.save} loading={vm.busy} />
-            <Button
-              label="Salvar como rascunho"
-              variant="ghost"
-              onPress={vm.saveDraft}
-              disabled={vm.busy}
-            />
+            <View style={styles.saveRow}>
+              <Button
+                label="Salvar abastecimento"
+                onPress={vm.save}
+                loading={vm.busy}
+                style={styles.flex}
+              />
+              {vm.canTalk && vm.talkButton ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={vm.talkButton.label}
+                  onPress={vm.talkButton.onPress}
+                  style={styles.talk}
+                >
+                  {vm.talkButton.listening ? (
+                    <ListeningDots />
+                  ) : (
+                    <Icon name="mic" size={22} color={colors.text} />
+                  )}
+                </Pressable>
+              ) : null}
+            </View>
           </View>
         ) : null}
       </KeyboardAvoidingView>
@@ -237,6 +244,15 @@ const styles = StyleSheet.create({
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   pair: { flexDirection: 'row', gap: spacing.md },
+  saveRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  talk: {
+    width: size.touchTarget,
+    height: size.touchTarget,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accent,
+  },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,

@@ -1,5 +1,5 @@
 import { parseFuelSpeech } from '@ta-em-dia/shared';
-import { voiceCard } from '../viewmodels/useFuelVoice';
+import { talkButton, voiceCard } from '../viewmodels/useFuelVoice';
 
 const actions = {
   talk: jest.fn(),
@@ -25,11 +25,8 @@ describe('voiceCard', () => {
     expect(labels(card)).toEqual(['Continuar', 'Agora não']);
   });
 
-  it('ouvindo, mostra o exemplo e depois o texto ao vivo', () => {
-    expect(voiceCard({ step: 'listening', text: '' }, actions)?.text).toContain('Ex.:');
-    const card = voiceCard({ step: 'listening', text: '150 reais' }, actions);
-    expect(card?.text).toBe('“150 reais”');
-    expect(labels(card)).toEqual(['Pronto', 'Cancelar']);
+  it('ouvindo, não mostra cartão nem o texto falado', () => {
+    expect(voiceCard({ step: 'listening' }, actions)).toBeNull();
   });
 
   it('a pergunta vira botões de resposta', () => {
@@ -50,11 +47,40 @@ describe('voiceCard', () => {
     expect(labels(card)).toEqual(['Desfazer', 'Editar']);
   });
 
-  it('inválido e falha deixam falar de novo', () => {
-    expect(voiceCard({ step: 'invalid', text: 'x' }, actions)?.tone).toBe('danger');
+  it('inválido e falha só explicam (o botão de falar continua ao lado de Salvar)', () => {
+    expect(voiceCard({ step: 'invalid' }, actions)?.tone).toBe('danger');
     expect(labels(voiceCard({ step: 'failed', message: 'Sem internet' }, actions))).toEqual([
-      'Falar de novo',
       'Fechar',
     ]);
+  });
+});
+
+describe('talkButton', () => {
+  it('parado: microfone que começa a ouvir', () => {
+    expect(talkButton({ step: 'idle' }, actions)).toEqual({
+      listening: false,
+      label: 'Falar o abastecimento',
+      onPress: actions.talk,
+    });
+  });
+
+  it('ouvindo: pontinhos, e tocar para de ouvir', () => {
+    expect(talkButton({ step: 'listening' }, actions)).toEqual({
+      listening: true,
+      label: 'Parar de ouvir',
+      onPress: actions.stop,
+    });
+  });
+
+  it('continua depois de falha ou de campo em vermelho', () => {
+    expect(talkButton({ step: 'failed', message: 'x' }, actions)?.listening).toBe(false);
+    expect(talkButton({ step: 'invalid' }, actions)?.listening).toBe(false);
+  });
+
+  it('some com aviso, pergunta ou resumo na tela', () => {
+    expect(talkButton({ step: 'notice' }, actions)).toBeNull();
+    expect(
+      talkButton({ step: 'saved', id: 'x', draft: false, title: 't', summary: '' }, actions),
+    ).toBeNull();
   });
 });

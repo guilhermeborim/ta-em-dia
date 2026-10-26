@@ -42,6 +42,7 @@ export {
   type TimelineKind,
 } from './components/ListItems';
 export { BrandSymbol, Logo } from './components/Logo';
+export { ListeningDots } from './components/ListeningDots';
 export { ListGroup } from './components/ListGroup';
 export { LicensePlate } from './components/LicensePlate';
 export { NotificationPreview } from './components/NotificationPreview';
