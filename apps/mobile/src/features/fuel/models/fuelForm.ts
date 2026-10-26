@@ -37,7 +37,9 @@ export interface FuelForm {
   station: string;
 }
 
-export type FuelFormErrors = Partial<Record<'amounts' | 'km' | 'station' | 'draft', string>>;
+export type FuelFormErrors = Partial<
+  Record<'amounts' | 'pricePerLiter' | 'km' | 'station' | 'draft', string>
+>;
 
 export const emptyFuelForm: FuelForm = {
   fuelType: 'gasoline',

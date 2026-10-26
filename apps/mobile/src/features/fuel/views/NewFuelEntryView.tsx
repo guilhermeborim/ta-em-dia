@@ -19,6 +19,7 @@ import {
   NumberField,
   size,
   spacing,
+  SpeechCard,
   SwitchRow,
   Text,
   TextField,
@@ -27,7 +28,8 @@ import { useNewFuelEntryViewModel } from '../viewmodels/useNewFuelEntryViewModel
 
 /**
  * Tela 9: novo abastecimento (e 9b, com tanque cheio marcado). Com `id` na rota, é o mesmo
- * formulário para completar um rascunho (sem frame no Figma).
+ * formulário para completar um rascunho (sem frame no Figma). "Falar" e o cartão da voz também
+ * não têm frame.
  */
 /** Android: o teclado decimal esconde a vírgula em alguns aparelhos; o numérico mostra. */
 const decimalKeyboard = Platform.OS === 'android' ? 'numeric' : 'decimal-pad';
@@ -66,6 +68,18 @@ export function NewFuelEntryView() {
 
           {vm.vehicle ? (
             <>
+              {vm.canTalk && vm.voice.showTalkButton ? (
+                <Button label="Falar" icon="mic" variant="accent" onPress={vm.voice.talk} />
+              ) : null}
+              {vm.voice.card ? (
+                <SpeechCard
+                  tone={vm.voice.card.tone}
+                  title={vm.voice.card.title}
+                  text={vm.voice.card.text}
+                  actions={vm.voice.card.actions}
+                />
+              ) : null}
+
               <View style={styles.chips}>
                 <Chip label={vm.dateLabel} icon="calendar" onPress={vm.openDatePicker} />
                 <Chip label={vm.vehicle.name} icon="car" />
@@ -88,6 +102,7 @@ export function NewFuelEntryView() {
                 <View style={styles.flex}>
                   <TextField
                     label="Preço por litro"
+                    error={vm.errors.pricePerLiter}
                     suffix="/L"
                     value={vm.amounts.pricePerLiter}
                     onChangeText={vm.setPricePerLiter}

@@ -53,6 +53,7 @@ import {
   TimelineItem,
   TopBar,
   ProgressSheet,
+  SpeechCard,
   Toast,
   typography,
   VehicleCard,
@@ -282,6 +283,28 @@ export function ComponentsView() {
             text="Trazendo tudo da sua conta. Não feche o app."
             onRequestClose={() => setSheet(false)}
           />
+        </Section>
+
+        <Section title="Cartão da voz">
+          <SpeechCard
+            tone="listening"
+            title="Ouvindo…"
+            text="150 reais, 25 litros, km 45.300, encheu"
+            actions={[
+              { label: 'Pronto', onPress: () => {}, variant: 'primary' },
+              { label: 'Cancelar', onPress: () => {}, variant: 'ghost' },
+            ]}
+          />
+          <SpeechCard
+            tone="success"
+            title="Abastecimento salvo"
+            text="Shell · R$ 150,00 · 25 L · 45.300 km"
+            actions={[
+              { label: 'Desfazer', onPress: () => {}, variant: 'outline' },
+              { label: 'Editar', onPress: () => {} },
+            ]}
+          />
+          <SpeechCard tone="warning" title="Não ouvi nada. Toque em Falar de novo." />
         </Section>
 
         <Section title="Toast">

@@ -42,6 +42,7 @@ describe('loadFuelFormContext', () => {
       vehicle: null,
       lastFuelType: null,
       suggestedKm: null,
+      lastFuelKm: null,
     });
   });
 
@@ -51,6 +52,7 @@ describe('loadFuelFormContext', () => {
       vehicle: { id: VEHICLE_ID, name: 'Gol' },
       lastFuelType: null,
       suggestedKm: 48320,
+      lastFuelKm: null,
     });
   });
 
@@ -62,6 +64,7 @@ describe('loadFuelFormContext', () => {
     const context = await loadFuelFormContext(db);
     expect(context.lastFuelType).toBe('ethanol');
     expect(context.suggestedKm).toBe(48910);
+    expect(context.lastFuelKm).toBe(48910);
   });
 
   it('ignora abastecimento excluído', async () => {

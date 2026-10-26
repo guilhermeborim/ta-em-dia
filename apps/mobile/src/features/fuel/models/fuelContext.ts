@@ -11,15 +11,17 @@ export interface FuelFormContext {
   lastFuelType: FuelType | null;
   /** Km sugerido: o km atual do veículo (maior entre inicial, abastecimentos, serviços e leituras). */
   suggestedKm: number | null;
+  /** Km do último abastecimento completo (a voz confere o km falado contra ele). */
+  lastFuelKm: number | null;
 }
 
 /** Lê do SQLite o que o formulário sugere: veículo, último combustível e km. */
 export async function loadFuelFormContext(db: Db): Promise<FuelFormContext> {
   const vehicle = await findActiveVehicle(db);
-  if (!vehicle) return { vehicle: null, lastFuelType: null, suggestedKm: null };
+  if (!vehicle) return { vehicle: null, lastFuelType: null, suggestedKm: null, lastFuelKm: null };
 
-  const last = await db.getFirstAsync<{ fuel_type: FuelType }>(
-    `SELECT fuel_type
+  const last = await db.getFirstAsync<{ fuel_type: FuelType; km: number }>(
+    `SELECT fuel_type, km
        FROM fuel_entries
       WHERE vehicle_id = ? AND deleted_at IS NULL AND status = 'complete'
       ORDER BY date DESC, km DESC
@@ -31,5 +33,6 @@ export async function loadFuelFormContext(db: Db): Promise<FuelFormContext> {
     vehicle: { id: vehicle.id, name: vehicle.name },
     lastFuelType: last?.fuel_type ?? null,
     suggestedKm: (await loadVehicleKm(db, vehicle.id, vehicle.initial_km)).currentKm,
+    lastFuelKm: last?.km ?? null,
   };
 }
