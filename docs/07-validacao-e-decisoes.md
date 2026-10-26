@@ -348,7 +348,7 @@ Sem frame no Figma (cartão da localização, chips "Trocar" e "Usar localizaç�
 - [ ] Fonte grande e TalkBack: cartão, chips e linha da média legíveis; chips com toque ≥ 44 pt.
 - [ ] iOS (quando houver build): pedido "durante o uso" em português; nenhum pedido de "sempre" nem de movimento.
 
-### 2.40 Aviso ao chegar no posto (C7, PR #N)
+### 2.40 Aviso ao chegar no posto (C7, PR #79)
 
 Sem frame no Figma (interruptor e telas que explicam as permissões). Dependências nativas: `expo-task-manager` (nova) e o "sempre" do `expo-location` (`ACCESS_BACKGROUND_LOCATION` no Android): exige development build novo; num build antigo o interruptor não aparece. No iPhone o aviso ainda não existe (sem build, os avisos locais não funcionam). Nenhum emulador estava aberto: nada foi visto rodando. Android com development build, staging no ar e internet:
 
