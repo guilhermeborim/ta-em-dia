@@ -65,9 +65,14 @@ class FakeRepository {
     return work(session);
   }
 
-  async listChanges(_userId: string, since: bigint, limit: number) {
+  listTables: (readonly SyncTable[] | undefined)[] = [];
+
+  async listChanges(_userId: string, since: bigint, limit: number, tables?: readonly SyncTable[]) {
     this.listArgs.push({ since, limit });
-    return this.pulled.filter((row) => row.version > since).slice(0, limit + 1);
+    this.listTables.push(tables);
+    return this.pulled
+      .filter((row) => row.version > since && (!tables || tables.includes(row.table)))
+      .slice(0, limit + 1);
   }
 
   async touchDevices(userId: string) {
@@ -261,14 +266,32 @@ describe('SyncService.push', () => {
   });
 
   it('protocolo mais novo que o da API: erro com código estável', async () => {
-    const error = await service.push(USER, { protocol: 2, changes: [] }, NOW).catch((e) => e);
+    const error = await service.push(USER, { protocol: 3, changes: [] }, NOW).catch((e) => e);
     expect(error).toBeInstanceOf(BadRequestException);
-    expect(error.getResponse()).toMatchObject({ code: 'SYNC_PROTOCOL_UNSUPPORTED', supported: 1 });
+    expect(error.getResponse()).toMatchObject({ code: 'SYNC_PROTOCOL_UNSUPPORTED', supported: 2 });
     expect(repo.touched).toEqual([]);
   });
 
+  it('posto é do próprio usuário, sem veículo pai', async () => {
+    const STATION = '018bcfe5-6800-7000-8000-000000000201';
+    const { results } = await push([
+      vehicle(),
+      {
+        table: 'stations',
+        id: STATION,
+        op: 'upsert',
+        updatedAt: SENT,
+        payload: { id: STATION, osmId: 'node/1', name: 'Shell', lat: -23.5, lng: -46.6 },
+      },
+      fuel({ stationId: STATION, stationName: 'Shell' }),
+    ]);
+    expect(results.map((r) => r.status)).toEqual(['accepted', 'accepted', 'accepted']);
+    expect(repo.rows.get(`stations:${STATION}`)).toMatchObject({ ownerId: USER });
+    expect(repo.rows.get(`fuel_entries:${FUEL}`)?.data).toMatchObject({ stationId: STATION });
+  });
+
   it('lote vazio vale', async () => {
-    expect(await push([])).toEqual({ protocol: 1, results: [] });
+    expect(await push([])).toEqual({ protocol: 2, results: [] });
   });
 });
 
@@ -333,7 +356,7 @@ describe('SyncService.pull', () => {
         payload: { id: FUEL, deletedAt: '2026-10-21T10:00:00.000Z' },
       },
     ]);
-    expect(res).toMatchObject({ protocol: 1, nextSince: '5', hasMore: false });
+    expect(res).toMatchObject({ protocol: 2, nextSince: '5', hasMore: false });
     expect(repo.touched).toEqual([USER]);
   });
 
@@ -356,6 +379,46 @@ describe('SyncService.pull', () => {
     const res = await service.pull(USER, { protocol: 1, since: '0', limit: 2 }, NOW);
     expect(res.changes.map((c) => c.version)).toEqual(['1', '2']);
     expect(res).toMatchObject({ nextSince: '2', hasMore: true });
+  });
+
+  it('app do protocolo 1 não recebe postos; o do 2 recebe, sem coordenada do posto local', async () => {
+    const STATION = '018bcfe5-6800-7000-8000-000000000201';
+    const LOCAL = '018bcfe5-6800-7000-8000-000000000202';
+    repo.pulled = [
+      row('stations', STATION, 1n, {
+        osmId: 'node/1',
+        name: 'Shell',
+        brand: 'Shell',
+        street: 'Av. da Pista',
+        lat: -23.5,
+        lng: -46.6,
+      }),
+      row('stations', LOCAL, 2n, {
+        osmId: null,
+        name: 'Posto do Zé',
+        brand: null,
+        street: null,
+        lat: null,
+        lng: null,
+      }),
+    ];
+    const old = await service.pull(USER, { protocol: 1, since: '0', limit: 200 }, NOW);
+    expect(old.changes).toEqual([]);
+    expect(repo.listTables[0]).not.toContain('stations');
+
+    const res = await service.pull(USER, { protocol: 2, since: '0', limit: 200 }, NOW);
+    expect(res.changes.map((c) => c.payload)).toEqual([
+      {
+        id: STATION,
+        osmId: 'node/1',
+        name: 'Shell',
+        brand: 'Shell',
+        street: 'Av. da Pista',
+        lat: -23.5,
+        lng: -46.6,
+      },
+      { id: LOCAL, name: 'Posto do Zé' },
+    ]);
   });
 
   it('protocolo mais novo que o da API: erro', async () => {

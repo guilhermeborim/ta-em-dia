@@ -131,9 +131,9 @@ describe('sync (e2e)', () => {
   });
 
   it('protocolo que a API não conhece: 400 SYNC_PROTOCOL_UNSUPPORTED', async () => {
-    const res = await push({ protocol: 2, changes: [] }).expect(400);
+    const res = await push({ protocol: 3, changes: [] }).expect(400);
     expect(res.body.code).toBe('SYNC_PROTOCOL_UNSUPPORTED');
-    const res2 = await pull('protocol=2').expect(400);
+    const res2 = await pull('protocol=3').expect(400);
     expect(res2.body.code).toBe('SYNC_PROTOCOL_UNSUPPORTED');
   });
 });

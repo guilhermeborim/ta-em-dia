@@ -127,8 +127,100 @@ describe('SYNC_SPECS', () => {
       total: null,
       fullTank: null,
       stationName: 'Shell',
+      stationId: null,
       note: null,
     });
+  });
+
+  it('abastecimento leva e traz o stationId', () => {
+    const STATION = '018bcfe5-6800-7000-8000-000000000009';
+    const entry = SYNC_SPECS.fuel_entries.schema.parse({
+      id: ROW,
+      vehicleId: VEHICLE,
+      date: at.toISOString(),
+      km: 100,
+      fuelType: 'gasoline',
+      liters: 10,
+      pricePerLiter: 6,
+      total: 60,
+      fullTank: false,
+      stationName: 'Shell · Av. da Pista',
+      stationId: STATION,
+    });
+    expect(SYNC_SPECS.fuel_entries.toData(entry)).toMatchObject({ stationId: STATION });
+    const payload = SYNC_SPECS.fuel_entries.toPayload({
+      id: ROW,
+      vehicleId: VEHICLE,
+      date: at,
+      status: 'complete',
+      km: 100,
+      fuelType: 'gasoline',
+      liters: decimal(10),
+      pricePerLiter: decimal(6),
+      total: decimal(60),
+      fullTank: false,
+      stationName: 'Shell · Av. da Pista',
+      stationId: STATION,
+      note: null,
+    });
+    expect(payload).toMatchObject({ stationId: STATION });
+    expect(SYNC_SPECS.fuel_entries.schema.safeParse(payload).success).toBe(true);
+  });
+
+  it('posto do OpenStreetMap guarda a coordenada; posto local nunca', () => {
+    const osm = SYNC_SPECS.stations.schema.parse({
+      id: ROW,
+      osmId: 'way/42',
+      name: 'Shell',
+      brand: 'Shell',
+      street: 'Av. da Pista',
+      lat: -23.5,
+      lng: -46.6,
+    });
+    expect(SYNC_SPECS.stations.toData(osm)).toEqual({
+      osmId: 'way/42',
+      name: 'Shell',
+      brand: 'Shell',
+      street: 'Av. da Pista',
+      lat: -23.5,
+      lng: -46.6,
+    });
+    // Um app com defeito que mande a coordenada do posto local: a API não guarda.
+    const local = SYNC_SPECS.stations.schema.parse({
+      id: ROW,
+      name: 'Posto do Zé',
+      lat: 1,
+      lng: 2,
+    });
+    expect(SYNC_SPECS.stations.toData(local)).toEqual({
+      osmId: null,
+      name: 'Posto do Zé',
+      brand: null,
+      street: null,
+      lat: null,
+      lng: null,
+    });
+    expect(SYNC_SPECS.stations.parents(local)).toEqual({});
+  });
+
+  it('posto do banco volta sem os campos nulos', () => {
+    const payload = SYNC_SPECS.stations.toPayload({
+      id: ROW,
+      osmId: 'node/7',
+      name: null,
+      brand: null,
+      street: 'Rua das Flores',
+      lat: -23.5,
+      lng: -46.6,
+    });
+    expect(payload).toEqual({
+      id: ROW,
+      osmId: 'node/7',
+      street: 'Rua das Flores',
+      lat: -23.5,
+      lng: -46.6,
+    });
+    expect(SYNC_SPECS.stations.schema.safeParse(payload).success).toBe(true);
   });
 
   it('rascunho do banco volta como payload com status e sem os campos nulos', () => {

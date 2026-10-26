@@ -23,8 +23,9 @@ interface TableSpec<S extends z.ZodType> {
     | 'fuelEntry'
     | 'maintenancePlan'
     | 'maintenanceRecord'
-    | 'document';
-  /** `userId` na própria linha (veículo e documento); as outras tabelas chegam ao dono pelo veículo. */
+    | 'document'
+    | 'station';
+  /** `userId` na própria linha (veículo, documento e posto); as outras tabelas chegam ao dono pelo veículo. */
   ownedDirectly: boolean;
   schema: S;
   parents(payload: z.infer<S>): RowParents;
@@ -109,6 +110,7 @@ export const SYNC_SPECS: Specs = {
       total: p.total ?? null,
       fullTank: p.fullTank ?? null,
       stationName: p.stationName ?? null,
+      stationId: 'stationId' in p ? (p.stationId ?? null) : null,
       note: p.note ?? null,
     }),
     toPayload: (row) => ({
@@ -123,6 +125,7 @@ export const SYNC_SPECS: Specs = {
       ...optional('total', row.total, num),
       ...optional('fullTank', row.fullTank),
       ...optional('stationName', row.stationName),
+      ...optional('stationId', row.stationId),
       ...optional('note', row.note),
     }),
   },
@@ -201,6 +204,29 @@ export const SYNC_SPECS: Specs = {
       dueDate: fromDateColumn(row.dueDate),
       notifyDays: row.notifyDays,
       ...optional('note', row.note),
+    }),
+  },
+  stations: {
+    model: 'station',
+    ownedDirectly: true,
+    schema: SYNC_UPSERT_SCHEMAS.stations,
+    parents: () => ({}),
+    // Posto local (sem `osmId`) nunca guarda coordenada, mesmo que um app a mande (docs/05).
+    toData: (p) => ({
+      osmId: p.osmId ?? null,
+      name: p.name ?? null,
+      brand: p.brand ?? null,
+      street: p.street ?? null,
+      lat: p.osmId ? (p.lat ?? null) : null,
+      lng: p.osmId ? (p.lng ?? null) : null,
+    }),
+    toPayload: (row) => ({
+      id: row.id,
+      ...optional('osmId', row.osmId),
+      ...optional('name', row.name),
+      ...optional('brand', row.brand),
+      ...optional('street', row.street),
+      ...(row.osmId && row.lat !== null && row.lng !== null ? { lat: row.lat, lng: row.lng } : {}),
     }),
   },
 };
