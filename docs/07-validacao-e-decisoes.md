@@ -316,6 +316,15 @@ Sem frame no Figma (tela de edição, ação de arrastar, aviso de exclusão). A
 - [ ] Leitor de tela (TalkBack): o registro lê "toque para editar" e oferece a ação "Excluir".
 - [ ] Fonte grande: a ação "Excluir" não corta o texto.
 
+### 2.37 API: postos (`GET /v1/places`, C5)
+
+Sem tela; o app só usa no C6. Em staging, depois do deploy (a migration `place_cells` roda no deploy), com um token de "Continuar sem login":
+
+- [ ] `GET /v1/places?geohash=6gyf4` (centro de São Paulo) responde 200 com dezenas de postos (no teste local foram 58) e `fetchedAt` de agora; a segunda chamada responde rápido e com o mesmo `fetchedAt` (veio do cache).
+- [ ] Uma célula sem posto (ex.: `6gx00`, no mar) responde 200 com `places: []` e também fica no cache.
+- [ ] Os logs do Render não mostram o geohash (nem na linha do pedido nem no aviso de falha do Overpass).
+- [ ] Primeira chamada de uma célula com o host acordando do sono: ver se cabe no tempo de espera do app (Overpass leva de 1 a 10 s).
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
@@ -459,3 +468,11 @@ Código puro em `shared`, sem tela; nada a validar no aparelho. O que o reconhec
 - **Decimal por extenso só entra no preço** ("seis e vinte e nove o litro"). "Vinte litros e meio" e outras frações por extenso não são entendidas.
 - **Se corrigindo, vale o último citado** ("paguei 100 reais, não, foram 150 reais" → 150). Alternativa: ignorar a frase inteira e perguntar. Recomendação: manter.
 - **Limites conhecidos:** nada de data ("ontem", "dia 20" é ignorado), posto falado só no C4 (ver 3.36), "gás" sozinho não é GNV (só "gás natural" ou "GNV"), e dois combustíveis na mesma frase ficam com o último.
+
+### 3.38 Postos na API: escolhas que fiz (C5)
+
+- **Posto sem nome no OpenStreetMap:** `name` vem da bandeira (`brand`); sem as duas, `null` (2 de 58 no centro de São Paulo). O app decide no C6 o que mostrar. Alternativa: a API descartar esses postos. Recomendação: manter e, no C6, mostrar "Posto" + rua.
+- **Overpass fora do ar:** a API devolve a lista vencida, se houver; sem nenhuma, `503 PLACES_UNAVAILABLE` e o app segue com os postos já usados. Alternativa: tentar uma segunda instância do Overpass (`overpass.kumi.systems`, também gratuita). Recomendação: manter uma só e trocar `OVERPASS_URL` se a pública falhar muito.
+- **Limite de chamadas:** o padrão (100 por minuto por IP), sem `@Throttle` próprio. O app deve pedir a célula e as 8 vizinhas só quando não as tiver no aparelho (9 chamadas). Alternativa: rota que aceita várias células numa chamada. Recomendação: manter e decidir no C6, se as 9 chamadas pesarem.
+- **Sem limpeza de `place_cells`:** células vencidas só são trocadas quando alguém pede de novo. São dado público e pequeno (~10 KB por célula). Recomendação: manter.
+- **Só o essencial do OSM:** nome, bandeira, rua e coordenada. Ficam de fora número, cidade, horário e combustíveis vendidos. Recomendação: manter até o mapa de postos (`docs/08`).
