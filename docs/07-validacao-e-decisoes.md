@@ -366,3 +366,27 @@ Recomendação: **A** agora; revisar quando o login existir. Se escolher B, o te
 - **Sem rota de logout na API:** sair só apaga a sessão do aparelho; o refresh token fica válido até vencer (90 dias). Recomendação: revogar o token do aparelho junto com "Excluir conta" (próximo item).
 - **Nome e e-mail ficam no aparelho** (`app_settings`) para a tela Conta; somem ao sair. `docs/05` foi atualizado.
 - **Registros da Conta** são abastecimentos e serviços de manutenção (sem leituras de km nem prazos), a mesma conta da API na tela 24.
+
+### 3.30 Voz e privacidade: reconhecimento sem o pacote no aparelho (Fase C, C0)
+
+`docs/05` diz que o app não grava nem envia áudio. O reconhecimento, porém, é do sistema: no Android e no iOS, sem o pacote de idioma baixado, o sistema pode mandar o áudio ao servidor do Google ou da Apple. O backlog diz "voz roda no aparelho".
+
+| Opção                                                                                 | Efeito                                                                          |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| A. Só no aparelho (`requiresOnDeviceRecognition`)                                     | Privacidade total e funciona sem internet; sem o pacote, "Falar" não aparece    |
+| B. No aparelho quando houver; senão, sistema, com aviso uma vez antes do primeiro uso | Funciona em mais celulares; a Política e as lojas precisam citar Google e Apple |
+
+Recomendação: **B**, com o aviso e a declaração nas lojas. Decidir antes do C4.
+
+### 3.31 Posto local: coordenada fica só no aparelho (Fase C, C0)
+
+O dono decidiu que a coordenada do usuário não sai do aparelho. Posto fora do OpenStreetMap nasce da posição do usuário, então o sync (C6) envia `name`, `brand` e `street` e **não** envia `lat`/`lng` desse posto (`docs/05`, `docs/03`). Consequência: num segundo aparelho, o posto local aparece pelo nome, mas não é sugerido por proximidade até alguém abastecer lá de novo.
+
+Alternativa: enviar a coordenada arredondada (~1 km). Recomendação: manter só no aparelho.
+
+### 3.32 Docs da Fase C: escolhas que fiz (C0)
+
+- **Cache da API (`places`):** tabela `place_cells` no Postgres (geohash de 5 caracteres, lista de postos, data da busca), validade de 30 dias, em vez de memória (o Render grátis dorme e perde a memória). Alternativa: cache em memória. Recomendação: manter.
+- **Rota `GET /v1/places?geohash=` exige token** (inclui o anônimo), com limite de chamadas. Alternativa: pública. Recomendação: manter.
+- **Lembrete no posto (C7) continua na tabela da Fase 2 do roadmap**, com nota de que é o item C7 do backlog. Alternativa: mover para o MVP. Recomendação: manter até as lojas aprovarem o "sempre".
+- **Voz sem flag de Premium por enquanto.** Se virar Premium, nasce atrás de flag (regra do projeto). Decidir antes do C4.

@@ -4,6 +4,8 @@ Ideia: um mapa que lista os postos num raio do usuário. Os próprios usuários 
 
 **Status:** Futuro. Não implemente sem pedido (ver `docs/01-roadmap.md`). Antes de implementar, atualizar `docs/05-privacidade-lgpd.md` (localização e conteúdo de usuário) e `docs/03-arquitetura.md`.
 
+**Já puxado para o MVP (Fase C do `docs/06-backlog.md`):** a lista de postos do OpenStreetMap por geohash (módulo `places`, tabela `place_cells`) e a tabela `stations` no app, usadas para sugerir o posto no abastecimento. O mapa, os preços de terceiros e tudo o que vem abaixo continuam Futuro. Atenção ao nome: a tabela `stations` da Fase B abaixo (PostGIS, na API) é outra coisa; ao implementar o mapa, reaproveitar `place_cells` e `stations` do MVP em vez de duplicar.
+
 ## Como funciona, de ponta a ponta
 
 ### 1. Ver o mapa
