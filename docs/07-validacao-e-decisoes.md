@@ -325,7 +325,7 @@ Sem tela; o app só usa no C6. Em staging, depois do deploy (a migration `place_
 - [ ] Os logs do Render não mostram o geohash (nem na linha do pedido nem no aviso de falha do Overpass).
 - [ ] Primeira chamada de uma célula com o host acordando do sono: ver se cabe no tempo de espera do app (Overpass leva de 1 a 10 s).
 
-### 2.38 Ajuda e contato, Termos e Privacidade (Mais, Configurações e Login, PR #?)
+### 2.38 Ajuda e contato, Termos e Privacidade (Mais, Configurações e Login, PR #77)
 
 Sem e-mail e sem URLs no build (o padrão hoje), tudo mostra "Em breve". Para testar o caminho completo, ponha valores de teste em `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_TERMS_URL` e `EXPO_PUBLIC_PRIVACY_URL` (`apps/mobile/.env`) e reinicie o Expo.
 
