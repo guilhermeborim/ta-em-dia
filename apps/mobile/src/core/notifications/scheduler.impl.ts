@@ -6,6 +6,9 @@ import type {
   ReminderScheduler,
 } from './scheduler.types';
 
+/** Esta plataforma agenda avisos locais (o iOS ainda não: ver scheduler.ios.ts). */
+export const localNotificationsAvailable = true;
+
 /** Agendador de avisos locais (Android e web). O iOS tem o seu em scheduler.ios.ts. */
 export const reminderScheduler: ReminderScheduler = {
   async replaceScheduled(prefix: string, items: ReminderNotification[]): Promise<boolean> {

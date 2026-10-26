@@ -46,6 +46,14 @@ describe('posto pela localização', () => {
   });
 });
 
+describe('aviso ao chegar no posto', () => {
+  it('só no Premium e a API pode desligar', () => {
+    expect(DEFAULT_FLAGS.free['geo.fuelReminder']).toBe(false);
+    expect(DEFAULT_FLAGS.premium['geo.fuelReminder']).toBe(true);
+    expect(flagsFor('premium', { 'geo.fuelReminder': false })['geo.fuelReminder']).toBe(false);
+  });
+});
+
 describe('plano grátis', () => {
   it('tem 1 veículo; o premium não tem limite', () => {
     expect(DEFAULT_FLAGS.free['vehicles.max']).toBe(1);

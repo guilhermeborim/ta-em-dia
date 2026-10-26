@@ -16,6 +16,7 @@ describe('loadSettings', () => {
       notifyOdometer: false,
       documentNotifyDays: [30, 7],
       voiceAutoSave: false,
+      stationArrival: false,
     });
   });
 
@@ -39,6 +40,13 @@ describe('loadSettings', () => {
     expect((await loadSettings(db)).voiceAutoSave).toBe(true);
     await saveToggle(db, 'voiceAutoSave', false);
     expect((await loadSettings(db)).voiceAutoSave).toBe(false);
+  });
+
+  it('aviso ao chegar no posto vem desligado e guarda a escolha', async () => {
+    const db = await setup();
+    expect((await loadSettings(db)).stationArrival).toBe(false);
+    await saveToggle(db, 'stationArrival', true);
+    expect((await loadSettings(db)).stationArrival).toBe(true);
   });
 
   it('guarda a antecedência do maior para o menor, sem repetir', async () => {

@@ -7,7 +7,12 @@ export interface ReminderNotification {
   /** Quando o aviso aparece. Sempre no futuro. */
   fireAt: Date;
   /** Volta no toque do aviso (ver `onNotificationOpened`). */
-  data: { planId: string } | { documentId: string; vehicleId?: string } | { vehicleId: string };
+  data:
+    | { planId: string }
+    | { documentId: string; vehicleId?: string }
+    | { vehicleId: string }
+    /** Aviso ao chegar no posto: abre o Novo abastecimento. */
+    | { openNewFuelEntry: true };
 }
 
 export interface ReminderScheduler {

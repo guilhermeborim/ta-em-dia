@@ -69,6 +69,15 @@ export function SettingsView() {
               value={vm.voiceAutoSave}
               onValueChange={vm.setVoiceAutoSave}
             />
+            {vm.showStationArrival ? (
+              <SwitchRow
+                flat
+                label="Aviso ao chegar no posto"
+                hint="Lembra de registrar quando você para num posto"
+                value={vm.stationArrival}
+                onValueChange={vm.setStationArrival}
+              />
+            ) : null}
           </ListGroup>
 
           <Text variant="caption" color="text3">

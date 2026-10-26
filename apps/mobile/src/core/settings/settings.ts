@@ -13,6 +13,8 @@ export interface AppSettings {
   documentNotifyDays: number[];
   /** Falar um abastecimento completo e válido já salva (padrão: desligado; senão só preenche). */
   voiceAutoSave: boolean;
+  /** Aviso ao chegar no posto, com a localização "sempre" (padrão: desligado; C7). */
+  stationArrival: boolean;
 }
 
 const KEYS = {
@@ -21,10 +23,11 @@ const KEYS = {
   notifyOdometer: 'settings.notify_odometer',
   documentNotifyDays: 'settings.document_notify_days',
   voiceAutoSave: 'settings.voice_auto_save',
+  stationArrival: 'settings.station_arrival',
 } as const;
 
 export type NotifySetting = 'notifyMaintenance' | 'notifyDocuments' | 'notifyOdometer';
-export type ToggleSetting = NotifySetting | 'voiceAutoSave';
+export type ToggleSetting = NotifySetting | 'voiceAutoSave' | 'stationArrival';
 
 /** "30,7" → [30, 7]. Ignora o que não é uma opção válida; sem nada válido, volta ao padrão. */
 export function parseNotifyDays(text: string | null): number[] {
@@ -48,6 +51,7 @@ export async function loadSettings(db: Db): Promise<AppSettings> {
     notifyOdometer: await readFlag(db, KEYS.notifyOdometer, false),
     documentNotifyDays: parseNotifyDays(await getSetting(db, KEYS.documentNotifyDays)),
     voiceAutoSave: await readFlag(db, KEYS.voiceAutoSave, false),
+    stationArrival: await readFlag(db, KEYS.stationArrival, false),
   };
 }
 

@@ -10,6 +10,7 @@ export * from './odometer';
 export * from './places';
 export * from './reports';
 export * from './schemas';
+export * from './stationArrival';
 export * from './stations';
 export * from './sync';
 export * from './uuidv7';

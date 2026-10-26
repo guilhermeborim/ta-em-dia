@@ -13,6 +13,10 @@ export interface FeatureFlags {
   'sync.anonymous': boolean;
   'reports.advanced': boolean;
   'export.pdf': boolean;
+  /**
+   * Aviso ao chegar no posto (C7, localização "sempre"). Só Premium (decisão do dono, 26/10/2026);
+   * a pessoa ainda liga o aviso em Configurações (vem desligado). Se as lojas recusarem, desliga aqui.
+   */
   'geo.fuelReminder': boolean;
   /** Botão "Falar" no abastecimento. Ligada nos dois planos: se virar Premium, muda só aqui (docs/07). */
   'fuel.voice': boolean;

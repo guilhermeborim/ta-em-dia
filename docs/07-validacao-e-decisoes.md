@@ -348,6 +348,28 @@ Sem frame no Figma (cartão da localização, chips "Trocar" e "Usar localizaç�
 - [ ] Fonte grande e TalkBack: cartão, chips e linha da média legíveis; chips com toque ≥ 44 pt.
 - [ ] iOS (quando houver build): pedido "durante o uso" em português; nenhum pedido de "sempre" nem de movimento.
 
+### 2.40 Aviso ao chegar no posto (C7, PR #79)
+
+Sem frame no Figma (interruptor e telas que explicam as permissões). Dependências nativas: `expo-task-manager` (nova) e o "sempre" do `expo-location` (`ACCESS_BACKGROUND_LOCATION` no Android): exige development build novo; num build antigo o interruptor não aparece. No iPhone o aviso ainda não existe (sem build, os avisos locais não funcionam). Nenhum emulador estava aberto: nada foi visto rodando. **Só Premium** (decisão do dono, 26/10/2026): para testar, ligue `'geo.fuelReminder': true` em `DEFAULT_FLAGS.free` (`packages/shared/src/flags.ts`) no seu build. Android com development build, staging no ar e internet:
+
+- [ ] Plano grátis, flag padrão: o interruptor "Aviso ao chegar no posto" não aparece em Configurações.
+- [ ] Configurações → Abastecimento: "Aviso ao chegar no posto" aparece desligado. Num build sem `expo-task-manager`, não aparece.
+- [ ] Ligar sem o "sempre": abre a tela "Aviso ao chegar no posto" (ilustração com o exemplo do aviso, quatro itens e "Continuar"/"Agora não"). "Agora não" volta e o interruptor fica desligado.
+- [ ] "Continuar": pede o "durante o uso" (se ainda não foi dado no Abastecer); depois a tela "Permita a localização o tempo todo"; "Continuar" abre a página do Android; escolher "Permitir o tempo todo" e voltar: o aviso liga, pede as notificações se ainda não foram dadas e volta a Configurações com o interruptor ligado.
+- [ ] Recusar o "sempre" (ou "durante o uso") até o sistema não perguntar mais: tela "O aviso precisa da localização" com "Abrir ajustes" (abre os ajustes do app).
+- [ ] Notificações desativadas: depois de ligar, tela "Ative as notificações" com "Abrir ajustes".
+- [ ] No posto (um já usado ou perto de casa), com o app fechado (em segundo plano), parar ~2 min: chega "Abastecendo no Nome · Rua? Registre agora.". Tocar abre o Novo abastecimento com o posto sugerido pela localização.
+- [ ] Passar pelo posto sem parar: nenhum aviso. Anotar se a saída da geofence demora no Android e o aviso chega mesmo assim (falso aviso).
+- [ ] Voltar ao mesmo posto em menos de 12 h: nenhum aviso; outro posto avisa. Depois de 12 h, o mesmo posto avisa de novo.
+- [ ] Com abastecimento registrado hoje: nenhum aviso. Registrar o abastecimento nos 2 min depois de chegar: o aviso não chega.
+- [ ] Viajar (mais de ~5 km): os postos da região nova avisam sem abrir o app (a troca é feita ao sair da área).
+- [ ] App encerrado (deslizado dos recentes) e celular reiniciado: conferir se o aviso ainda chega (a documentação do `expo-location` diz que o Android não reabre o app encerrado para geofence; depois de reiniciar, as geofences voltam quando o app abre). Ver 3.40.
+- [ ] Desligar o interruptor: nenhum aviso mais, inclusive o que ia sair. Tirar o "sempre" nos ajustes do Android e abrir o app: nada quebra e nenhum aviso chega.
+- [ ] Bateria: um dia com o aviso ligado; o consumo do app nos ajustes do Android fica baixo.
+- [ ] Logs da API (Render): só chamadas a `/v1/places` de regiões novas; nenhuma coordenada.
+- [ ] Fonte grande e TalkBack: as telas do aviso rolam sem cortar; botões com toque ≥ 44 pt.
+- [ ] Play Console: declaração de localização em segundo plano com o vídeo (até 30 s) da tela que explica, do pedido e do aviso; Data safety com localização aproximada e precisa. O manifest passa a pedir `ACCESS_BACKGROUND_LOCATION`.
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
@@ -508,3 +530,18 @@ Código puro em `shared`, sem tela; nada a validar no aparelho. O que o reconhec
 - **`station_id` sem chave estrangeira** (no SQLite e no Postgres): o abastecimento pode chegar antes do posto no pull. Recomendação: manter.
 - **Sem tela "Seus postos":** não dá para renomear nem excluir um posto; o posto errado se corrige editando o abastecimento. Recomendação: fazer quando houver pedido.
 - **Dependência nativa nova:** `expo-location` (do Expo), só "durante o uso" (sem "sempre", sem movimento, sem serviço em primeiro plano). O C7 acrescenta o "sempre". Recomendação: manter.
+
+### 3.40 Aviso ao chegar no posto: escolhas que fiz (C7)
+
+- **Telas sem frame no Figma:** o interruptor "Aviso ao chegar no posto" (Configurações, grupo Abastecimento) e as telas `/configuracoes/aviso-no-posto` (o que é, o "sempre", a recusa e as notificações), no estilo da tela 6 (permissão de notificações), com o ícone de pino e o exemplo do aviso. O Figma só tem o item na tela 21 (Premium em breve). Recomendação: pedir os frames ao designer.
+- **Textos meus:** "Aviso ao chegar no posto", "Lembra de registrar quando você para num posto", "Quando você para uns 2 minutos num posto, o app lembra de registrar o abastecimento.", os quatro itens (localização com o app fechado que não sai do celular, bateria, 12 horas e "já registrou hoje", desligar em Configurações), "Permita a localização o tempo todo" (texto do Android e do iPhone), "O aviso precisa da localização", "Ative as notificações", "Aviso indisponível", o aviso "Abastecendo no Shell · Av. da Pista? Registre agora." (título "Tá em Dia") e os pedidos do iPhone no `app.config.ts` (o "durante o uso" agora cita o aviso). Recomendação: revisar junto com a Política de Privacidade; o Google exige que a primeira tela ("prominent disclosure") diga que a localização é usada com o app fechado.
+- **19 postos + 1 região da área**, não 20 postos: o iOS aceita 20 regiões por app e a área (5 km) é o que troca os postos quando a pessoa viaja. Alternativa: 20 postos e trocar só ao abrir o app. Recomendação: manter.
+- **"Mais usados ou próximos":** primeiro os já usados (do mais usado), depois os mais perto, todos a até 10 km. Quem tem muitos postos usados perto pode não ter vigiado um posto novo do lado. Alternativa: metade usados, metade perto. Recomendação: manter.
+- **"~2 min parado" é "2 min dentro dos 150 m":** as geofences do `expo-location` só têm entrar e sair; o app agenda o aviso ao entrar e cancela se sair antes. Trânsito parado ao lado de um posto por 2 min também avisa, e no Android a saída pode chegar atrasada. Alternativa: conferir a velocidade com uma leitura de GPS ao fim dos 2 min (gasta mais e no Android pede serviço em primeiro plano). Recomendação: manter e ver no uso (2.40).
+- **Regras:** "abastecimento hoje" é qualquer veículo, no fuso do aparelho; as 12 h contam da hora do aviso; aviso cancelado (saiu antes) não conta. Recomendação: manter.
+- **O que fica no aparelho:** o centro da área é o centro da célula de ~5 km (não a posição), então a troca pode acontecer antes de andar 5 km; a hora do último aviso por posto fica só pelas últimas 12 h; nada sincroniza (`docs/05`). Recomendação: manter.
+- **Troca dos postos ao abrir o app** a cada 6 h (ou se as geofences não estão ligadas, ex.: depois de reiniciar o celular). Recomendação: manter.
+- **Android com o app encerrado ou depois de reiniciar:** segundo a documentação do `expo-location`, o Android não reabre o app encerrado para a geofence, e o sistema apaga as geofences ao reiniciar (voltam quando o app abre). Alternativa: código nativo para registrar de novo no boot (fora do Expo). Recomendação: ver no aparelho (2.40) antes de decidir.
+- **iPhone:** o interruptor fica escondido enquanto não houver development build no iOS (`scheduler.ios.ts` não agenda avisos). Quando houver, apagar os arquivos `.ios.ts` de `core/notifications` liga o aviso também lá; o iOS reporta o estado inicial das regiões ao registrar, então quem liga o aviso dentro de um posto pode receber um aviso logo (as regras valem). Recomendação: manter.
+- **Plano B se as lojas recusarem o "sempre":** desligar a flag (o interruptor some) e, para o Google, tirar `isAndroidBackgroundLocationEnabled` do `app.config.ts` (o manifest com `ACCESS_BACKGROUND_LOCATION` já exige a declaração, mesmo com o aviso desligado). As alternativas do `docs/03` (lembrete só com o app aberto ou notificação periódica "Abasteceu esta semana?") não foram feitas. Recomendação: só decidir se recusarem.
+- **Dependência nativa nova:** `expo-task-manager` (do Expo, gratuita); sem `UIBackgroundModes: location` e sem serviço em primeiro plano. Recomendação: manter.
