@@ -51,6 +51,16 @@ const config: ExpoConfig = {
     'expo-notifications',
     'expo-updates',
     'expo-apple-authentication',
+    // "Falar" na tela Abastecer: microfone e reconhecimento de fala do sistema (docs/05).
+    [
+      'expo-speech-recognition',
+      {
+        microphonePermission:
+          'O Tá em Dia usa o microfone só quando você toca em Falar, para registrar o abastecimento pela voz.',
+        speechRecognitionPermission:
+          'O que você fala vai ao reconhecimento de fala da Apple para virar texto. O Tá em Dia não guarda o áudio.',
+      },
+    ],
     ...(googleIosUrlScheme
       ? [
           ['@react-native-google-signin/google-signin', { iosUrlScheme: googleIosUrlScheme }] as [

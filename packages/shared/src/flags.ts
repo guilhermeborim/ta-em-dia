@@ -14,6 +14,8 @@ export interface FeatureFlags {
   'reports.advanced': boolean;
   'export.pdf': boolean;
   'geo.fuelReminder': boolean;
+  /** Botão "Falar" no abastecimento. Ligada nos dois planos: se virar Premium, muda só aqui (docs/07). */
+  'fuel.voice': boolean;
   /** Valor do veículo na tabela FIPE (Fase 2). Desligada: o app mostra o cartão "Em breve". */
   'fipe.value': boolean;
   'attachments.max': number | null;
@@ -29,6 +31,7 @@ export const DEFAULT_FLAGS: Record<Plan, FeatureFlags> = {
     'reports.advanced': true,
     'export.pdf': false,
     'geo.fuelReminder': false,
+    'fuel.voice': true,
     'fipe.value': false,
     'attachments.max': null,
   },
@@ -39,6 +42,7 @@ export const DEFAULT_FLAGS: Record<Plan, FeatureFlags> = {
     'reports.advanced': true,
     'export.pdf': true,
     'geo.fuelReminder': true,
+    'fuel.voice': true,
     'fipe.value': false,
     'attachments.max': null,
   },

@@ -31,6 +31,14 @@ describe('FIPE', () => {
   });
 });
 
+describe('voz no abastecimento', () => {
+  it('fica ligada nos dois planos e a API pode desligar', () => {
+    expect(DEFAULT_FLAGS.free['fuel.voice']).toBe(true);
+    expect(DEFAULT_FLAGS.premium['fuel.voice']).toBe(true);
+    expect(flagsFor('free', { 'fuel.voice': false })['fuel.voice']).toBe(false);
+  });
+});
+
 describe('plano grátis', () => {
   it('tem 1 veículo; o premium não tem limite', () => {
     expect(DEFAULT_FLAGS.free['vehicles.max']).toBe(1);

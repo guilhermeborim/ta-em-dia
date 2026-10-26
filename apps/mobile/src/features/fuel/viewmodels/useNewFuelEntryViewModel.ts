@@ -16,6 +16,7 @@ import {
   listStationNames,
   updateFuelRecord,
 } from '../../../core/fuel';
+import { useFlag } from '../../../core/flags/useFlag';
 import { refreshReminders } from '../../../core/reminders';
 import {
   buildFuelDraftInput,
@@ -32,11 +33,12 @@ import {
   type FuelFormErrors,
   type FuelType,
 } from '../models/fuelForm';
+import { useFuelVoice } from './useFuelVoice';
 
 /**
  * ViewModel do Novo abastecimento: sugestões, cálculo do terceiro valor, validação e gravação local.
  * Aberto com `id` na rota, é o "Completar abastecimento": carrega o rascunho e, ao salvar, ele vira
- * um abastecimento completo (mesmo id).
+ * um abastecimento completo (mesmo id). O botão "Falar" (só no Novo) preenche e salva pela voz.
  */
 export function useNewFuelEntryViewModel() {
   const db = useDb();
@@ -53,6 +55,9 @@ export function useNewFuelEntryViewModel() {
   // `null` = hoje (a data de agora, na hora de salvar); a pessoa troca pelo calendário.
   const [pickedDate, setPickedDate] = useState<Date | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  // Registro que a voz salvou e a pessoa pediu para editar: salvar atualiza esse mesmo id.
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const voiceEnabled = useFlag('fuel.voice');
 
   useEffect(() => {
     let active = true;
@@ -104,7 +109,7 @@ export function useNewFuelEntryViewModel() {
       [field]: sanitizeAmount(field, text),
       amountOrder: touchAmount(prev.amountOrder, field),
     }));
-    setErrors((prev) => ({ ...prev, amounts: undefined }));
+    setErrors((prev) => ({ ...prev, amounts: undefined, pricePerLiter: undefined }));
   }, []);
 
   // Rascunho aberto mantém a data em que foi criado, a menos que a pessoa escolha outra.
@@ -124,8 +129,9 @@ export function useNewFuelEntryViewModel() {
     setBusy(true);
     try {
       let id: string;
-      if (draft) {
-        id = draft.id;
+      const existingId = draft?.id ?? savedId;
+      if (existingId) {
+        id = existingId;
         const saved = await updateFuelRecord(db, { ...result.value, id });
         // O rascunho foi excluído por outro caminho (ex.: sync): nada a completar.
         if (!saved) {
@@ -141,7 +147,7 @@ export function useNewFuelEntryViewModel() {
     } finally {
       setBusy(false);
     }
-  }, [context, dateToSave, db, draft, form, router, stations]);
+  }, [context, dateToSave, db, draft, form, router, savedId, stations]);
 
   /** Guarda o que foi preenchido como rascunho "Incompleto", para completar depois. */
   const saveDraft = useCallback(async () => {
@@ -164,15 +170,34 @@ export function useNewFuelEntryViewModel() {
     }
     setBusy(true);
     try {
-      if (draft) await updateFuelRecord(db, { ...result.value, id: draft.id, status: 'draft' });
-      else await addFuelDraft(db, result.value);
+      const existingId = draft?.id ?? savedId;
+      if (existingId) {
+        await updateFuelRecord(db, { ...result.value, id: existingId, status: 'draft' });
+      } else await addFuelDraft(db, result.value);
       // O lembrete das 20h depende do rascunho.
       void refreshReminders(db);
       router.back();
     } finally {
       setBusy(false);
     }
-  }, [context, dateToSave, db, draft, form, kmTouched, router, save, stations]);
+  }, [context, dateToSave, db, draft, form, kmTouched, router, save, savedId, stations]);
+
+  const voice = useFuelVoice({
+    db,
+    context,
+    stations,
+    form,
+    kmTouched,
+    setForm,
+    setKmTouched,
+    setErrors,
+    date: dateToSave,
+    onDone: ({ id, draft: isDraft }) => {
+      if (isDraft) router.back();
+      else router.dismissTo({ pathname: '/', params: { saved: id } });
+    },
+    onEdit: setSavedId,
+  });
 
   return {
     title: draft ? 'Completar abastecimento' : 'Novo abastecimento',
@@ -215,5 +240,8 @@ export function useNewFuelEntryViewModel() {
     save,
     saveDraft,
     isCompleting: draft !== null,
+    /** "Falar" só no Novo abastecimento, antes de a voz ter salvo algo para editar. */
+    canTalk: voiceEnabled && draft === null && savedId === null,
+    voice,
   };
 }

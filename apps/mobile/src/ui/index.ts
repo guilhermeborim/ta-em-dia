@@ -50,6 +50,7 @@ export { SegmentedControl } from './components/SegmentedControl';
 export { ProgressSheet } from './components/ProgressSheet';
 export { ProgressRing } from './components/ProgressRing';
 export { ReorderableList } from './components/ReorderableList';
+export { SpeechCard, type SpeechCardAction, type SpeechCardTone } from './components/SpeechCard';
 export { SocialButton } from './components/SocialButton';
 export { StatTile } from './components/StatTile';
 export { SummaryCard } from './components/SummaryCard';

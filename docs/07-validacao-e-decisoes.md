@@ -298,6 +298,25 @@ Sem frame no Figma (é uma notificação). Android com development build, notifi
 - [ ] Sem permissão de notificações: nada é agendado e nenhum pedido aparece.
 - [ ] Os outros avisos (manutenção, documentos, atualizar o km) continuam chegando.
 
+### 2.35 Falar o abastecimento (C4, PR #73)
+
+Sem frame no Figma (botão Falar, cartão da voz, aviso do áudio, pergunta, resumo de 5 s). Dependência nativa nova: `expo-speech-recognition` (exige development build; no Expo Go o "Falar" diz que a fala não está disponível). Nenhum emulador estava aberto: nada foi visto rodando. Android 13+ com development build e internet:
+
+- [ ] Primeiro toque em **Falar**: aparece o cartão "Antes de falar"; "Agora não" fecha; "Continuar" pede o microfone com o texto em português e começa a ouvir. No segundo uso, o cartão não volta.
+- [ ] Recusar o microfone: cartão "Sem acesso ao microfone..." e o formulário segue normal.
+- [ ] Ouvindo: o texto aparece enquanto fala; 2 s de silêncio encerram sozinho; **Pronto** encerra; **Cancelar** volta sem mudar nada.
+- [ ] Com o posto escolhido antes (chip), falar "150 reais, 25 litros, km [último + 300], encheu": salva sozinho, cartão verde "Abastecimento salvo" com "Shell · R$ 150,00 · 25 L · 45.300 km"; após 5 s volta ao Início com o toast do km/l.
+- [ ] **Desfazer** no resumo: o abastecimento some (lista, Início) e o formulário fica preenchido. **Editar**: fica na tela, o botão Falar some, mudar um campo e salvar atualiza o mesmo abastecimento (não cria outro).
+- [ ] Sem posto: salva como rascunho ("Salvo como rascunho · Falta o posto"), volta após 5 s e o rascunho aparece "Incompleto"; às 20h chega o lembrete (C2).
+- [ ] Sem falar o km: rascunho "Falta o km" (o km sugerido não conta).
+- [ ] Falar "50": pergunta "50 é o valor ou os litros?" com os botões; responder continua o fluxo.
+- [ ] Km menor que o último ou "150 reais 4 litros": campo em vermelho com a mensagem, cartão "Confira os campos em vermelho e salve" e nada salvo.
+- [ ] Modo avião: cartão "Falar precisa de internet. Preencha abaixo."
+- [ ] Aparelho sem o app Google / serviço "Reconhecimento e síntese de fala": "A fala não está disponível neste aparelho".
+- [ ] Barulho de posto (ou rádio ligado): ver o que o reconhecimento devolve e se o interpretador acerta; anotar frases que falharam para novos testes em `shared`.
+- [ ] Fonte grande: cartão e botões da voz legíveis, botões ≥ 44 pt; leitor de tela anuncia o texto ao vivo.
+- [ ] iOS (quando houver development build): pedido de microfone e de reconhecimento de fala em português, Ditado/Siri desligado mostra "não está disponível".
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
@@ -402,7 +421,7 @@ Alternativa: enviar a coordenada arredondada (~1 km). Recomendação: manter só
 - **Cache da API (`places`):** tabela `place_cells` no Postgres (geohash de 5 caracteres, lista de postos, data da busca), validade de 30 dias, em vez de memória (o Render grátis dorme e perde a memória). Alternativa: cache em memória. Recomendação: manter.
 - **Rota `GET /v1/places?geohash=` exige token** (inclui o anônimo), com limite de chamadas. Alternativa: pública. Recomendação: manter.
 - **Lembrete no posto (C7) continua na tabela da Fase 2 do roadmap**, com nota de que é o item C7 do backlog. Alternativa: mover para o MVP. Recomendação: manter até as lojas aprovarem o "sempre".
-- **Voz sem flag de Premium por enquanto.** Se virar Premium, nasce atrás de flag (regra do projeto). Decidir antes do C4.
+- **Voz sem Premium por enquanto.** O C4 pôs o botão atrás da flag `fuel.voice`, ligada nos dois planos (não decide nada: só deixa a troca a um passo). Falta decidir se vira Premium. Recomendação: grátis, porque é o que resolve a dor do posto.
 
 ### 3.33 Rascunho de abastecimento: escolhas que fiz (C1)
 
@@ -419,6 +438,20 @@ Alternativa: enviar a coordenada arredondada (~1 km). Recomendação: manter só
 - **Sem interruptor em Configurações:** o lembrete segue só a permissão de notificações. Os outros avisos têm interruptor (manutenção, documentos, km). Alternativa: um interruptor "Lembrar de completar abastecimentos" (sem frame no Figma). Recomendação: manter até alguém reclamar.
 - **O dia conta do `created_at` do rascunho**, não da data do abastecimento (que pode ser outro dia). Num segundo aparelho, o rascunho que chega pelo sync ganha o `created_at` do momento do pull, então ele também lembra (às 20h do dia da chegada); completar em qualquer aparelho tira os avisos dos dois depois do sync. Alternativa: sincronizar a data de criação. Recomendação: manter.
 - **Todos os veículos ativos** entram (não só o do Início), como os prazos de documentos. Rascunho de veículo arquivado não avisa.
+
+### 3.36 Falar o abastecimento: escolhas que fiz (C4)
+
+- **Dependência nativa nova:** `expo-speech-recognition` 58 (biblioteca da comunidade, não do time do Expo; o Expo não tem módulo próprio de reconhecimento de fala). Exige development build; sem ele o botão avisa que a fala não está disponível. Alternativa: nenhuma grátis sem módulo nativo. Recomendação: manter.
+- **Telas sem frame no Figma:** botão "Falar" (variante `accent`, com ícone de microfone, no topo do formulário), cartão da voz (`SpeechCard`, novo no catálogo) para aviso, ouvindo, pergunta, resumo, inválido e falha. Recomendação: pedir os frames ao designer com o fluxo 2b.
+- **Textos meus:** "Antes de falar" e o aviso do áudio, "Ouvindo…", o exemplo de frase, "Pronto", "Cancelar", "Confira os campos em vermelho e salve", "Salvo como rascunho · Falta o posto", "Falar de novo", as mensagens de falha ("Falar precisa de internet...", "Não ouvi nada...", "Não entendi os valores...", "Sem acesso ao microfone...") e os pedidos do sistema em `app.config.ts`. Recomendação: revisar junto com a Política de Privacidade.
+- **Tanque cheio não dito vale "não":** a regra de completo do C1 exige sim ou não, e o formulário já vem desligado. Sem isso, quase toda fala viraria rascunho. Alternativa: perguntar "Encheu o tanque?". Recomendação: manter.
+- **Km sugerido não conta:** sem km falado ou digitado, vira rascunho "Falta o km" (como o fluxo 2b descreve). Alternativa: aceitar o sugerido. Recomendação: manter.
+- **O posto não é falado:** vem do formulário (chip antes de falar) até o C6; sem posto, a fala vira rascunho. Alternativa: entender "no Shell" na frase. Recomendação: esperar o C6.
+- **Desfazer deixa o formulário preenchido** (para corrigir ou falar de novo) e **Editar fica na tela** atualizando o mesmo registro, já que abastecimento completo ainda não tem tela de edição. Recomendação: manter.
+- **"Falar" só no Novo abastecimento**, não no Completar rascunho (salvar sozinho sobre um rascunho existente é outro fluxo). Recomendação: manter.
+- **Validações só na voz:** o formulário manual continua aceitando km menor (abastecimento antigo). O item 3.33 sobre isso segue em aberto.
+- **Botão "Salvar como rascunho" (3.33):** ficou, agora ao lado do Falar. Decidir com o botão na tela.
+- **Aviso do áudio guardado só no aparelho** (`app_settings`, chave `fuel.voice_notice_seen`): reinstalar mostra de novo. Recomendação: manter.
 
 ### 3.35 Interpretador de fala: escolhas que fiz (C3)
 
