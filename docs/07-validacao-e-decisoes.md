@@ -325,7 +325,7 @@ Sem tela; o app só usa no C6. Em staging, depois do deploy (a migration `place_
 - [ ] Os logs do Render não mostram o geohash (nem na linha do pedido nem no aviso de falha do Overpass).
 - [ ] Primeira chamada de uma célula com o host acordando do sono: ver se cabe no tempo de espera do app (Overpass leva de 1 a 10 s).
 
-### 2.38 Posto pela localização (C6, PR #N)
+### 2.38 Posto pela localização (C6, PR #78)
 
 Sem frame no Figma (cartão da localização, chips "Trocar" e "Usar localização", linha da média). Dependência nativa nova: `expo-location` (exige development build novo; num build antigo a localização só fica indisponível). Nenhum emulador estava aberto: nada foi visto rodando. Android com development build, staging no ar (deploy da API com a migration `stations`) e internet:
 
