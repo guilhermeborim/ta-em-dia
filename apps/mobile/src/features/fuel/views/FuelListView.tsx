@@ -92,6 +92,8 @@ export function FuelListView() {
                     details={item.details}
                     total={item.total}
                     kmPerLiter={item.kmPerLiter}
+                    incomplete={item.incomplete}
+                    onPress={item.incomplete ? () => vm.openDraft(item.id) : undefined}
                   />
                 ))}
               </View>

@@ -102,6 +102,8 @@ export function HistoryView() {
                   title={item.title}
                   details={item.details}
                   value={item.value}
+                  incomplete={item.incomplete}
+                  onPress={item.incomplete ? () => vm.openDraft(item.id) : undefined}
                   last={sectionIndex === lastSection && index === section.items.length - 1}
                 />
               ))}

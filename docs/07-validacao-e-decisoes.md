@@ -274,6 +274,18 @@ Precisa do login com Google funcionando e da API no ar com `DELETE /v1/auth/acco
 - [ ] Chamar de novo com o mesmo token responde 200 (idempotente).
 - [ ] Sem token: 401.
 
+### 2.33 Rascunho de abastecimento (C1, PR #69)
+
+Sem frame no Figma. No Android, com um aparelho que já tem abastecimentos (atualizando de uma versão anterior):
+
+- [ ] **Migration 9** (recria `fuel_entries`): depois de atualizar, os abastecimentos antigos continuam na lista, no Histórico e no Início, com os mesmos km/l, médias e totais.
+- [ ] Novo abastecimento → preencher só posto e total → **Salvar como rascunho**: a tela fecha e o item aparece na aba Abastecer com a etiqueta âmbar "Incompleto", total "—" (ou o valor) e sem km/l; no mês, o resumo mostra "N incompleto" à parte do total.
+- [ ] O mesmo rascunho aparece no Histórico com "Incompleto". Os totais do Início, os relatórios, o km/l e o "km atual" **não** mudam por causa dele.
+- [ ] Tocar no rascunho (Abastecer ou Histórico) abre "Completar abastecimento" com os campos preenchidos, o km sugerido e a data original. Preencher o que falta e salvar: ele vira abastecimento comum (sem etiqueta), o Início mostra o toast e o resumo conta o gasto.
+- [ ] Salvar como rascunho sem nada preenchido mostra "Preencha ao menos um dado para guardar o rascunho". Com tudo preenchido, o botão salva como abastecimento completo.
+- [ ] "Incompleto" legível em fonte grande, nos dois cartões (lista e Histórico); alvo de toque do cartão ≥ 44 pt.
+- [ ] Com sync ligado (conta com login): o rascunho aparece no outro aparelho e, depois de completo, deixa de ser rascunho lá também.
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
@@ -286,7 +298,7 @@ Com um aparelho que já tem dados da versão anterior ao PR #28:
 - [ ] Atualizar km funciona num veículo antigo (migration 6, `odometer_readings`).
 - [ ] Prazos funcionam (migration 7, `documents`).
 - [ ] **Moto (migration 8, recria `vehicles`)**: com veículos antigos (um carro e uma moto cadastrados antes), depois de atualizar nada some: mesma ordem, placa, km, abastecimentos, serviços e prazos; a moto antiga passa a mostrar o ícone de moto e "Tipo: Moto". Cadastre uma moto nova (Carro/Moto no formulário) e confira o ícone no Início (seletor), em Meus veículos e no detalhe. Confira também o ícone no Android e no iOS, em fonte grande.
-- [ ] Voltar para a versão anterior do app com o banco novo não quebra (as migrations só adicionam colunas e tabelas). A migration 8 recria uma tabela e grava `motorcycle`: voltar à versão anterior mostra a moto com ícone de carro, e editar essa moto na versão antiga falha. Só vale para quem testou o app antes do lançamento.
+- [ ] Voltar para a versão anterior do app com o banco novo não quebra (as migrations só adicionam colunas e tabelas, fora as que recriam `vehicles` e `fuel_entries`). A migration 8 recria uma tabela e grava `motorcycle`: voltar à versão anterior mostra a moto com ícone de carro, e editar essa moto na versão antiga falha. Só vale para quem testou o app antes do lançamento.
 
 ### 2.14 API: segurança da conta anônima
 
@@ -390,3 +402,12 @@ Alternativa: enviar a coordenada arredondada (~1 km). Recomendação: manter só
 - **Rota `GET /v1/places?geohash=` exige token** (inclui o anônimo), com limite de chamadas. Alternativa: pública. Recomendação: manter.
 - **Lembrete no posto (C7) continua na tabela da Fase 2 do roadmap**, com nota de que é o item C7 do backlog. Alternativa: mover para o MVP. Recomendação: manter até as lojas aprovarem o "sempre".
 - **Voz sem flag de Premium por enquanto.** Se virar Premium, nasce atrás de flag (regra do projeto). Decidir antes do C4.
+
+### 3.33 Rascunho de abastecimento: escolhas que fiz (C1)
+
+- **Botão "Salvar como rascunho" no formulário (sem frame no Figma):** o item C1 só pedia a etiqueta e o completar pelo formulário, mas sem um jeito de criar rascunho o recurso não se testa antes da voz (C4). Botão `ghost` abaixo de "Salvar abastecimento". Alternativa: tirar o botão e criar rascunho só pela voz. Recomendação: manter até o C4 e decidir com o botão da voz na tela.
+- **Etiqueta e textos meus:** "Incompleto" (âmbar, `StatusPill`), "Completar abastecimento", "Salvar como rascunho", "Faltam dados", "N incompleto(s)" no resumo do mês e "Preencha ao menos um dado para guardar o rascunho". Recomendação: manter.
+- **Rascunho só aparece em "Tudo"** na lista de abastecimentos (filtros de combustível e "Só tanque cheio" o escondem) e fica fora do total e da contagem do mês. Alternativa: mostrar também nos filtros. Recomendação: manter.
+- **Sem excluir rascunho pela tela:** quem não quer um rascunho precisa completá-lo; abastecimento completo também não tem exclusão na tela hoje. A exclusão existe no Model (`deleteFuelEntry`). Alternativa: botão "Excluir rascunho" com confirmação no formulário. Recomendação: fazer num PR pequeno junto da edição de abastecimento.
+- **Validações novas (km, faixa de R$ 2 a R$ 12, 2%) não valem no formulário manual:** estão em `shared` (`fuelEntryIssues`) e entram com a voz (C4), para não mudar o que o formulário aceita hoje (por exemplo, registrar um abastecimento antigo com km menor). Alternativa: aplicar já no formulário manual como aviso. Recomendação: manter até o C4.
+- **Migration 9 recria `fuel_entries`:** o SQLite não tira `NOT NULL`, então o item "migration que só adiciona" virou "recria a tabela com os mesmos dados" (como a 8 fez com `vehicles`). No Postgres, `DROP NOT NULL`. Alternativa: gravar 0 nas colunas numéricas do rascunho e só adicionar `status`. Recomendação: manter; zeros misturariam rascunho com dado de verdade em toda consulta.

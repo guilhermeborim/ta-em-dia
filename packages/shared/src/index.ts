@@ -2,6 +2,7 @@ export * from './auth';
 export * from './calculations';
 export * from './documents';
 export * from './flags';
+export * from './fuelDraft';
 export * from './maintenance';
 export * from './odometer';
 export * from './reports';

@@ -16,17 +16,27 @@ interface FuelItemProps {
   total: string;
   /** Média do trecho. Ex.: "13,1 km/l". Omita quando não der para calcular. */
   kmPerLiter?: string;
+  /** Rascunho: mostra a etiqueta "Incompleto" sob os detalhes. */
+  incomplete?: boolean;
   /** Sem cantos arredondados: para itens empilhados dentro de um grupo arredondado. */
   flat?: boolean;
   onPress?: () => void;
 }
 
 /** Item da lista de abastecimentos. */
-export function FuelItem({ title, details, total, kmPerLiter, flat, onPress }: FuelItemProps) {
+export function FuelItem({
+  title,
+  details,
+  total,
+  kmPerLiter,
+  incomplete,
+  flat,
+  onPress,
+}: FuelItemProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${title}, ${total}`}
+      accessibilityLabel={incomplete ? `${title}, incompleto, ${total}` : `${title}, ${total}`}
       onPress={onPress}
       style={[styles.row, styles.fuel, flat && styles.flat]}
     >
@@ -44,6 +54,7 @@ export function FuelItem({ title, details, total, kmPerLiter, flat, onPress }: F
         <Text variant="small" color="text2" numberOfLines={1}>
           {details}
         </Text>
+        {incomplete ? <StatusPill tone="warning" label="Incompleto" /> : null}
       </View>
       <View style={styles.right}>
         <Text variant="bodyStrong">{total}</Text>
@@ -114,13 +125,23 @@ interface TimelineItemProps {
   details: string;
   /** Ex.: "R$ 229,10". Omita se não houve valor informado. */
   value?: string;
+  /** Rascunho: mostra a etiqueta "Incompleto" sob os detalhes. */
+  incomplete?: boolean;
   /** Último da linha do tempo: sem o traço que liga ao próximo. */
   last?: boolean;
   onPress?: () => void;
 }
 
 /** Item da linha do tempo (Histórico): ícone redondo por tipo, traço e cartão com o valor. */
-export function TimelineItem({ kind, title, details, value, last, onPress }: TimelineItemProps) {
+export function TimelineItem({
+  kind,
+  title,
+  details,
+  value,
+  incomplete,
+  last,
+  onPress,
+}: TimelineItemProps) {
   const { icon, background, color } = timelineKinds[kind];
   return (
     <View style={styles.timeline}>
@@ -142,6 +163,7 @@ export function TimelineItem({ kind, title, details, value, last, onPress }: Tim
           <Text variant="small" color="text2">
             {details}
           </Text>
+          {incomplete ? <StatusPill tone="warning" label="Incompleto" /> : null}
         </View>
         {value ? <Text variant="bodyStrong">{value}</Text> : null}
       </Pressable>

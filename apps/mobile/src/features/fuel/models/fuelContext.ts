@@ -21,7 +21,7 @@ export async function loadFuelFormContext(db: Db): Promise<FuelFormContext> {
   const last = await db.getFirstAsync<{ fuel_type: FuelType }>(
     `SELECT fuel_type
        FROM fuel_entries
-      WHERE vehicle_id = ? AND deleted_at IS NULL
+      WHERE vehicle_id = ? AND deleted_at IS NULL AND status = 'complete'
       ORDER BY date DESC, km DESC
       LIMIT 1`,
     vehicle.id,

@@ -3,7 +3,15 @@ import { addDocument, deleteDocument, listDocuments } from '../../documents';
 import { migrate } from '../../db/migrations';
 import { createTestDb } from '../../db/testing/testDb';
 import type { Db } from '../../db';
-import { addFuelEntry, deleteFuelEntry, listFuelEntries } from '../../fuel';
+import {
+  addFuelDraft,
+  addFuelEntry,
+  deleteFuelEntry,
+  getFuelRecord,
+  listFuelDrafts,
+  listFuelEntries,
+  updateFuelRecord,
+} from '../../fuel';
 import { addManualReading } from '../../odometer';
 import { registerMaintenance } from '../../../features/maintenance/models/register.repository';
 import {
@@ -269,6 +277,47 @@ describe('dois aparelhos', () => {
     expect(result.outcome).toBe('done');
     expect((await listVehicles(b))[0]).toMatchObject({ name: 'Gol G6', model: 'G6' });
     expect(await listFuelEntries(b, GOL)).toHaveLength(1);
+  });
+
+  it('rascunho de abastecimento chega ao segundo aparelho e, completo, deixa de ser rascunho', async () => {
+    const server = createFakeServer();
+    const a = await newDevice();
+    const b = await newDevice();
+    await seed(a);
+    const draft = await addFuelDraft(
+      a,
+      { vehicleId: GOL, date: minutes(10), stationName: 'Shell', total: 150 },
+      { now: minutes(10) },
+    );
+    await syncNow(deps(a, server));
+    await syncNow(deps(b, server));
+
+    expect(await listFuelDrafts(b, GOL)).toEqual([draft]);
+    // O rascunho não entra nas contas do aparelho que o recebeu.
+    expect(await listFuelEntries(b, GOL)).toEqual(await listFuelEntries(a, GOL));
+
+    await updateFuelRecord(
+      a,
+      {
+        id: draft.id,
+        vehicleId: GOL,
+        date: draft.date,
+        km: 1500,
+        fuelType: 'gasoline',
+        liters: 25,
+        pricePerLiter: 6,
+        total: 150,
+        fullTank: true,
+        stationName: 'Shell',
+      },
+      minutes(20),
+    );
+    await syncNow(deps(a, server));
+    await syncNow(deps(b, server));
+
+    expect(await listFuelDrafts(b, GOL)).toEqual([]);
+    expect(await getFuelRecord(b, draft.id)).toMatchObject({ km: 1500, liters: 25 });
+    expect(await getFuelRecord(b, draft.id)).not.toHaveProperty('status');
   });
 
   it('edição e exclusão do primeiro chegam ao segundo', async () => {

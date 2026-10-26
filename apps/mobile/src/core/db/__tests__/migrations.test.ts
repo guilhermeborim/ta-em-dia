@@ -58,7 +58,7 @@ describe('migrate', () => {
   it('recria vehicles para aceitar motorcycle sem perder dados nem as chaves estrangeiras', async () => {
     const db = createTestDb();
     // O banco como estava antes da migration da moto.
-    await migrate(db, MIGRATIONS.slice(0, MIGRATIONS.length - 1));
+    await migrate(db, MIGRATIONS.slice(0, 7));
     const at = '2026-10-01T10:00:00.000Z';
     for (const [id, name, type, sort] of [
       ['v1', 'Gol', 'flex', 0],
@@ -137,5 +137,79 @@ describe('migrate', () => {
     ).rejects.toThrow();
     expect(await db.getFirstAsync('PRAGMA foreign_keys')).toEqual({ foreign_keys: 1 });
     expect(await db.getFirstAsync('PRAGMA user_version')).toEqual({ user_version: 0 });
+  });
+  it('recria fuel_entries com status e colunas opcionais sem perder os abastecimentos', async () => {
+    const db = createTestDb();
+    // O banco como estava antes do rascunho de abastecimento.
+    await migrate(db, MIGRATIONS.slice(0, 8));
+    const at = '2026-10-01T10:00:00.000Z';
+    await db.runAsync(
+      `INSERT INTO vehicles (id, name, type, initial_km, created_at, updated_at)
+       VALUES ('v1', 'Gol', 'flex', 0, ?, ?)`,
+      at,
+      at,
+    );
+    await db.runAsync(
+      `INSERT INTO fuel_entries (id, vehicle_id, date, km, fuel_type, liters, price_per_liter, total, full_tank, station_name, created_at, updated_at, version)
+       VALUES ('f1', 'v1', ?, 200, 'gasoline', 10, 6, 60, 1, 'Shell', ?, ?, 7)`,
+      at,
+      at,
+      at,
+    );
+
+    await migrate(db);
+
+    expect(
+      await db.getFirstAsync(
+        'SELECT id, km, liters, full_tank, station_name, version, status FROM fuel_entries',
+      ),
+    ).toEqual({
+      id: 'f1',
+      km: 200,
+      liters: 10,
+      full_tank: 1,
+      station_name: 'Shell',
+      version: 7,
+      status: 'complete',
+    });
+    // Rascunho: só o que se sabe; o resto fica nulo.
+    await db.runAsync(
+      `INSERT INTO fuel_entries (id, vehicle_id, date, station_name, status, created_at, updated_at)
+       VALUES ('f2', 'v1', ?, 'Shell', 'draft', ?, ?)`,
+      at,
+      at,
+      at,
+    );
+    expect(await db.getFirstAsync("SELECT km, total FROM fuel_entries WHERE id = 'f2'")).toEqual({
+      km: null,
+      total: null,
+    });
+    // Sem status informado, o abastecimento é completo; status fora da lista não vale.
+    await db.runAsync(
+      `INSERT INTO fuel_entries (id, vehicle_id, date, created_at, updated_at)
+       VALUES ('f3', 'v1', ?, ?, ?)`,
+      at,
+      at,
+      at,
+    );
+    expect(await db.getFirstAsync("SELECT status FROM fuel_entries WHERE id = 'f3'")).toEqual({
+      status: 'complete',
+    });
+    await expect(
+      db.runAsync(
+        `INSERT INTO fuel_entries (id, vehicle_id, date, status, created_at, updated_at)
+         VALUES ('f4', 'v1', ?, 'outro', ?, ?)`,
+        at,
+        at,
+        at,
+      ),
+    ).rejects.toThrow();
+    // O índice voltou e as chaves estrangeiras valem.
+    expect(
+      await db.getAllAsync(
+        "SELECT name FROM sqlite_master WHERE name = 'idx_fuel_entries_vehicle_date'",
+      ),
+    ).toHaveLength(1);
+    expect(await db.getFirstAsync('PRAGMA foreign_keys')).toEqual({ foreign_keys: 1 });
   });
 });

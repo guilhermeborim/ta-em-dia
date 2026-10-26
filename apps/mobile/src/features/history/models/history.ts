@@ -1,6 +1,7 @@
 import {
   maintenanceLabel,
   segmentKmPerLiter,
+  type FuelDraft,
   type FuelEntry,
   type MaintenanceRecord,
 } from '@ta-em-dia/shared';
@@ -29,6 +30,8 @@ export const historyPeriods: { value: HistoryPeriod; label: string }[] = [
 export interface HistoryData {
   /** Do mais recente ao mais antigo. */
   entries: FuelEntry[];
+  /** Abastecimentos incompletos: entram na linha do tempo com a etiqueta "Incompleto". */
+  drafts?: FuelDraft[];
   records: MaintenanceRecord[];
 }
 
@@ -40,6 +43,8 @@ export interface TimelineEntry {
   details: string;
   /** Ex.: "R$ 229,10". Serviço sem custo informado fica sem valor. */
   value?: string;
+  /** Rascunho de abastecimento: mostra "Incompleto" e abre o formulário para completar. */
+  incomplete?: boolean;
 }
 
 export interface TimelineSection {
@@ -108,6 +113,26 @@ export function buildTimeline(
     });
   }
 
+  if (filter !== 'maintenance') {
+    for (const draft of data.drafts ?? []) {
+      events.push({
+        id: draft.id,
+        kind: 'fuel',
+        title: 'Abastecimento',
+        details: [
+          dayText(draft.date),
+          draft.liters === undefined ? null : `${formatNumber(draft.liters, 1, 2)} L`,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        value: draft.total === undefined ? undefined : formatBRL(draft.total),
+        incomplete: true,
+        date: draft.date,
+        km: draft.km ?? 0,
+      });
+    }
+  }
+
   if (filter !== 'fuel') {
     for (const record of data.records) {
       events.push({
@@ -130,14 +155,18 @@ export function buildTimeline(
     .sort((a, b) => dayNumber(b.date) - dayNumber(a.date) || b.km - a.km);
 
   const sections: TimelineSection[] = [];
-  for (const { date, id, kind, title, details, value } of visible) {
+  for (const { date, id, kind, title, details, value, incomplete } of visible) {
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     let section = sections[sections.length - 1];
     if (section?.key !== key) {
       section = { key, title: `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`, items: [] };
       sections.push(section);
     }
-    section.items.push({ id, kind, title, details, value });
+    section.items.push(
+      incomplete
+        ? { id, kind, title, details, value, incomplete }
+        : { id, kind, title, details, value },
+    );
   }
   return sections;
 }
