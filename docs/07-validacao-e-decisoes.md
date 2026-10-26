@@ -316,6 +316,15 @@ Sem frame no Figma (tela de edição, ação de arrastar, aviso de exclusão). A
 - [ ] Leitor de tela (TalkBack): o registro lê "toque para editar" e oferece a ação "Excluir".
 - [ ] Fonte grande: a ação "Excluir" não corta o texto.
 
+### 2.37 API: postos (`GET /v1/places`, C5, PR #76)
+
+Sem tela; o app só usa no C6. Em staging, depois do deploy (a migration `place_cells` roda no deploy), com um token de "Continuar sem login":
+
+- [ ] `GET /v1/places?geohash=6gyf4` (centro de São Paulo) responde 200 com dezenas de postos (no teste local foram 58) e `fetchedAt` de agora; a segunda chamada responde rápido e com o mesmo `fetchedAt` (veio do cache).
+- [ ] Uma célula sem posto (ex.: `6gx00`, no mar) responde 200 com `places: []` e também fica no cache.
+- [ ] Os logs do Render não mostram o geohash (nem na linha do pedido nem no aviso de falha do Overpass).
+- [ ] Primeira chamada de uma célula com o host acordando do sono: ver se cabe no tempo de espera do app (Overpass leva de 1 a 10 s).
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
