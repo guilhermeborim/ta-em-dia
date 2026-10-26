@@ -98,7 +98,7 @@ São 22 telas, agrupadas por área.
 2. O usuário fala do jeito que quiser: "abasteci 150 reais, 25 litros, 45 mil e 300, encheu". Enquanto ouve, o microfone vira três pontinhos animados; o texto falado não aparece na tela. Tocar nos pontinhos para de ouvir; 2 s de silêncio também encerram.
 3. Se estiver completo e válido, o app **salva sozinho** e mostra por 5 s o resumo ("Shell · R$ 150,00 · 25 L · 45.300 km") com **Desfazer** (apaga e deixa o formulário preenchido) e **Editar** (fica na tela; salvar atualiza o mesmo registro). Depois dos 5 s volta ao Início com o toast de sempre.
 4. Se algo for ambíguo, o app pergunta ("50 é o valor ou os litros?") com botões de resposta.
-5. Se faltar dado (por exemplo, o km; o km sugerido não conta, só o falado ou digitado), salva como **rascunho** "Incompleto" e avisa ("Salvo como rascunho · Falta o km"), também com Desfazer e Editar; às 20h chega o lembrete "Falta o km do abastecimento de hoje no Shell", que abre o rascunho para completar.
+5. Se faltar dado (por exemplo, o km; o km sugerido não conta, só o falado ou digitado), salva como **rascunho** "Incompleto" e avisa ("Salvo como rascunho · Falta o km"), **a tela não fecha**: o cartão fica com **Desfazer** e **Completar**, e o formulário preenchido continua para a pessoa informar o que falta (salvar atualiza o mesmo rascunho, sem criar outro); às 20h chega o lembrete "Falta o km do abastecimento de hoje no Shell", que abre o rascunho para completar.
 6. Se um valor não passar na validação (preço do litro fora de R$ 2 a R$ 12, km menor que o último), o campo fica em vermelho e o app **não salva sozinho**.
 7. Sem microfone, com barulho ou sem entender, a pessoa preenche o formulário atual na mesma tela.
 

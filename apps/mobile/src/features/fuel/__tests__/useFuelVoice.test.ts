@@ -47,6 +47,21 @@ describe('voiceCard', () => {
     expect(labels(card)).toEqual(['Desfazer', 'Editar']);
   });
 
+  it('rascunho: a tela fica e o botão é Completar', () => {
+    const card = voiceCard(
+      {
+        step: 'saved',
+        id: 'x',
+        draft: true,
+        title: 'Salvo como rascunho · Falta o km',
+        summary: '',
+      },
+      actions,
+    );
+    expect(card?.title).toContain('Falta o km');
+    expect(labels(card)).toEqual(['Desfazer', 'Completar']);
+  });
+
   it('inválido e falha só explicam (o botão de falar continua ao lado de Salvar)', () => {
     expect(voiceCard({ step: 'invalid' }, actions)?.tone).toBe('danger');
     expect(labels(voiceCard({ step: 'failed', message: 'Sem internet' }, actions))).toEqual([

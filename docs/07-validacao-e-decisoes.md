@@ -306,7 +306,7 @@ Sem frame no Figma (botão Falar, cartão da voz, aviso do áudio, pergunta, res
 - [ ] O microfone fica ao lado de "Salvar abastecimento"; ouvindo, vira três pontinhos animados e **nenhum texto falado aparece**; 2 s de silêncio encerram; tocar nos pontinhos encerra.
 - [ ] Com o posto escolhido antes (chip), falar "150 reais, 25 litros, km [último + 300], encheu": salva sozinho, cartão verde "Abastecimento salvo" com "Shell · R$ 150,00 · 25 L · 45.300 km"; após 5 s volta ao Início com o toast do km/l.
 - [ ] **Desfazer** no resumo: o abastecimento some (lista, Início) e o formulário fica preenchido. **Editar**: fica na tela, o microfone some, mudar um campo e salvar atualiza o mesmo abastecimento (não cria outro).
-- [ ] Sem posto: salva como rascunho ("Salvo como rascunho · Falta o posto"), volta após 5 s e o rascunho aparece "Incompleto"; às 20h chega o lembrete (C2).
+- [ ] Sem posto: salva como rascunho ("Salvo como rascunho · Falta o posto"), a tela **não fecha sozinha**; informar o posto e tocar em "Salvar abastecimento" completa o mesmo registro (sem duplicar); **Completar** também deixa o formulário na tela; fechando no X, o rascunho aparece "Incompleto" na lista; às 20h chega o lembrete (C2).
 - [ ] Sem falar o km: rascunho "Falta o km" (o km sugerido não conta).
 - [ ] Falar "50": pergunta "50 é o valor ou os litros?" com os botões; responder continua o fluxo.
 - [ ] Km menor que o último ou "150 reais 4 litros": campo em vermelho com a mensagem, cartão "Confira os campos em vermelho e salve" e nada salvo.

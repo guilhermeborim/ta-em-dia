@@ -156,7 +156,7 @@ export function useNewFuelEntryViewModel() {
       if (isDraft) router.back();
       else router.dismissTo({ pathname: '/', params: { saved: id } });
     },
-    onEdit: setSavedId,
+    onTrack: setSavedId,
   });
 
   return {

@@ -53,10 +53,13 @@ interface FuelVoiceDeps {
   setKmTouched: (value: boolean) => void;
   setErrors: (errors: FuelFormErrors) => void;
   date: () => Date;
-  /** Fim dos 5 s do resumo: sai da tela. */
+  /** Fim dos 5 s do resumo de um abastecimento completo: sai da tela. */
   onDone: (saved: { id: string; draft: boolean }) => void;
-  /** "Editar": o registro salvo passa a ser o que o formulário atualiza. */
-  onEdit: (id: string) => void;
+  /**
+   * Registro que a voz salvou e o formulário passa a atualizar (salvar de novo não cria outro);
+   * `null` quando a voz o desfez.
+   */
+  onTrack: (id: string | null) => void;
 }
 
 /**
@@ -134,7 +137,12 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
       title: draft ? `Salvo como rascunho · ${outcome.missing}` : 'Abastecimento salvo',
       summary: outcome.summary,
     });
-    timer.current = setTimeout(() => latest.current.onDone({ id, draft }), VOICE_SUMMARY_MS);
+    // O formulário agora atualiza este registro (salvar depois não cria outro).
+    d.onTrack(id);
+    // Completo: some depois do resumo. Rascunho: a tela fica, a pessoa ainda tem o que informar.
+    if (!draft) {
+      timer.current = setTimeout(() => latest.current.onDone({ id, draft }), VOICE_SUMMARY_MS);
+    }
   }, []);
 
   const finish = useCallback(() => {
@@ -204,6 +212,7 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
     if (state.step !== 'saved') return;
     clearTimer();
     await deleteFuelEntry(latest.current.db, state.id);
+    latest.current.onTrack(null);
     void refreshReminders(latest.current.db);
     setState({ step: 'idle' });
   }, [state]);
@@ -212,7 +221,6 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
   const edit = useCallback(() => {
     if (state.step !== 'saved') return;
     clearTimer();
-    latest.current.onEdit(state.id);
     setState({ step: 'idle' });
   }, [state]);
 
@@ -317,7 +325,7 @@ export function voiceCard(
         text: state.summary || undefined,
         actions: [
           { label: 'Desfazer', onPress: a.undo, variant: 'outline' },
-          { label: 'Editar', onPress: a.edit },
+          { label: state.draft ? 'Completar' : 'Editar', onPress: a.edit },
         ],
       };
   }
