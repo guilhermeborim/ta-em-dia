@@ -39,6 +39,13 @@ describe('voz no abastecimento', () => {
   });
 });
 
+describe('posto pela localização', () => {
+  it('fica ligado nos dois planos', () => {
+    expect(DEFAULT_FLAGS.free['fuel.nearbyStation']).toBe(true);
+    expect(DEFAULT_FLAGS.premium['fuel.nearbyStation']).toBe(true);
+  });
+});
+
 describe('plano grátis', () => {
   it('tem 1 veículo; o premium não tem limite', () => {
     expect(DEFAULT_FLAGS.free['vehicles.max']).toBe(1);

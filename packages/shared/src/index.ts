@@ -4,6 +4,7 @@ export * from './documents';
 export * from './flags';
 export * from './fuelRules';
 export * from './fuelSpeech';
+export * from './geo';
 export * from './maintenance';
 export * from './odometer';
 export * from './places';

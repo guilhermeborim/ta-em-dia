@@ -81,6 +81,32 @@ export function geohashBounds(hash: string): GeohashBounds {
   return { south, west, north, east };
 }
 
+/**
+ * A célula e as 8 vizinhas (a primeira é a própria). O app baixa os postos dessas 9 células para
+ * achar o posto mais perto mesmo na borda da célula e guardar a região para usar sem internet.
+ * Perto dos polos as vizinhas de cima ou de baixo não existem e ficam de fora.
+ */
+export function geohashNeighborhood(hash: string): string[] {
+  const box = geohashBounds(hash);
+  const height = box.north - box.south;
+  const width = box.east - box.west;
+  const lat = (box.south + box.north) / 2;
+  const lng = (box.west + box.east) / 2;
+  const cells = [hash.toLowerCase()];
+  for (const dLat of [-1, 0, 1]) {
+    for (const dLng of [-1, 0, 1]) {
+      if (dLat === 0 && dLng === 0) continue;
+      const nextLat = lat + dLat * height;
+      if (nextLat <= -90 || nextLat >= 90) continue;
+      // Do outro lado da linha de data, a longitude volta a -180..180.
+      const nextLng = ((((lng + dLng * width + 180) % 360) + 360) % 360) - 180;
+      const cell = encodeGeohash(nextLat, nextLng, hash.length);
+      if (!cells.includes(cell)) cells.push(cell);
+    }
+  }
+  return cells;
+}
+
 /** Pedido de `GET /v1/places`: maiúsculas viram minúsculas; só 5 caracteres do alfabeto. */
 export const placesQuerySchema = z.object({
   geohash: z

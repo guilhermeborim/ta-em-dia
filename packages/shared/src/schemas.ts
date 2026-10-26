@@ -31,9 +31,36 @@ export const fuelEntrySchema = z.object({
   pricePerLiter: z.number().positive(),
   total: z.number().positive(),
   fullTank: z.boolean(),
+  /** Texto do posto ("Shell · Av. da Pista"); continua para os registros antigos e as listas. */
   stationName: z.string().max(80).optional(),
+  /** Posto em `stations` (Fase C). Registros antigos ou de versões anteriores do app não têm. */
+  stationId: z.uuid().optional(),
   note: z.string().max(500).optional(),
 });
+
+/**
+ * Posto do usuário (Fase C): do OpenStreetMap (`osmId`) ou local, criado ao digitar um posto
+ * novo. Posto local não leva coordenada no sync: `lat`/`lng` dele ficam só no aparelho
+ * (docs/05-privacidade-lgpd.md). Coordenada vem sempre em par.
+ */
+export const stationSchema = z
+  .object({
+    id: z.uuid(),
+    osmId: z
+      .string()
+      .regex(/^(node|way|relation)\/\d+$/)
+      .optional(),
+    /** Sem nome e sem bandeira no OpenStreetMap, fica vazio e aparece como "Posto". */
+    name: z.string().min(1).max(80).optional(),
+    brand: z.string().max(80).optional(),
+    street: z.string().max(120).optional(),
+    lat: z.number().min(-90).max(90).optional(),
+    lng: z.number().min(-180).max(180).optional(),
+  })
+  .refine((s) => (s.lat === undefined) === (s.lng === undefined), {
+    message: 'Coordenada incompleta',
+    path: ['lat'],
+  });
 
 /**
  * Linha antiga de rascunho (`status: 'draft'`). O app não cria mais rascunho; o schema fica só para
@@ -112,6 +139,7 @@ export const odometerReadingSchema = z.object({
 export type Vehicle = z.infer<typeof vehicleSchema>;
 export type FuelEntry = z.infer<typeof fuelEntrySchema>;
 export type FuelDraft = z.infer<typeof fuelDraftSchema>;
+export type StationRecord = z.infer<typeof stationSchema>;
 export type MaintenancePlan = z.infer<typeof maintenancePlanSchema>;
 export type MaintenanceRecord = z.infer<typeof maintenanceRecordSchema>;
 export type DocumentRecord = z.infer<typeof documentSchema>;
