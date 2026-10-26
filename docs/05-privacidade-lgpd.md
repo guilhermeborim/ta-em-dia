@@ -126,7 +126,7 @@ Essa decisão é separada, porque muda o risco. Antes de implementar:
 ## Checklist antes de publicar
 
 - [ ] Política de Privacidade e Termos revisados por advogado, em URL pública.
-- [ ] Telas de Termos e Privacidade ligadas às URLs.
+- [ ] URLs de Termos e Privacidade e o e-mail de ajuda em `EXPO_PUBLIC_TERMS_URL`, `EXPO_PUBLIC_PRIVACY_URL` e `EXPO_PUBLIC_SUPPORT_EMAIL` no perfil `production` do `eas.json` (o app já abre os links; sem valor, mostra "Em breve").
 - [ ] Excluir conta funcionando no app e na API (implementado; falta validar no aparelho e revogar o token da Apple, `docs/07` 2.23 e 3.28).
 - [ ] Exportar meus dados funcionando.
 - [ ] Nenhum dado pessoal em log (app e API), inclusive geohash e coordenada.

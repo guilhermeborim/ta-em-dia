@@ -104,6 +104,9 @@ const config: ExpoConfig = {
     apiUrl: process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000',
     googleWebClientId,
     googleIosClientId,
+    supportEmail: process.env.EXPO_PUBLIC_SUPPORT_EMAIL ?? '',
+    termsUrl: process.env.EXPO_PUBLIC_TERMS_URL ?? '',
+    privacyUrl: process.env.EXPO_PUBLIC_PRIVACY_URL ?? '',
   },
 };
 

@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { displayName, loadAccount } from '../../../core/auth';
 import { useDb } from '../../../core/db';
 import { appEnv } from '../../../core/env/appEnv';
+import { openExternalLink } from '../../../core/links';
 import { useToast } from '../../../core/toast/useToast';
 import { documentsBadge } from '../models/documentsBadge';
 import { loadMoreSummary } from '../models/more.repository';
@@ -35,8 +36,11 @@ export function useMoreViewModel() {
     }, [db]),
   );
 
-  // Ajuda ainda não existe: avisa, como o "Salve seus dados" do Início.
-  const comingSoon = useCallback(() => show({ title: 'Em breve' }), [show]);
+  // Abre o e-mail de ajuda; sem e-mail no build, avisa "Em breve".
+  const openHelp = useCallback(async () => {
+    const notice = await openExternalLink('help');
+    if (notice) show(notice);
+  }, [show]);
 
   return {
     showDevTools: isDev,
@@ -51,7 +55,7 @@ export function useMoreViewModel() {
     documentsBadge: documents,
     openAccount: () => router.push('/conta'),
     openSettings: () => router.push('/configuracoes'),
-    openHelp: comingSoon,
+    openHelp: () => void openHelp(),
     openVehicles: () => router.push('/veiculos'),
     openDocuments: () => router.push('/documentos'),
     openHistory: () => router.push('/historico'),

@@ -2,6 +2,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { useDb } from '../../../core/db';
 import { useFlag } from '../../../core/flags/useFlag';
+import { hasExternalLink, openExternalLink, type ExternalLink } from '../../../core/links';
 import { requestNotificationPermission } from '../../../core/notifications';
 import { refreshReminders } from '../../../core/reminders';
 import {
@@ -21,7 +22,7 @@ import { formatNotifyDays } from '../models/settingsView';
 
 /**
  * ViewModel de Configurações (tela 20): avisos por tipo, antecedência padrão, salvar pela fala,
- * aviso ao chegar no posto, unidades e exportar.
+ * aviso ao chegar no posto, unidades, exportar, Termos e Privacidade.
  */
 export function useSettingsViewModel() {
   const db = useDb();
@@ -95,6 +96,14 @@ export function useSettingsViewModel() {
     [arrivalDeps, router, show],
   );
 
+  const openLink = useCallback(
+    async (kind: ExternalLink) => {
+      const notice = await openExternalLink(kind);
+      if (notice) show(notice);
+    },
+    [show],
+  );
+
   return {
     loading: settings === null,
     toast,
@@ -112,6 +121,11 @@ export function useSettingsViewModel() {
     setStationArrival: (value: boolean) => void setStationArrival(value),
     openNotifyDays: () => router.push('/configuracoes/antecedencia'),
     exportData: () => show({ title: 'Em breve' }),
+    /** "Em breve" abaixo de Termos e Privacidade enquanto o build não tem as URLs. */
+    termsHint: hasExternalLink('terms') ? undefined : 'Em breve',
+    privacyHint: hasExternalLink('privacy') ? undefined : 'Em breve',
+    openTerms: () => void openLink('terms'),
+    openPrivacy: () => void openLink('privacy'),
     back: () => router.back(),
   };
 }
