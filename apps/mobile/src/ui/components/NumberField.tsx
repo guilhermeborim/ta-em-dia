@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import { colors, fontFamily, typography } from '../theme/tokens';
 import { Text } from './Text';
@@ -8,6 +9,8 @@ interface NumberFieldProps extends Omit<TextInputProps, 'style' | 'keyboardType'
   prefix?: string;
   /** Mensagem de erro abaixo da caixa; a borda fica vermelha. */
   error?: string;
+  /** Para dar foco ao campo por código (ex.: o campo que falta depois da voz). */
+  ref?: Ref<TextInput>;
 }
 
 /** Campo de número grande (ex.: total pago): borda roxa de 2 pt e número em destaque. */
@@ -60,8 +63,6 @@ const styles = StyleSheet.create({
     padding: 0,
     fontFamily: fontFamily.display,
     fontSize: typography.display.fontSize,
-    // Altura fixa em vez de `lineHeight`: no Android, `lineHeight` menor que a fonte cria rolagem.
-    height: typography.display.lineHeight + 8,
     letterSpacing: typography.display.letterSpacing,
     color: colors.text,
     includeFontPadding: false,

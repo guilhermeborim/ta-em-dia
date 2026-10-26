@@ -7,7 +7,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Db } from '../../../core/db';
 import type { ButtonVariant, SpeechCardTone } from '../../../ui';
-import { addFuelDraft, addFuelEntry, deleteFuelEntry } from '../../../core/fuel';
+import { addFuelEntry, deleteFuelEntry } from '../../../core/fuel';
 import { refreshReminders } from '../../../core/reminders';
 import {
   isSpeechAvailable,
@@ -22,12 +22,13 @@ import {
   answerOptions,
   applyFuelSpeech,
   decideFuelVoice,
+  type FuelFocusField,
   markVoiceNoticeSeen,
   speechFailureText,
   voiceNoticeSeen,
 } from '../models/fuelVoice';
 
-/** Quanto tempo o resumo fica na tela antes de voltar (com "Desfazer" e "Editar"). */
+/** Quanto tempo o resumo fica na tela antes de sair (com "Desfazer" e "Editar"). */
 export const VOICE_SUMMARY_MS = 5000;
 
 export type FuelVoiceState =
@@ -40,8 +41,10 @@ export type FuelVoiceState =
   | { step: 'question'; text: string; question: FuelSpeechQuestion }
   /** Preencheu, mas algo ficou em vermelho: não salvou. */
   | { step: 'invalid' }
+  /** Faltou dado: não salvou, o campo que falta ficou em vermelho e com o foco. */
+  | { step: 'missing'; message: string }
   | { step: 'failed'; message: string }
-  | { step: 'saved'; id: string; draft: boolean; title: string; summary: string };
+  | { step: 'saved'; id: string; summary: string };
 
 interface FuelVoiceDeps {
   db: Db;
@@ -53,8 +56,10 @@ interface FuelVoiceDeps {
   setKmTouched: (value: boolean) => void;
   setErrors: (errors: FuelFormErrors) => void;
   date: () => Date;
-  /** Fim dos 5 s do resumo de um abastecimento completo: sai da tela. */
-  onDone: (saved: { id: string; draft: boolean }) => void;
+  /** Fim dos 5 s do resumo: sai da tela. */
+  onDone: (id: string) => void;
+  /** Leva o cursor ao campo que falta ou está em vermelho. */
+  onFocus: (field: FuelFocusField) => void;
   /**
    * Registro que a voz salvou e o formulário passa a atualizar (salvar de novo não cria outro);
    * `null` quando a voz o desfez.
@@ -63,8 +68,10 @@ interface FuelVoiceDeps {
 }
 
 /**
- * Registro por voz na tela Abastecer: ouve, mostra o texto ao vivo, pergunta o que for ambíguo e
- * salva sozinho (completo ou rascunho). Qualquer falha deixa o formulário como estava.
+ * Registro por voz na tela Abastecer: ouve, pergunta o que for ambíguo e salva sozinho quando está
+ * completo e válido. Faltando dado ou com valor fora da regra, não salva: preenche o que entendeu,
+ * deixa o campo em vermelho, leva o foco a ele e o card diz o que falta. Falha de reconhecimento
+ * deixa o formulário como estava.
  */
 export function useFuelVoice(deps: FuelVoiceDeps) {
   const [state, setState] = useState<FuelVoiceState>({ step: 'idle' });
@@ -117,32 +124,24 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
     }
     d.setForm(applied.form);
     d.setKmTouched(kmTouched);
-    if (outcome.kind === 'invalid') {
+    if (outcome.kind === 'invalid' || outcome.kind === 'missing') {
       d.setErrors(outcome.errors);
-      setState({ step: 'invalid' });
+      d.onFocus(outcome.focus);
+      setState(
+        outcome.kind === 'invalid'
+          ? { step: 'invalid' }
+          : { step: 'missing', message: outcome.message },
+      );
       return;
     }
     d.setErrors({});
 
-    const draft = outcome.kind === 'draft';
-    const id =
-      outcome.kind === 'entry'
-        ? (await addFuelEntry(d.db, outcome.value)).id
-        : (await addFuelDraft(d.db, outcome.value)).id;
+    const { id } = await addFuelEntry(d.db, outcome.value);
     void refreshReminders(d.db);
-    setState({
-      step: 'saved',
-      id,
-      draft,
-      title: draft ? `Salvo como rascunho · ${outcome.missing}` : 'Abastecimento salvo',
-      summary: outcome.summary,
-    });
+    setState({ step: 'saved', id, summary: outcome.summary });
     // O formulário agora atualiza este registro (salvar depois não cria outro).
     d.onTrack(id);
-    // Completo: some depois do resumo. Rascunho: a tela fica, a pessoa ainda tem o que informar.
-    if (!draft) {
-      timer.current = setTimeout(() => latest.current.onDone({ id, draft }), VOICE_SUMMARY_MS);
-    }
+    timer.current = setTimeout(() => latest.current.onDone(id), VOICE_SUMMARY_MS);
   }, []);
 
   const finish = useCallback(() => {
@@ -263,7 +262,12 @@ export function talkButton(
   if (state.step === 'listening') {
     return { listening: true, label: 'Parar de ouvir', onPress: a.stop };
   }
-  if (state.step === 'idle' || state.step === 'failed' || state.step === 'invalid') {
+  if (
+    state.step === 'idle' ||
+    state.step === 'failed' ||
+    state.step === 'invalid' ||
+    state.step === 'missing'
+  ) {
     return { listening: false, label: 'Falar o abastecimento', onPress: a.talk };
   }
   return null;
@@ -312,6 +316,13 @@ export function voiceCard(
         title: 'Confira os campos em vermelho e salve',
         actions: [],
       };
+    case 'missing':
+      return {
+        tone: 'warning',
+        title: state.message,
+        text: 'Preencha abaixo e toque em Salvar abastecimento.',
+        actions: [],
+      };
     case 'failed':
       return {
         tone: 'warning',
@@ -321,11 +332,11 @@ export function voiceCard(
     case 'saved':
       return {
         tone: 'success',
-        title: state.title,
+        title: 'Abastecimento salvo',
         text: state.summary || undefined,
         actions: [
           { label: 'Desfazer', onPress: a.undo, variant: 'outline' },
-          { label: state.draft ? 'Completar' : 'Editar', onPress: a.edit },
+          { label: 'Editar', onPress: a.edit },
         ],
       };
   }

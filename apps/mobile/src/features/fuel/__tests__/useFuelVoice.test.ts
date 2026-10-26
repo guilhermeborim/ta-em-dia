@@ -39,27 +39,23 @@ describe('voiceCard', () => {
   });
 
   it('salvo: resumo com Desfazer e Editar', () => {
-    const card = voiceCard(
-      { step: 'saved', id: 'x', draft: false, title: 'Abastecimento salvo', summary: 'R$ 150,00' },
-      actions,
-    );
-    expect(card).toMatchObject({ tone: 'success', text: 'R$ 150,00' });
+    const card = voiceCard({ step: 'saved', id: 'x', summary: 'R$ 150,00' }, actions);
+    expect(card).toMatchObject({
+      tone: 'success',
+      title: 'Abastecimento salvo',
+      text: 'R$ 150,00',
+    });
     expect(labels(card)).toEqual(['Desfazer', 'Editar']);
   });
 
-  it('rascunho: a tela fica e o botão é Completar', () => {
-    const card = voiceCard(
-      {
-        step: 'saved',
-        id: 'x',
-        draft: true,
-        title: 'Salvo como rascunho · Falta o km',
-        summary: '',
-      },
-      actions,
-    );
-    expect(card?.title).toContain('Falta o km');
-    expect(labels(card)).toEqual(['Desfazer', 'Completar']);
+  it('faltou dado: card avisa o que falta e manda preencher, sem botões', () => {
+    const card = voiceCard({ step: 'missing', message: 'Falta informar o km' }, actions);
+    expect(card).toMatchObject({
+      tone: 'warning',
+      title: 'Falta informar o km',
+      text: 'Preencha abaixo e toque em Salvar abastecimento.',
+      actions: [],
+    });
   });
 
   it('inválido e falha só explicam (o botão de falar continua ao lado de Salvar)', () => {
@@ -90,12 +86,11 @@ describe('talkButton', () => {
   it('continua depois de falha ou de campo em vermelho', () => {
     expect(talkButton({ step: 'failed', message: 'x' }, actions)?.listening).toBe(false);
     expect(talkButton({ step: 'invalid' }, actions)?.listening).toBe(false);
+    expect(talkButton({ step: 'missing', message: 'x' }, actions)?.listening).toBe(false);
   });
 
   it('some com aviso, pergunta ou resumo na tela', () => {
     expect(talkButton({ step: 'notice' }, actions)).toBeNull();
-    expect(
-      talkButton({ step: 'saved', id: 'x', draft: false, title: 't', summary: '' }, actions),
-    ).toBeNull();
+    expect(talkButton({ step: 'saved', id: 'x', summary: '' }, actions)).toBeNull();
   });
 });

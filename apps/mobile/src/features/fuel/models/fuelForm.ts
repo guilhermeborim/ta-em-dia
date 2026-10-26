@@ -2,11 +2,9 @@ import {
   calculateMissingFuelAmount,
   resolveStationName,
   type FuelAmountField,
-  type FuelDraft,
 } from '@ta-em-dia/shared';
 import {
   atNoon,
-  formatKm,
   MONTH_NAMES_SHORT,
   parseDecimal,
   parseKm,
@@ -15,12 +13,7 @@ import {
 } from '../../../core/format';
 
 export { parseDecimal, sanitizeDecimal };
-import {
-  fuelTypeOptions,
-  type FuelType,
-  type NewFuelDraft,
-  type NewFuelEntry,
-} from '../../../core/fuel';
+import { fuelTypeOptions, type FuelType, type NewFuelEntry } from '../../../core/fuel';
 
 export { fuelTypeOptions };
 export type { FuelType };
@@ -38,7 +31,7 @@ export interface FuelForm {
 }
 
 export type FuelFormErrors = Partial<
-  Record<'amounts' | 'pricePerLiter' | 'km' | 'station' | 'draft', string>
+  Record<'amounts' | 'pricePerLiter' | 'km' | 'station', string>
 >;
 
 export const emptyFuelForm: FuelForm = {
@@ -181,73 +174,5 @@ export function buildFuelEntryInput(
       fullTank: form.fullTank,
       stationName,
     },
-  };
-}
-
-/**
- * Rascunho a partir do formulário: guarda o que foi preenchido, sem exigir nada. O km sugerido só
- * vale se a pessoa o tocou (senão o rascunho ficaria com um km que ninguém confirmou). Sem nenhum
- * dado, não há o que guardar.
- */
-export function buildFuelDraftInput(
-  form: FuelForm,
-  ctx: { vehicleId: string; date: Date; stations?: readonly string[]; kmTouched: boolean },
-): { value: NewFuelDraft; errors?: undefined } | { value?: undefined; errors: FuelFormErrors } {
-  const amounts = deriveAmounts(form);
-  const positive = (text: string) => {
-    const value = parseDecimal(text);
-    return value !== null && value > 0 ? value : undefined;
-  };
-  const pricePerLiter = positive(amounts.pricePerLiter);
-  const liters = positive(amounts.liters);
-  const total = positive(amounts.total);
-  const km = ctx.kmTouched ? (parseKm(form.km) ?? undefined) : undefined;
-  const stationName = resolveStationName(ctx.stations ?? [], form.station);
-
-  if (
-    pricePerLiter === undefined &&
-    liters === undefined &&
-    total === undefined &&
-    km === undefined &&
-    stationName === undefined
-  ) {
-    return { errors: { draft: 'Preencha ao menos um dado para guardar o rascunho' } };
-  }
-
-  return {
-    value: {
-      vehicleId: ctx.vehicleId,
-      date: ctx.date,
-      km,
-      fuelType: form.fuelType,
-      liters,
-      pricePerLiter,
-      total,
-      fullTank: form.fullTank,
-      stationName,
-    },
-  };
-}
-
-/** Formulário preenchido com o que o rascunho já tem; o km que falta volta como sugestão. */
-export function fuelFormFromDraft(
-  draft: FuelDraft,
-  fallback: { fuelType: FuelType | null; suggestedKm: number | null },
-): FuelForm {
-  const kmText = draft.km ?? fallback.suggestedKm;
-  const amount = (field: FuelAmountField) =>
-    draft[field] === undefined ? '' : formatDecimal(draft[field], field);
-  const present = (['pricePerLiter', 'liters', 'total'] as const).filter(
-    (field) => draft[field] !== undefined,
-  );
-  return {
-    fuelType: draft.fuelType ?? fallback.fuelType ?? emptyFuelForm.fuelType,
-    pricePerLiter: amount('pricePerLiter'),
-    liters: amount('liters'),
-    total: amount('total'),
-    amountOrder: present,
-    km: kmText === null ? '' : formatKm(String(kmText)),
-    fullTank: draft.fullTank ?? false,
-    station: draft.stationName ?? '',
   };
 }

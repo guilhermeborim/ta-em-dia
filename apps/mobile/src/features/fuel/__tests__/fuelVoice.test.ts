@@ -88,19 +88,47 @@ describe('decideFuelVoice', () => {
     expect(outcome.kind === 'entry' && outcome.value.fullTank).toBe(false);
   });
 
-  it('sem posto vira rascunho e diz o que falta', () => {
+  it('sem posto não salva: diz o que falta e põe o foco no posto', () => {
     const { outcome } = run('150 reais, 25 litros, km 45300');
-    expect(outcome).toMatchObject({
-      kind: 'draft',
-      summary: 'R$ 150,00 · 25 L · 45.300 km',
-      missing: 'Falta o posto',
+    expect(outcome).toEqual({
+      kind: 'missing',
+      message: 'Falta informar o posto',
+      focus: 'station',
+      errors: { station: 'Informe o posto' },
     });
   });
 
-  it('sem km falado, o sugerido não conta: rascunho', () => {
+  it('sem km falado, o sugerido não conta: pede para confirmar e foca o km', () => {
     const { outcome } = run('150 reais, 25 litros', opened({ station: 'Shell' }));
-    expect(outcome).toMatchObject({ kind: 'draft', missing: 'Falta o km' });
-    expect(outcome.kind === 'draft' && outcome.value.km).toBeUndefined();
+    expect(outcome).toEqual({
+      kind: 'missing',
+      message: 'Falta informar o km',
+      focus: 'km',
+      errors: { km: 'Confirme o km do painel' },
+    });
+  });
+
+  it('sem km nenhum no campo, pede para informar', () => {
+    const { outcome } = run('150 reais, 25 litros', opened({ station: 'Shell', km: '' }));
+    expect(outcome).toMatchObject({ kind: 'missing', errors: { km: 'Informe o km do painel' } });
+  });
+
+  it('só um valor falado: foca o primeiro valor vazio (litros, depois do total)', () => {
+    const { outcome } = run('150 reais, km 45300', opened({ station: 'Shell' }));
+    expect(outcome).toMatchObject({
+      kind: 'missing',
+      message: 'Falta informar os valores',
+      focus: 'liters',
+    });
+  });
+
+  it('falta mais de um dado: lista todos e foca o primeiro da tela', () => {
+    const { outcome } = run('25 litros');
+    expect(outcome).toMatchObject({
+      kind: 'missing',
+      message: 'Falta informar os valores, o km e o posto',
+      focus: 'total',
+    });
   });
 
   it('km digitado antes de falar vale', () => {
@@ -113,6 +141,7 @@ describe('decideFuelVoice', () => {
     const { outcome } = run('150 reais, 25 litros, km 44000', opened({ station: 'Shell' }));
     expect(outcome).toEqual({
       kind: 'invalid',
+      focus: 'km',
       errors: { km: 'Menor que o km do último abastecimento (45.000 km)' },
     });
   });
@@ -151,7 +180,7 @@ describe('decideFuelVoice', () => {
     const answered = parseFuelSpeech('50', { lastKm: 45000 }, { [first.question!.id]: 'total' });
     const applied = applyFuelSpeech(opened(), answered);
     const outcome = decideFuelVoice(answered, applied.form, ctx());
-    expect(outcome).toMatchObject({ kind: 'draft', summary: 'R$ 50,00' });
+    expect(outcome).toMatchObject({ kind: 'missing', focus: 'liters' });
   });
 
   it('nada entendido (só o combustível do último): não faz nada', () => {
@@ -166,10 +195,12 @@ describe('textos', () => {
     expect(fuelVoiceSummary({})).toBe('');
   });
 
-  it('o que falta, em lista', () => {
-    expect(missingText(['station'])).toBe('Falta o posto');
-    expect(missingText(['station', 'km'])).toBe('Falta o posto e o km');
-    expect(missingText(['station', 'km', 'amounts'])).toBe('Falta o posto, o km e os valores');
+  it('o que falta, em lista, na ordem da tela', () => {
+    expect(missingText({ station: 'x' })).toBe('Falta informar o posto');
+    expect(missingText({ station: 'x', km: 'x' })).toBe('Falta informar o km e o posto');
+    expect(missingText({ station: 'x', km: 'x', amounts: 'x' })).toBe(
+      'Falta informar os valores, o km e o posto',
+    );
   });
 
   it('botões da pergunta', () => {

@@ -425,7 +425,6 @@ export function ComponentsView() {
             kmPerLiter="11,8 km/l"
           />
           <FuelItem title="Ipiranga" details="28 set · 40 L · Etanol" total="R$ 188,00" />
-          <FuelItem title="26 out · Shell" details="Gasolina" total="—" incomplete />
           <FuelItem
             flat
             title="09 out · Shell"
@@ -475,13 +474,6 @@ export function ComponentsView() {
               title="Abastecimento"
               details="18 out · 38,2 L · 13,1 km/l"
               value="R$ 229,10"
-            />
-            <TimelineItem
-              kind="fuel"
-              title="Abastecimento"
-              details="26 out · 25,0 L"
-              value="R$ 150,00"
-              incomplete
             />
             <TimelineItem
               kind="maintenance"

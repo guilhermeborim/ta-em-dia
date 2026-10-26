@@ -212,4 +212,43 @@ describe('migrate', () => {
     ).toHaveLength(1);
     expect(await db.getFirstAsync('PRAGMA foreign_keys')).toEqual({ foreign_keys: 1 });
   });
+  it('exclui os rascunhos antigos de forma lógica e manda a exclusão para o sync', async () => {
+    const db = createTestDb();
+    await migrate(db, MIGRATIONS.slice(0, 9));
+    const at = '2026-10-01T10:00:00.000Z';
+    await db.runAsync(
+      `INSERT INTO vehicles (id, name, type, initial_km, created_at, updated_at)
+       VALUES ('v1', 'Gol', 'flex', 0, ?, ?)`,
+      at,
+      at,
+    );
+    await db.runAsync(
+      `INSERT INTO fuel_entries (id, vehicle_id, date, km, fuel_type, liters, price_per_liter, total, full_tank, station_name, created_at, updated_at)
+       VALUES ('f1', 'v1', ?, 200, 'gasoline', 10, 6, 60, 1, 'Shell', ?, ?)`,
+      at,
+      at,
+      at,
+    );
+    await db.runAsync(
+      `INSERT INTO fuel_entries (id, vehicle_id, date, station_name, status, created_at, updated_at)
+       VALUES ('f2', 'v1', ?, 'Shell', 'draft', ?, ?)`,
+      at,
+      at,
+      at,
+    );
+
+    await migrate(db);
+
+    const rows = await db.getAllAsync<{ id: string; deleted_at: string | null }>(
+      'SELECT id, deleted_at FROM fuel_entries ORDER BY id',
+    );
+    expect(rows[0]).toEqual({ id: 'f1', deleted_at: null });
+    expect(rows[1]!.deleted_at).not.toBeNull();
+    const queue = await db.getAllAsync<{ row_id: string; op: string; payload: string }>(
+      'SELECT row_id, op, payload FROM outbox',
+    );
+    expect(queue).toHaveLength(1);
+    expect(queue[0]).toMatchObject({ row_id: 'f2', op: 'delete' });
+    expect(JSON.parse(queue[0]!.payload)).toEqual({ id: 'f2', deletedAt: expect.any(String) });
+  });
 });

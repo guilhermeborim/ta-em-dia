@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  type TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -39,6 +40,19 @@ export function NewFuelEntryView() {
   const vm = useNewFuelEntryViewModel();
   const scroll = useRef<ScrollView>(null);
   const stationFocused = useRef(false);
+  const inputs = {
+    pricePerLiter: useRef<TextInput>(null),
+    liters: useRef<TextInput>(null),
+    total: useRef<TextInput>(null),
+    km: useRef<TextInput>(null),
+    station: useRef<TextInput>(null),
+  };
+  // A voz não salvou: o cursor vai para o campo que falta ou está em vermelho.
+  const focusRequest = vm.focusRequest;
+  useEffect(() => {
+    if (focusRequest) inputs[focusRequest.field].current?.focus();
+    // `inputs` são refs estáveis; só um novo pedido (nonce) move o foco.
+  }, [focusRequest]);
 
   if (vm.loading) return <SafeAreaView style={styles.container} />;
 
@@ -90,6 +104,7 @@ export function NewFuelEntryView() {
               <View style={styles.pair}>
                 <View style={styles.flex}>
                   <TextField
+                    ref={inputs.pricePerLiter}
                     label="Preço por litro"
                     error={vm.errors.pricePerLiter}
                     suffix="/L"
@@ -101,6 +116,7 @@ export function NewFuelEntryView() {
                 </View>
                 <View style={styles.flex}>
                   <TextField
+                    ref={inputs.liters}
                     label="Litros"
                     suffix="L"
                     value={vm.amounts.liters}
@@ -112,6 +128,7 @@ export function NewFuelEntryView() {
               </View>
 
               <NumberField
+                ref={inputs.total}
                 label={vm.amounts.calculated === 'total' ? 'Total pago · calculado' : 'Total pago'}
                 prefix="R$"
                 error={vm.errors.amounts}
@@ -121,6 +138,7 @@ export function NewFuelEntryView() {
               />
 
               <TextField
+                ref={inputs.km}
                 label={vm.kmLabel}
                 required
                 error={vm.errors.km}
@@ -142,6 +160,7 @@ export function NewFuelEntryView() {
               </Text>
 
               <TextField
+                ref={inputs.station}
                 label="Posto"
                 required
                 error={vm.errors.station}
