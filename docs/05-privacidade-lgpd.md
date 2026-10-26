@@ -19,7 +19,7 @@ O melhor jeito de proteger um dado é não ter o dado. O MVP **não guarda** nú
 | Refresh token                    | API (`refresh_tokens`)                                              | Alta          | Só o hash; revogável                                                                             |
 | Push token                       | API (`devices`)                                                     | Média         | Apagado ao sair ou excluir a conta                                                               |
 | Fotos de nota (Premium futuro)   | Armazenamento de arquivos                                           | Média         | Bucket privado, URL assinada e curta, nunca público                                              |
-| Fala do abastecimento (Fase C)   | Só no aparelho, durante o reconhecimento                            | Média         | O áudio não é gravado nem enviado pelo app; só o texto interpretado vira dado do abastecimento   |
+| Fala do abastecimento (Fase C)   | No aparelho; sem o pacote de idioma, o sistema pode usar o servidor da Apple/Google (`docs/07`, 3.30) | Média         | O áudio não é gravado nem enviado pelo app; só o texto interpretado vira dado do abastecimento   |
 | Localização do usuário (Fase C)  | Só na memória do aparelho, na tela Abastecer                        | Alta          | Não é guardada nem enviada; serve para achar o posto mais perto                                  |
 | Geohash de 5 caracteres (Fase C) | API (`places`), só na consulta                                      | Média         | Célula de ~5 km, sem usuário ligado; nunca em log                                                |
 | Postos (`stations`, Fase C)      | SQLite e API                                                        | Baixa         | Posto do OpenStreetMap: dado público. Posto local: `lat`/`lng` ficam só no aparelho (ver abaixo) |
@@ -32,7 +32,7 @@ Decidido pelo dono em 26/10/2026. Vale para quem está logado e para o usuário 
 **Microfone (registro por voz)**
 
 - Pedido só quando o usuário toca em **Falar** na tela Abastecer. Recusar não bloqueia nada: o formulário continua na mesma tela.
-- O app **não grava e não envia áudio**. O reconhecimento é do sistema do celular (Android e iOS); o app recebe só o texto, interpreta e guarda os campos do abastecimento (valor, litros, km, combustível, tanque cheio). A frase inteira não é guardada.
+- O app **não grava nem guarda áudio, e a nossa API nunca o recebe**. O reconhecimento é do sistema do celular (Android e iOS), que pode mandar o áudio à Apple ou ao Google conforme a decisão 3.30; o app recebe só o texto, interpreta e guarda os campos do abastecimento (valor, litros, km, combustível, tanque cheio). A frase inteira não é guardada.
 - O app pede reconhecimento **no aparelho** (`requiresOnDeviceRecognition`) quando o sistema tem o pacote de idioma. Sem o pacote, o sistema pode usar o servidor do Google ou da Apple. O que fazer nesse caso é decisão aberta (`docs/07`, 3.30).
 - Textos do pedido do sistema em português (`NSMicrophoneUsageDescription`, `NSSpeechRecognitionUsageDescription`, `RECORD_AUDIO`).
 
