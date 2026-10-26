@@ -102,7 +102,7 @@ São 22 telas, agrupadas por área.
 6. Se um valor não passar na validação (preço do litro fora de R$ 2 a R$ 12, km menor que o último), o campo fica em vermelho, recebe o cursor e o app **não salva sozinho**.
 7. Sem microfone, com barulho ou sem entender, a pessoa preenche o formulário atual na mesma tela.
 
-Telas novas sem frame no Figma: botão de falar, tela de "ouvindo" com os pontinhos, cartão da voz (pergunta, o que falta, campo em vermelho), o interruptor "Salvar pela fala" e textos das permissões. Cada item do backlog (C4, C6) registra o que ficou sem frame em `docs/07-validacao-e-decisoes.md`.
+Telas novas sem frame no Figma: botão de falar, tela de "ouvindo" com os pontinhos, cartão da voz (pergunta, o que falta, campo em vermelho), o interruptor "Salvar pela fala" e textos das permissões. Do C6 (posto pela localização): o cartão "Achar o posto pela localização" (antes do pedido do sistema), os chips do posto perto e "Trocar", o chip "Usar localização" e a linha "Média neste posto" sob o Posto. Cada item do backlog (C4, C6) registra o que ficou sem frame em `docs/07-validacao-e-decisoes.md`.
 
 **2c. Editar e excluir um abastecimento**
 

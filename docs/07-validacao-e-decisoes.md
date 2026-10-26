@@ -325,6 +325,29 @@ Sem tela; o app só usa no C6. Em staging, depois do deploy (a migration `place_
 - [ ] Os logs do Render não mostram o geohash (nem na linha do pedido nem no aviso de falha do Overpass).
 - [ ] Primeira chamada de uma célula com o host acordando do sono: ver se cabe no tempo de espera do app (Overpass leva de 1 a 10 s).
 
+### 2.38 Posto pela localização (C6, PR #N)
+
+Sem frame no Figma (cartão da localização, chips "Trocar" e "Usar localização", linha da média). Dependência nativa nova: `expo-location` (exige development build novo; num build antigo a localização só fica indisponível). Nenhum emulador estava aberto: nada foi visto rodando. Android com development build, staging no ar (deploy da API com a migration `stations`) e internet:
+
+- [ ] Primeiro Novo abastecimento: o cartão "Achar o posto pela localização" aparece acima de "Salvar abastecimento"; "Usar localização" abre o pedido do sistema (no iPhone, com o texto do `app.config.ts`). Ao permitir, perto de um posto, o campo Posto se preenche sozinho em poucos segundos com "Nome · Rua" (nunca um ID).
+- [ ] "Agora não": o cartão some e não volta (sair e abrir de novo); sob o Posto fica o chip roxo "Usar localização", que abre o pedido do sistema.
+- [ ] Recusar no sistema até ele não perguntar mais: nada de cartão nem chip; os chips do Posto são os postos já usados, como antes.
+- [ ] No posto: o campo traz o mais perto; os chips trazem o segundo mais perto (se houver outro a até ~150 m) e "Trocar". Tocar no segundo troca o campo; "Trocar" limpa o campo, abre o teclado e os chips voltam com os postos perto e os já usados.
+- [ ] Longe de posto (em casa): campo vazio, chips dos postos já usados.
+- [ ] GPS lento: se a pessoa já digitou ou falou o posto antes de a localização chegar, o campo não é trocado.
+- [ ] Posto do OpenStreetMap sem nome e sem bandeira aparece como "Posto · Rua tal".
+- [ ] Salvar com o posto sugerido: a lista, o Início e o Histórico mostram "Nome · Rua". Abastecer de novo no mesmo posto não cria outro posto (com sync, conferir no outro aparelho que há um posto só).
+- [ ] Posto fora do mapa: digitar um nome novo no posto e salvar. Na próxima vez, nesse lugar, ele é sugerido. Num segundo aparelho (mesma conta), ele aparece pelo nome nos chips, mas não é sugerido pela localização.
+- [ ] Registrar um abastecimento de outro dia (calendário) com um posto novo digitado: na próxima vez, em outro lugar, ele não é sugerido (não guardou a posição).
+- [ ] Sem internet, num lugar cuja região já foi baixada: a sugestão funciona. Região nunca baixada e sem internet: nada é sugerido e nada quebra.
+- [ ] Logs da API (Render): a primeira vez numa região faz até 9 chamadas a `/v1/places` e as seguintes nenhuma; nenhum log mostra coordenada.
+- [ ] Voz com o posto sugerido no campo e "Salvar pela fala" ligado: falar só os valores e o km salva com o posto sugerido.
+- [ ] "Média neste posto: R$ ... o litro de gasolina (N abastecimentos)" aparece sob o Posto depois do primeiro abastecimento nele e muda ao trocar o combustível.
+- [ ] Editar abastecimento: sem cartão nem localização; trocar o texto do posto troca o posto; não mexer mantém.
+- [ ] Atualizar o app com dados antigos (migration 11): abastecimentos, km/l e listas iguais; postos antigos continuam pelo nome.
+- [ ] Fonte grande e TalkBack: cartão, chips e linha da média legíveis; chips com toque ≥ 44 pt.
+- [ ] iOS (quando houver build): pedido "durante o uso" em português; nenhum pedido de "sempre" nem de movimento.
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
@@ -468,3 +491,20 @@ Código puro em `shared`, sem tela; nada a validar no aparelho. O que o reconhec
 - **Decimal por extenso só entra no preço** ("seis e vinte e nove o litro"). "Vinte litros e meio" e outras frações por extenso não são entendidas.
 - **Se corrigindo, vale o último citado** ("paguei 100 reais, não, foram 150 reais" → 150). Alternativa: ignorar a frase inteira e perguntar. Recomendação: manter.
 - **Limites conhecidos:** nada de data ("ontem", "dia 20" é ignorado), posto falado só no C4 (ver 3.36), "gás" sozinho não é GNV (só "gás natural" ou "GNV"), e dois combustíveis na mesma frase ficam com o último.
+
+### 3.38 Posto pela localização: escolhas que fiz (C6)
+
+- **Telas sem frame no Figma:** cartão "Achar o posto pela localização" (o `SpeechCard`, tom info) acima de "Salvar abastecimento", com "Usar localização" e "Agora não"; chips sob o Posto: o segundo posto perto e "Trocar" (ícone de atualizar); chip roxo "Usar localização" (ícone de pino) depois do "Agora não"; linha "Média neste posto" sob os chips. O Figma (tela 9) só mostra o campo com "Posto Ipiranga · Av. Paulista". Recomendação: pedir os frames ao designer.
+- **Textos meus:** "Achar o posto pela localização", "Com a localização, o app sugere o posto onde você está. Ela fica só no celular.", "Usar localização", "Agora não", "Trocar", "Média neste posto: R$ 5,89 o litro de gasolina (3 abastecimentos)" e o pedido do iPhone ("O Tá em Dia usa a localização só na tela Abastecer, para sugerir o posto onde você está. Ela fica no celular."). Recomendação: revisar junto com a Política de Privacidade.
+- **Rótulo pelo nome, não pela bandeira:** "Nome · Rua"; sem nome, a bandeira; sem as duas, "Posto · Rua" (como no Figma, "Posto Ipiranga · Av. Paulista"). Alternativa: bandeira primeiro ("Ipiranga · Av. Paulista"), que pode ser mais reconhecível mas some com postos sem bandeira. Recomendação: manter.
+- **Cartão no rodapé, não junto do Posto:** o Posto fica no fim do formulário e o cartão ali passaria despercebido. Alternativa: no topo, sob o banner roxo. Recomendação: manter.
+- **"Agora não" é para sempre:** o cartão não volta; fica o chip "Usar localização". Alternativa: mostrar o cartão de novo depois de 30 dias. Recomendação: manter.
+- **Só os postos usados vão para `stations` (e para o sync):** os postos da região baixados ficam numa tabela local à parte (`region_places`), sem sync; o posto do mapa entra em `stations` ao ser usado num abastecimento. Alternativa: guardar a região inteira em `stations` (centenas de linhas por usuário no servidor). Recomendação: manter.
+- **9 chamadas por região nova:** a célula da posição e as 8 vizinhas, uma vez a cada 30 dias por célula (o C5 deixou para o C6 rever). Alternativa: só as células que tocam o raio de 150 m (1 a 4) e as outras depois. Recomendação: manter e olhar os logs (2.38).
+- **Posição do posto local só se o abastecimento é de hoje** (registro de outro dia não foi feito no posto) e a posição vem da última do sistema se tem até 60 s e 100 m de precisão. Mesmo assim, quem digita um posto novo em casa no mesmo dia grava a posição de casa. Alternativa: só guardar a posição quando estiver perto de um posto do mapa ou perguntar. Recomendação: manter e ver no uso.
+- **Média de preço:** pesa pelos litros, junta todos os veículos, separa por combustível e aparece com 1 abastecimento já. Abastecimentos antigos entram pelo mesmo nome. Alternativa: só com 2 ou mais, ou só dos últimos 90 dias. Recomendação: manter.
+- **Flag `fuel.nearbyStation`** ligada nos dois planos (não decide nada: só deixa a troca a um passo, como a voz). Recomendação: grátis.
+- **Protocolo de sync 2:** a tabela `stations` entrou no sync; a API não manda postos para o app do protocolo 1, e o app novo com a API antiga recebe 400 até o deploy. O deploy da API vem com o merge, antes de qualquer build do app. Recomendação: manter a ordem (API primeiro).
+- **`station_id` sem chave estrangeira** (no SQLite e no Postgres): o abastecimento pode chegar antes do posto no pull. Recomendação: manter.
+- **Sem tela "Seus postos":** não dá para renomear nem excluir um posto; o posto errado se corrige editando o abastecimento. Recomendação: fazer quando houver pedido.
+- **Dependência nativa nova:** `expo-location` (do Expo), só "durante o uso" (sem "sempre", sem movimento, sem serviço em primeiro plano). O C7 acrescenta o "sempre". Recomendação: manter.

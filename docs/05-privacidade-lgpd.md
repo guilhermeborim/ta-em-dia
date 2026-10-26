@@ -38,10 +38,10 @@ Decidido pelo dono em 26/10/2026. Vale para quem está logado e para o usuário 
 
 **Localização "durante o uso" (posto único)**
 
-- Pedida só na tela Abastecer, com uma tela explicando antes do pedido do sistema ("agora não" visível). Sem permissão, o app sugere os postos já usados, como hoje.
+- Pedida só na tela Abastecer (Novo abastecimento), com um cartão explicando antes do pedido do sistema ("Achar o posto pela localização", com "Agora não" visível; C6). Depois do "Agora não", fica só um chip "Usar localização" sob o Posto. Sem permissão, o app sugere os postos já usados, como hoje.
 - A coordenada do usuário **não sai do aparelho**: ela só serve para achar o posto mais perto (~150 m) entre os postos guardados. Não vai para a API, para log, para o Sentry nem para a `outbox`.
-- A API recebe só o **geohash de 5 caracteres** (célula de ~5 km) para devolver os postos da região, inclusive de usuário sem login. A rota não grava o geohash junto do usuário nem o registra em log.
-- `stations` guarda `name`, `brand`, `street`, `lat`, `lng` e `osm_id` do **posto**. Para posto do OpenStreetMap, é dado público e sincroniza. Para posto local (fora do OpenStreetMap), `lat` e `lng` nascem da posição do usuário e por isso **ficam só no aparelho**: o sync envia o nome, a bandeira e a rua, sem coordenada. O abastecimento guarda `station_id`, nunca a posição.
+- A API recebe só o **geohash de 5 caracteres** (célula de ~5 km) para devolver os postos da região, inclusive de usuário sem login. O app pede a célula da posição e as 8 vizinhas (uma área de ~15 km), só as que ainda não tem guardadas (ou guardadas há mais de 30 dias), e guarda os postos no aparelho (`region_places`, dado público, não sincroniza). A rota não grava o geohash junto do usuário nem o registra em log.
+- `stations` guarda `name`, `brand`, `street`, `lat`, `lng` e `osm_id` do **posto**. Para posto do OpenStreetMap, é dado público e sincroniza. Para posto local (fora do OpenStreetMap), `lat` e `lng` nascem da posição do usuário e por isso **ficam só no aparelho**: o sync envia o nome, a bandeira e a rua, sem coordenada (e a API descarta coordenada de posto sem `osm_id`, se vier). O app só grava a posição num posto local novo se o abastecimento é de hoje (registro de outro dia não foi feito no posto). O abastecimento guarda `station_id`, nunca a posição.
 - Excluir conta apaga também os postos do usuário na API.
 
 **Localização "sempre" (aviso ao chegar no posto, item C7)**
