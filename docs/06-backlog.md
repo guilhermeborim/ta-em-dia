@@ -1,58 +1,28 @@
 # Backlog de features
 
-Ordem de implementação do MVP. O próximo item é o primeiro sem `[x]`. Cada item é um PR.
+O próximo item é o primeiro sem `[x]`. Cada item é um PR. Itens concluídos saem daqui; o histórico (inclusive os links dos frames do Figma de cada tela) fica no git: `git log -p docs/06-backlog.md`.
 Para pedir ao Claude Code, use `/proxima-feature` (ver `.claude/commands/proxima-feature.md`).
 
-Figma: arquivo `ESJceLVFjGNDdSSAvoguPo`, página "Telas — Claro". Os links abrem o frame.
-Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
+Figma: arquivo `ESJceLVFjGNDdSSAvoguPo`, página "Telas — Claro". Telas de referência: `docs/02-telas-e-fluxos.md`. Regras: `CLAUDE.md`.
 
-## Fase A — Só no app, offline (sem API)
+## Fase C — Registro rápido de abastecimento
 
-- [x] **Boas-vindas** (tela 2): [02](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=7-205), [02b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=32-1569), [02c](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=32-1667)
-- [x] **Login offline** (tela 3, só "Continuar sem login") e **Aviso sem login** (tela 4): [03a iPhone](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=7-272), [03b Android](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=32-1502), [04](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=7-340)
-- [x] **Primeiro veículo** (tela 5): [05](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=7-395). Formulário, grava em `vehicles` (já existe o repositório). Pode pular.
-- [x] **Permissão de notificações** (tela 6): [06](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=7-449). Tela prévia e pedido do sistema (`expo-notifications`).
-- [x] **Abas e Início vazio** (telas 7b e 15 só como aba): [07b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=8-517). `TabBar`, `VehicleSelector`, botão "+ Abastecer". As abas ainda sem tela mostram um vazio simples.
-- [x] **Novo abastecimento** (tela 9): [09](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=8-762), [09b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=33-1607). Dois de três valores preenchem o terceiro. Regra de cálculo em `packages/shared`, com teste.
-- [x] **Lista de abastecimentos** (tela 8): [08](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=8-617). km/l do trecho vem de `packages/shared`.
-- [x] **Início com dados** (telas 7, 7c, 7d): [07](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=8-364), [07c](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=33-1808), [07d](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=33-1724). Gasto do mês, projeção, % vs mês anterior, média km/l, toast ao salvar.
-- [x] **Manutenções: lista** (tela 10): [10](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=10-874). Próximas e Feitas, sugeridas com "Ativar". Tabela `maintenance_plans`; estado do item em `shared`.
-- [x] **Manutenções: plano do item** (telas 11, 11b, 11c): [11](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=10-1012), [11b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=34-1881), [11c](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=34-1955). Detalhe com anel de progresso e previsão (`nextMaintenance`, média diária), editar intervalo, desativar lembrete.
-- [x] **Registrar manutenção** (tela 12): [12](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=10-1067), [12b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=34-2024). Tipo "Outro" salvo como atalho "Seu".
-- [x] **Alertas de manutenção** (notificações locais): reagendar a cada mudança de km ou data (ver `docs/03-arquitetura.md`).
-- [x] **Histórico** (tela 13): [13](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=10-1136).
-- [x] **Meus veículos** (tela 16): [16](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1396). Lista, adicionar e reordenar. Respeitar `docs/05-privacidade-lgpd.md` (placa nunca em log).
-- [x] **Detalhe do veículo** (tela 17): [17](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1454). Placa, km atual, média diária, custo/km e dados; "Atualizar km" (leitura manual do hodômetro). Abre pelo cartão da tela 16. Placa nunca em log.
-- [x] **Editar, arquivar e excluir veículo** (lápis da tela 17, sem frame no Figma ainda): editar marca, modelo, ano, apelido e placa (validar a placa); arquivar; excluir com confirmação, apagando de forma lógica o que depende do veículo e cancelando os avisos dele.
-- [x] **Documentos e prazos** (tela 18): [18](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1527). Só datas, sem número da CNH nem foto. Lista, adicionar, editar a data e excluir; sem avisos ainda (item abaixo).
-- [x] **Alertas de documentos**: notificações locais 30 e 7 dias antes de cada vencimento (reagendar como nos avisos de manutenção), banner "Avisamos 30 e 7 dias antes" da tela 18, editar a antecedência ("editar lembrete"), documentos vencidos ou perto de vencer entrando em "Próximos alertas" do Início, no selo do cartão de Meus veículos e no valor "1 vencido" de Documentos e prazos na aba Mais.
-- [x] **Relatórios** (tela 14): [14](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1094).
-- [x] **Mais e Premium em breve** (telas 15, 21): [15](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=12-1236), [21](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1521). Premium atrás de feature flag. Conta, Configurações e Ajuda avisam "Em breve" até chegarem.
-- [x] **Configurações** (tela 20): [20](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1446). Interruptores de notificação (manutenções, documentos, lembrar de atualizar o km a cada 7 dias), antecedência padrão dos prazos, unidades (km e litros) e "Exportar dados" (Em breve). Sem o seletor de aparência: o app é só tema claro (`apps/mobile/CLAUDE.md`).
+Dor: no posto o usuário tem uns 10 segundos e o formulário pede tudo digitado. Decidido pelo dono em 26/10/2026: nenhum dado do formulário sai; no posto o usuário **fala** em vez de digitar; o que faltar vira **rascunho** e o app lembra de completar; o posto é identificado pela localização com um **ID único** (OpenStreetMap). A voz **substitui** a foto da bomba (OCR). **Não existe capacidade do tanque** (nem campo nem limite): as regras usam a conta valor ÷ litros entre R$ 2 e R$ 12. Sem serviço pago: voz e localização rodam no aparelho.
+
+Plano completo: doc "Abastecimento por voz e posto único" (Claude Docs do projeto). Essas fases puxam para o MVP o que o roadmap deixava na Fase 2; o item C0 atualiza os docs antes de qualquer código.
+
+- [ ] **C0. Docs**: em `docs/01-roadmap.md`, mover o registro por voz para o MVP e tirar "Foto da bomba (OCR)" (a voz substitui); em `docs/05-privacidade-lgpd.md`, registrar microfone (consentimento, pedido só ao tocar em Falar; o áudio não é gravado nem enviado, só o texto vira dado) e localização "durante o uso" (consentimento, pedida só na tela Abastecer; a coordenada não sai do aparelho; a API recebe só o geohash de 5 caracteres, inclusive de usuário sem login); em `docs/03-arquitetura.md`, as tabelas novas e o módulo `places`; em `docs/02-telas-e-fluxos.md`, o fluxo de voz.
+- [ ] **C1. Rascunho de abastecimento**: `status` (`complete` ou `draft`, padrão `complete`) em `fuel_entries`, migration que só adiciona (SQLite e Prisma) e contrato de sync em `shared`. Regra "completo" (posto, valor, litros ou 2 de 3 entre valor, litros e preço, km, combustível, tanque cheio) e validações em `packages/shared`, com teste: km menor que o último ou mais de 2.000 km acima, preço do litro ou valor ÷ litros fora de R$ 2 a R$ 12, valor, litros e preço que não batem (mais de 2% de diferença). Etiqueta "Incompleto" na lista e no Histórico, completar pelo formulário. km/l, custo por km, médias, projeção e relatórios ignoram rascunho. Sem frame no Figma: registrar em `docs/07-validacao-e-decisoes.md`.
+- [ ] **C2. Lembrete do rascunho**: notificação local às 20h do mesmo dia ("Falta o km do abastecimento de hoje no Shell"), repete no dia seguinte e para; tocar abre o rascunho. Reagendar como nos avisos de manutenção.
+- [ ] **C3. Interpretador de fala** em `packages/shared`, puro, com 50+ frases de teste (completas, curtas, fora de ordem, com erro de transcrição). Palavra junto do número define o campo (reais, litros, km, "o litro"); número sem palavra: perto e acima do último km é km, com centavos entre R$ 2 e R$ 12 é preço do litro, dois números soltos se decidem por valor ÷ litros entre R$ 2 e R$ 12, e número só ou ambíguo vira pergunta ("50 é o valor ou os litros?"); "encheu", "completei", "tanque cheio" = cheio, "não enchi" = não; combustível por nome, senão o do último abastecimento; números por extenso; com 2 de 3 entre valor, litros e preço, calcula o terceiro.
+- [ ] **C4. Falar o abastecimento**: `expo-speech-recognition` (reconhecimento do próprio celular, grátis; development build). Botão "Falar" na tela Abastecer, texto aparece enquanto fala, preenche e salva sozinho com resumo de 5 s e "Desfazer" e "Editar"; pergunta quando for ambíguo; faltou dado vira rascunho (C1); falha de validação deixa o campo em vermelho e não salva sozinho. Sem microfone, sem permissão ou com barulho, o formulário atual continua na mesma tela. Textos de permissão do sistema em português. Registrar em `docs/07-validacao-e-decisoes.md` a dependência nativa nova.
+- [ ] **C5. API: postos** (módulo `places`): lista de postos do OpenStreetMap (Overpass, `amenity=fuel`) por geohash de 5 caracteres, com cache; sem serviço pago.
+- [ ] **C6. App: posto único pela localização**: `expo-location` ("durante o uso", pedida só na tela Abastecer), tabela `stations` (`id` UUID v7, `osm_id` opcional, `name`, `brand`, `street`, `lat`, `lng`, `deleted_at`) e `station_id` opcional em `fuel_entries` (`station_name` continua para os registros antigos). Sugere o posto mais perto num raio de ~150 m, com chip "Trocar" (e o segundo mais perto em outro chip); aparece "Shell · Av. da Pista", nunca o ID. Posto fora do OpenStreetMap vira posto local com coordenada e UUID. Postos da região ficam guardados no aparelho para uso sem internet. Sem permissão: sugere os postos já usados, como hoje. Média de preço por posto no app.
+- [ ] **C7. Aviso ao chegar no posto** (opcional, desligado por padrão, "sempre"): geofence nos 20 postos mais usados ou próximos, notificação depois de ~2 min parado ("Abastecendo no Shell · Av. da Pista? Registre agora."), no máximo 1 por posto a cada 12 h e nenhuma se já houve abastecimento hoje; tocar abre Abastecer. Segue `docs/03-arquitetura.md` ("Localização em segundo plano"). Declarações e vídeos para Apple e Google; plano B se recusarem o "sempre": sem esse aviso, o resto do fluxo funciona igual.
 
 ## Fase B — Com API
 
-- [x] **API: usuário anônimo** (`POST /v1/auth/anonymous`): módulo `auth`, Prisma, migration `init`, guard JWT global.
-- [x] **App: chamar o usuário anônimo** quando houver internet: `core/api`, tokens no SecureStore, refazer a chamada se falhar.
-- [x] **API: sync** (`POST /v1/sync/push` e `GET /v1/sync/pull`): módulo `sync`, contrato em `shared`, contador `users.syncVersion`.
-- [x] **App: motor de sync** (envia a `outbox`, aplica o pull, dispara ao abrir, ao voltar, ao recuperar internet e depois de gravar). Atrás das flags `sync.cloud` e `sync.anonymous` (desligada até o dono decidir). As telas 23 e 24 vêm com o login (item abaixo).
-- [x] **API: login com Google e Apple e vincular conta** (`POST /v1/auth/google`, `/apple` e `/link`): validação do `id_token`, junção de dados (`merge`) e troca de conta (`use_account`). Ver `docs/03-arquitetura.md`.
-- [x] **App: login com Google** (Android e iOS) e **Apple** (só iOS), e vincular conta. Telas: [19](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1349), [19b](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1399), e as do primeiro envio ao vincular: [23 "Enviando seus dados"](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1656) e [24 "Essa conta já tem dados"](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1688).
-- [x] **Excluir conta** (tela 22): [22](https://www.figma.com/design/ESJceLVFjGNDdSSAvoguPo/Ta-em-Dia?node-id=13-1598). App e API.
 - [ ] **Exportar meus dados** (LGPD, ver `docs/05-privacidade-lgpd.md`).
-
-## Decisões do dono (22/10/2026)
-
-Escolhas tomadas em `docs/07-validacao-e-decisoes.md`. Cada item é um PR e pode ser feito fora da ordem das fases.
-
-- [x] **Regras de veículos e prazos**: o texto do "Avise-me quando lançar" não promete mais nada ("Anotado!" sem aviso futuro); prazo cadastrado já dentro da janela avisa uma vez no próximo 9h (igual à manutenção); avisos de documentos de **todos** os veículos ativos; arquivar o único veículo ativo é bloqueado ("Você precisa de outro veículo ativo").
-- [x] **Moto**: tipo `motorcycle` no `shared`, no SQLite (migration só adiciona) e no Prisma, com ícone próprio.
-- [x] **Limite grátis de 1 veículo**: `vehicles.max` = 1 no plano grátis (`flags.ts`), aplicado em "Adicionar veículo" e no primeiro veículo.
-- [x] **Prazos por ano**: guardar cada prazo de documento por ano (IPVA 2026, IPVA 2027...), com histórico.
-- [x] **Reordenar arrastando**: arrastar de verdade em Meus veículos (`react-native-gesture-handler` e `react-native-reanimated`).
-- [x] **Seletor de data**: chip "Hoje" e calendário nativo (`@react-native-community/datetimepicker`) nos formulários de abastecimento, manutenção e prazo.
-- [x] **API: segurança da conta anônima**: rate limit (`@nestjs/throttler`), `POST /v1/auth/refresh` com rotação do token, job que apaga contas anônimas sem uso por 12 meses.
-- [x] **App: renovar pelo refresh**: usar `POST /v1/auth/refresh`, tratar 429 como "tentar depois" e reagir à volta da internet (`expo-network`).
 
 ## Decisões do dono (23/10/2026)
 
@@ -60,10 +30,7 @@ Escolhas tomadas sobre os itens 3.9 a 3.23 de `docs/07-validacao-e-decisoes.md`.
 
 ### Para implementar
 
-- [x] **Lembrar de atualizar o km a cada 7 dias**: trocar os 15 dias por 7 (primeiro aviso e repetição; texto "Faz 7 dias sem atualizar o km do <veículo>"; valor em `shared`, se existir). Atualizar também o checklist 2.8 de `docs/07-validacao-e-decisoes.md`.
 - [ ] **Ajuda e contato, Termos e Privacidade**: trocar o "Em breve" por telas ou links. Depende do dono: e-mail ou página de suporte e as URLs públicas (`docs/05-privacidade-lgpd.md`, checklist antes de publicar).
-- [x] **Cartão "Valor na FIPE"** (tela 17): cartão com o selo "Em breve" de Premium, igual ao Figma. Sem consulta real (Fase 2). Atrás de feature flag.
-- [x] **Posto padronizado no abastecimento** (tela 9): o campo "Posto" (obrigatório, com `*`) sugere os postos que o usuário já usou (sem diferenciar maiúsculas e acentos) e reaproveita o mesmo nome; digitar um nome novo cria o posto. Sem localização e sem permissão nova; grava em `station_name`, sem migration destrutiva. Regra de normalização em `packages/shared`, com teste. Prepara "Seus postos" e o mapa de postos (`docs/08-mapa-de-postos.md`, Futuro). Sem frame no Figma: registrar em `docs/07-validacao-e-decisoes.md`.
 
 ### Decididas, sem trabalho
 
@@ -76,5 +43,5 @@ Escolhas tomadas sobre os itens 3.9 a 3.23 de `docs/07-validacao-e-decisoes.md`.
 
 ## Como manter
 
-- Ao terminar um item, marque `[x]` no mesmo PR da feature.
-- Item novo ou fora de ordem: o dono do projeto decide. Não implemente Fase 2 ou Futuro (`docs/01-roadmap.md`).
+- Ao terminar um item, apague-o daqui no mesmo PR da feature (o histórico fica no git).
+- Item novo ou fora de ordem: o dono do projeto decide. Não implemente Fase 2 ou Futuro (`docs/01-roadmap.md`) sem pedido.

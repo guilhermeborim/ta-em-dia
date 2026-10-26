@@ -11,7 +11,7 @@ Responda e escreva textos de interface em português (BR). Código, nomes e comm
 - `docs/01-roadmap.md`: o que é MVP, Fase 2 e Futuro. Não implemente algo de Fase 2 ou Futuro sem pedido.
 - `docs/02-telas-e-fluxos.md`: telas e fluxos que o designer recebe.
 - `docs/03-arquitetura.md`: decisões de arquitetura. Mudou uma decisão, atualize o doc no mesmo PR.
-- `docs/06-backlog.md`: ordem das features e links do Figma. Use `/proxima-feature` para pegar o próximo item.
+- `docs/06-backlog.md`: ordem das próximas features (o que já foi feito sai de lá; links antigos do Figma ficam no git). Use `/proxima-feature` para pegar o próximo item.
 - `docs/07-validacao-e-decisoes.md`: o que ainda precisa ser testado no aparelho e o que está esperando decisão do dono do projeto. Não decida sozinho o que está listado em "Decisões em aberto".
 - `docs/05-privacidade-lgpd.md`: dados pessoais e LGPD. Não colete dado novo (CNH, foto de documento, localização) sem decidir ali.
 
