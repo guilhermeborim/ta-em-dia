@@ -286,7 +286,7 @@ Sem frame no Figma. No Android, com um aparelho que já tem abastecimentos (atua
 - [ ] "Incompleto" legível em fonte grande, nos dois cartões (lista e Histórico); alvo de toque do cartão ≥ 44 pt.
 - [ ] Com sync ligado (conta com login): o rascunho aparece no outro aparelho e, depois de completo, deixa de ser rascunho lá também.
 
-### 2.34 Lembrete do rascunho de abastecimento (C2, PR a abrir)
+### 2.34 Lembrete do rascunho de abastecimento (C2, PR #70)
 
 Sem frame no Figma (é uma notificação). Android com development build, notificações permitidas. Para não esperar as 20h, ajuste data e hora do aparelho para perto das 20h e abra o app (ele reagenda ao abrir e ao voltar para a frente).
 
