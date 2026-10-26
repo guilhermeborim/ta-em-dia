@@ -286,6 +286,18 @@ Sem frame no Figma. No Android, com um aparelho que já tem abastecimentos (atua
 - [ ] "Incompleto" legível em fonte grande, nos dois cartões (lista e Histórico); alvo de toque do cartão ≥ 44 pt.
 - [ ] Com sync ligado (conta com login): o rascunho aparece no outro aparelho e, depois de completo, deixa de ser rascunho lá também.
 
+### 2.34 Lembrete do rascunho de abastecimento (C2, PR a abrir)
+
+Sem frame no Figma (é uma notificação). Android com development build, notificações permitidas. Para não esperar as 20h, ajuste data e hora do aparelho para perto das 20h e abra o app (ele reagenda ao abrir e ao voltar para a frente).
+
+- [ ] Salvar um rascunho (Novo abastecimento → preencher posto e total → Salvar como rascunho) às 19h50: às 20h chega "Falta o km do abastecimento de hoje no Shell"; sem posto, "Falta o posto do abastecimento de hoje"; com vários dados faltando, "Falta completar o abastecimento de hoje no Shell".
+- [ ] No dia seguinte, às 20h, chega o segundo aviso ("... de ontem ..."). Depois disso, nada mais.
+- [ ] Rascunho criado depois das 20h: só o aviso do dia seguinte.
+- [ ] Tocar no aviso abre "Completar abastecimento" com o rascunho (app fechado e app aberto).
+- [ ] Completar o rascunho antes das 20h: nenhum aviso chega.
+- [ ] Sem permissão de notificações: nada é agendado e nenhum pedido aparece.
+- [ ] Os outros avisos (manutenção, documentos, atualizar o km) continuam chegando.
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
@@ -411,3 +423,10 @@ Alternativa: enviar a coordenada arredondada (~1 km). Recomendação: manter só
 - **Sem excluir rascunho pela tela:** quem não quer um rascunho precisa completá-lo; abastecimento completo também não tem exclusão na tela hoje. A exclusão existe no Model (`deleteFuelEntry`). Alternativa: botão "Excluir rascunho" com confirmação no formulário. Recomendação: fazer num PR pequeno junto da edição de abastecimento.
 - **Validações novas (km, faixa de R$ 2 a R$ 12, 2%) não valem no formulário manual:** estão em `shared` (`fuelEntryIssues`) e entram com a voz (C4), para não mudar o que o formulário aceita hoje (por exemplo, registrar um abastecimento antigo com km menor). Alternativa: aplicar já no formulário manual como aviso. Recomendação: manter até o C4.
 - **Migration 9 recria `fuel_entries`:** o SQLite não tira `NOT NULL`, então o item "migration que só adiciona" virou "recria a tabela com os mesmos dados" (como a 8 fez com `vehicles`). No Postgres, `DROP NOT NULL`. Alternativa: gravar 0 nas colunas numéricas do rascunho e só adicionar `status`. Recomendação: manter; zeros misturariam rascunho com dado de verdade em toda consulta.
+
+### 3.34 Lembrete do rascunho: escolhas que fiz (C2)
+
+- **Textos meus:** "Falta o km do abastecimento de hoje no Shell" (o do backlog), "Faltam os valores...", "Falta o combustível...", "Falta dizer se o tanque ficou cheio...", "Falta completar o abastecimento de hoje no Shell" (quando falta mais de um dado) e "de ontem" no segundo aviso. Recomendação: manter.
+- **Sem interruptor em Configurações:** o lembrete segue só a permissão de notificações. Os outros avisos têm interruptor (manutenção, documentos, km). Alternativa: um interruptor "Lembrar de completar abastecimentos" (sem frame no Figma). Recomendação: manter até alguém reclamar.
+- **O dia conta do `created_at` do rascunho**, não da data do abastecimento (que pode ser outro dia). Num segundo aparelho, o rascunho que chega pelo sync ganha o `created_at` do momento do pull, então ele também lembra (às 20h do dia da chegada); completar em qualquer aparelho tira os avisos dos dois depois do sync. Alternativa: sincronizar a data de criação. Recomendação: manter.
+- **Todos os veículos ativos** entram (não só o do Início), como os prazos de documentos. Rascunho de veículo arquivado não avisa.

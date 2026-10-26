@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   completeFuelDraft,
   fuelDraftSchema,
+  fuelDraftReminderText,
+  fuelDraftReminders,
   fuelEntryIssues,
   fuelEntrySyncSchema,
   isFuelDraftComplete,
@@ -187,5 +189,81 @@ describe('contrato de sync do rascunho', () => {
 
   it('abastecimento sem os campos obrigatórios e sem `status` não vale', () => {
     expect(fuelEntrySyncSchema.safeParse({ ...base, stationName: 'Shell' }).success).toBe(false);
+  });
+});
+
+describe('fuelDraftReminders', () => {
+  const createdAt = new Date(2026, 9, 26, 14, 30);
+
+  it('às 20h do dia do rascunho e às 20h do dia seguinte', () => {
+    const reminders = fuelDraftReminders(createdAt, new Date(2026, 9, 26, 15));
+    expect(reminders).toEqual([
+      { fireAt: new Date(2026, 9, 26, 20), dayOffset: 0 },
+      { fireAt: new Date(2026, 9, 27, 20), dayOffset: 1 },
+    ]);
+  });
+
+  it('criado depois das 20h: só o dia seguinte', () => {
+    const late = new Date(2026, 9, 26, 21, 10);
+    expect(fuelDraftReminders(late, late)).toEqual([
+      { fireAt: new Date(2026, 9, 27, 20), dayOffset: 1 },
+    ]);
+  });
+
+  it('depois do segundo aviso, para', () => {
+    expect(fuelDraftReminders(createdAt, new Date(2026, 9, 27, 20, 1))).toEqual([]);
+    expect(fuelDraftReminders(createdAt, new Date(2026, 9, 29))).toEqual([]);
+  });
+
+  it('exatamente na hora, o aviso já saiu', () => {
+    expect(fuelDraftReminders(createdAt, new Date(2026, 9, 26, 20))).toEqual([
+      { fireAt: new Date(2026, 9, 27, 20), dayOffset: 1 },
+    ]);
+  });
+
+  it('vira o mês e o ano', () => {
+    const newYear = new Date(2026, 11, 31, 10);
+    expect(fuelDraftReminders(newYear, newYear).map((r) => r.fireAt)).toEqual([
+      new Date(2026, 11, 31, 20),
+      new Date(2027, 0, 1, 20),
+    ]);
+  });
+
+  it('é o mesmo resultado ao reagendar no mesmo dia', () => {
+    const now = new Date(2026, 9, 26, 15);
+    expect(fuelDraftReminders(createdAt, now)).toEqual(fuelDraftReminders(createdAt, now));
+  });
+});
+
+describe('fuelDraftReminderText', () => {
+  it('um dado só', () => {
+    expect(fuelDraftReminderText(['km'], 'Shell', 0)).toBe(
+      'Falta o km do abastecimento de hoje no Shell',
+    );
+    expect(fuelDraftReminderText(['station'], undefined, 0)).toBe(
+      'Falta o posto do abastecimento de hoje',
+    );
+    expect(fuelDraftReminderText(['amounts'], 'Shell', 0)).toBe(
+      'Faltam os valores do abastecimento de hoje no Shell',
+    );
+    expect(fuelDraftReminderText(['fuelType'], 'Shell', 0)).toBe(
+      'Falta o combustível do abastecimento de hoje no Shell',
+    );
+    expect(fuelDraftReminderText(['fullTank'], 'Shell', 0)).toBe(
+      'Falta dizer se o tanque ficou cheio no abastecimento de hoje no Shell',
+    );
+  });
+
+  it('vários dados: completar', () => {
+    expect(fuelDraftReminderText(['km', 'amounts'], 'Shell', 0)).toBe(
+      'Falta completar o abastecimento de hoje no Shell',
+    );
+    expect(fuelDraftReminderText([], 'Shell', 0)).toBe(
+      'Falta completar o abastecimento de hoje no Shell',
+    );
+  });
+
+  it('no dia seguinte diz "de ontem"; posto em branco não aparece', () => {
+    expect(fuelDraftReminderText(['km'], '  ', 1)).toBe('Falta o km do abastecimento de ontem');
   });
 });

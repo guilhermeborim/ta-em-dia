@@ -141,3 +141,68 @@ export function fuelEntryIssues(input: FuelIssueInput, lastKm: number | null): F
 
   return issues;
 }
+
+/** Hora (fuso do aparelho) em que o lembrete do rascunho chega. */
+export const FUEL_DRAFT_REMINDER_HOUR = 20;
+
+/** Quantos dias o lembrete se repete: o dia do rascunho e o seguinte, depois para. */
+export const FUEL_DRAFT_REMINDER_DAYS = 2;
+
+export interface FuelDraftReminder {
+  /** Quando o aviso aparece: sempre no futuro. */
+  fireAt: Date;
+  /** 0 = no dia do rascunho, 1 = no dia seguinte. */
+  dayOffset: number;
+}
+
+/**
+ * Quando lembrar de completar o rascunho: às 20h do dia em que ele foi criado e às 20h do dia
+ * seguinte. Hora que já passou não entra; depois do segundo dia, nada. É determinístico:
+ * reagendar várias vezes dá os mesmos avisos.
+ */
+export function fuelDraftReminders(
+  createdAt: Date,
+  now: Date = new Date(),
+  hour: number = FUEL_DRAFT_REMINDER_HOUR,
+): FuelDraftReminder[] {
+  const reminders: FuelDraftReminder[] = [];
+  for (let dayOffset = 0; dayOffset < FUEL_DRAFT_REMINDER_DAYS; dayOffset++) {
+    const fireAt = new Date(
+      createdAt.getFullYear(),
+      createdAt.getMonth(),
+      createdAt.getDate() + dayOffset,
+      hour,
+    );
+    if (fireAt > now) reminders.push({ fireAt, dayOffset });
+  }
+  return reminders;
+}
+
+/**
+ * Texto do lembrete, pelo que falta no rascunho. Um dado só: "Falta o km do abastecimento de
+ * hoje no Shell"; vários: "Falta completar o abastecimento de hoje no Shell". No dia seguinte,
+ * "de ontem". Sem o posto, a frase termina em "abastecimento de hoje".
+ */
+export function fuelDraftReminderText(
+  missing: ReturnType<typeof missingFuelFields>,
+  stationName: string | undefined,
+  dayOffset: number,
+): string {
+  const day = dayOffset === 0 ? 'hoje' : 'ontem';
+  const station = (stationName ?? '').trim();
+  const at = station === '' ? '' : ` no ${station}`;
+  const fuel = `abastecimento de ${day}${at}`;
+  if (missing.length !== 1) return `Falta completar o ${fuel}`;
+  switch (missing[0]) {
+    case 'station':
+      return `Falta o posto do ${fuel}`;
+    case 'km':
+      return `Falta o km do ${fuel}`;
+    case 'fuelType':
+      return `Falta o combustível do ${fuel}`;
+    case 'fullTank':
+      return `Falta dizer se o tanque ficou cheio no ${fuel}`;
+    case 'amounts':
+      return `Faltam os valores do ${fuel}`;
+  }
+}
