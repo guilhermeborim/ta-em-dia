@@ -15,6 +15,7 @@ describe('loadSettings', () => {
       notifyDocuments: true,
       notifyOdometer: false,
       documentNotifyDays: [30, 7],
+      voiceAutoSave: false,
     });
   });
 
@@ -29,6 +30,15 @@ describe('loadSettings', () => {
     });
     await saveToggle(db, 'notifyMaintenance', true);
     expect((await loadSettings(db)).notifyMaintenance).toBe(true);
+  });
+
+  it('salvar pela fala vem desligado e guarda a escolha', async () => {
+    const db = await setup();
+    expect((await loadSettings(db)).voiceAutoSave).toBe(false);
+    await saveToggle(db, 'voiceAutoSave', true);
+    expect((await loadSettings(db)).voiceAutoSave).toBe(true);
+    await saveToggle(db, 'voiceAutoSave', false);
+    expect((await loadSettings(db)).voiceAutoSave).toBe(false);
   });
 
   it('guarda a antecedência do maior para o menor, sem repetir', async () => {

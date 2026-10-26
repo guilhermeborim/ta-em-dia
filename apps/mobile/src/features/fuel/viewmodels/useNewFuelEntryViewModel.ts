@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatKm } from '../../../core/format';
 import { useDb } from '../../../core/db';
 import { loadFuelFormContext, type FuelFormContext } from '../models/fuelContext';
-import { addFuelEntry, listStationNames, updateFuelRecord } from '../../../core/fuel';
+import { addFuelEntry, listStationNames } from '../../../core/fuel';
 import { useFlag } from '../../../core/flags/useFlag';
 import { refreshReminders } from '../../../core/reminders';
 import {
@@ -25,8 +25,9 @@ import { useFuelVoice } from './useFuelVoice';
 
 /**
  * ViewModel do Novo abastecimento: sugestões, cálculo do terceiro valor, validação e gravação local.
- * O botão de falar preenche o formulário e salva sozinho quando está completo e válido; se falta
- * dado, não salva: mostra o card do que falta e leva o foco ao campo (`focusRequest`).
+ * O botão de falar preenche o formulário; salva sozinho só se "Salvar pela fala" estiver ligado e
+ * tudo certo. Se falta dado, não salva: mostra o card do que falta e leva o foco ao campo
+ * (`focusRequest`).
  */
 export function useNewFuelEntryViewModel() {
   const db = useDb();
@@ -40,8 +41,6 @@ export function useNewFuelEntryViewModel() {
   // `null` = hoje (a data de agora, na hora de salvar); a pessoa troca pelo calendário.
   const [pickedDate, setPickedDate] = useState<Date | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
-  // Registro que a voz salvou: salvar de novo (depois de "Editar") atualiza esse mesmo id.
-  const [savedId, setSavedId] = useState<string | null>(null);
   // Pedido de foco da voz; `nonce` faz o mesmo campo receber o foco de novo.
   const [focusRequest, setFocusRequest] = useState<{ field: FuelFocusField; nonce: number } | null>(
     null,
@@ -94,22 +93,14 @@ export function useNewFuelEntryViewModel() {
     }
     setBusy(true);
     try {
-      let id: string;
-      if (savedId) {
-        id = savedId;
-        const saved = await updateFuelRecord(db, { ...result.value, id });
-        // O abastecimento foi excluído por outro caminho (ex.: sync): salva como novo.
-        if (!saved) id = (await addFuelEntry(db, result.value)).id;
-      } else {
-        id = (await addFuelEntry(db, result.value)).id;
-      }
+      const { id } = await addFuelEntry(db, result.value);
       // O km mudou: os avisos de manutenção dependem dele.
       void refreshReminders(db);
       router.dismissTo({ pathname: '/', params: { saved: id } });
     } finally {
       setBusy(false);
     }
-  }, [context, dateToSave, db, form, router, savedId, stations]);
+  }, [context, dateToSave, db, form, router, stations]);
 
   const voice = useFuelVoice({
     db,
@@ -121,9 +112,8 @@ export function useNewFuelEntryViewModel() {
     setKmTouched,
     setErrors,
     date: dateToSave,
-    onDone: (id) => router.dismissTo({ pathname: '/', params: { saved: id } }),
+    onSaved: (id) => router.dismissTo({ pathname: '/', params: { saved: id } }),
     onFocus: (field) => setFocusRequest((prev) => ({ field, nonce: (prev?.nonce ?? 0) + 1 })),
-    onTrack: setSavedId,
   });
 
   return {
@@ -165,8 +155,7 @@ export function useNewFuelEntryViewModel() {
     close: () => router.back(),
     addVehicle: () => router.replace('/primeiro-veiculo'),
     save,
-    /** "Falar" some depois que a voz salvou (o formulário passa a atualizar o registro). */
-    canTalk: voiceEnabled && savedId === null,
+    canTalk: voiceEnabled,
     focusRequest,
     voice,
     talkButton: voice.talkButton,

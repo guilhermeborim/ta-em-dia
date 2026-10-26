@@ -2,10 +2,8 @@ export { buildAverage, type FuelAverage } from './fuelAverage';
 export {
   addFuelEntry,
   deleteFuelEntry,
-  getFuelRecord,
   listFuelEntries,
   listStationNames,
-  updateFuelRecord,
   type NewFuelEntry,
 } from './fuelEntries.repository';
 export { cancelLegacyFuelDraftReminders } from './reminders';

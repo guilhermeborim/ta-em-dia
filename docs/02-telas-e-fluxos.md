@@ -65,15 +65,15 @@ São 22 telas, agrupadas por área.
 
 ### Veículos, documentos e conta
 
-| #   | Tela                   | Conteúdo                                                                                                             | Ações                                    |
-| --- | ---------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| 16  | Meus veículos          | Cartões com ícone (carro ou moto), apelido, modelo, km atual                                                         | Adicionar, abrir, reordenar (arrastar)   |
-| 17  | Detalhe/editar veículo | Dados completos, placa, km atual, média diária de km calculada                                                       | Atualizar km, editar, arquivar, excluir  |
-| 18  | Documentos e prazos    | IPVA, licenciamento, seguro (por veículo) e CNH (por pessoa), com data e status (em dia / vence em X dias / vencido) | Adicionar data, editar lembrete, renovar |
-| 19  | Conta                  | Modo anônimo: chamada "Salve seus dados" com Google (e Apple, no iPhone). Logado: nome, e-mail, último sync          | Vincular conta, sair, excluir conta      |
-| 20  | Configurações          | Notificações por tipo, antecedência dos alertas, unidades (só km e litros), exportar dados (Fase B)                  | Alterar                                  |
-| 21  | Premium (em breve)     | Lista de recursos Premium com selo, sem preço                                                                        | Tenho interesse                          |
-| 22  | Excluir conta          | Aviso claro do que será apagado, confirmação                                                                         | Confirmar exclusão                       |
+| #   | Tela                   | Conteúdo                                                                                                                                | Ações                                    |
+| --- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| 16  | Meus veículos          | Cartões com ícone (carro ou moto), apelido, modelo, km atual                                                                            | Adicionar, abrir, reordenar (arrastar)   |
+| 17  | Detalhe/editar veículo | Dados completos, placa, km atual, média diária de km calculada                                                                          | Atualizar km, editar, arquivar, excluir  |
+| 18  | Documentos e prazos    | IPVA, licenciamento, seguro (por veículo) e CNH (por pessoa), com data e status (em dia / vence em X dias / vencido)                    | Adicionar data, editar lembrete, renovar |
+| 19  | Conta                  | Modo anônimo: chamada "Salve seus dados" com Google (e Apple, no iPhone). Logado: nome, e-mail, último sync                             | Vincular conta, sair, excluir conta      |
+| 20  | Configurações          | Notificações por tipo, antecedência dos alertas, "Salvar pela fala" (abastecimento), unidades (só km e litros), exportar dados (Fase B) | Alterar                                  |
+| 21  | Premium (em breve)     | Lista de recursos Premium com selo, sem preço                                                                                           | Tenho interesse                          |
+| 22  | Excluir conta          | Aviso claro do que será apagado, confirmação                                                                                            | Confirmar exclusão                       |
 
 ## Fluxos principais
 
@@ -96,13 +96,13 @@ São 22 telas, agrupadas por área.
 
 1. Na tela Novo abastecimento, toque no **microfone** ao lado de Salvar abastecimento. Na primeira vez, o toque já abre o pedido de permissão do microfone do sistema (sem aviso antes; a localização entra no C6). Recusar não bloqueia: o formulário continua na mesma tela. O posto pode ser dito ("no posto Ipiranga", "na Shell", ou o nome de um posto já usado); se não for, vem do formulário (chip ou digitado antes de falar) e, no C6, da localização.
 2. O usuário fala do jeito que quiser: "abasteci 150 reais, 25 litros, 45 mil e 300, encheu". Enquanto ouve, a **tela inteira escurece** com três pontinhos animados no centro; o texto falado não aparece. Tocar em qualquer lugar para de ouvir; 2 s de silêncio também encerram.
-3. Se estiver completo e válido, o app **salva sozinho** e mostra por 5 s o resumo ("Shell · R$ 150,00 · 25 L · 45.300 km") com **Desfazer** (apaga e deixa o formulário preenchido) e **Editar** (fica na tela; salvar atualiza o mesmo registro). Depois dos 5 s volta ao Início com o toast de sempre.
+3. Ao terminar de falar, o app **preenche os campos** (sem cartão de sucesso). O que acontece depois depende de **Configurações → Abastecimento → Salvar pela fala** (padrão: desligado): desligado, a pessoa confere e toca em **Salvar abastecimento**; ligado, se estiver completo e válido o app **salva sozinho** e volta ao Início com o toast de sempre (sem desfazer).
 4. Se algo for ambíguo, o app pergunta ("50 é o valor ou os litros?") com botões de resposta.
-5. Se faltar dado (o posto, o km ou os valores; o km sugerido não conta, só o falado ou digitado), o app **não salva**: a tela continua aberta com o que foi entendido preenchido, um cartão avisa o que falta ("Falta informar o km") e o cursor vai para o campo que falta, que fica com a mensagem de erro. A pessoa preenche (ou toca no microfone de novo para falar só o que faltou) e toca em **Salvar abastecimento**.
+5. Se faltar dado (o posto ou os valores; com "Salvar pela fala" ligado, também o km, que precisa ser falado ou digitado, não vale o sugerido), o app **não salva**: a tela continua aberta com o que foi entendido preenchido, um cartão avisa o que falta ("Falta informar o km") e o cursor vai para o campo que falta, que fica com a mensagem de erro. A pessoa preenche (ou toca no microfone de novo para falar só o que faltou) e toca em **Salvar abastecimento**.
 6. Se um valor não passar na validação (preço do litro fora de R$ 2 a R$ 12, km menor que o último), o campo fica em vermelho, recebe o cursor e o app **não salva sozinho**.
 7. Sem microfone, com barulho ou sem entender, a pessoa preenche o formulário atual na mesma tela.
 
-Telas novas sem frame no Figma: botão de falar, tela de "ouvindo" com os pontinhos, cartão da voz (pergunta, o que falta, resumo de 5 s) e textos das permissões. Cada item do backlog (C4, C6) registra o que ficou sem frame em `docs/07-validacao-e-decisoes.md`.
+Telas novas sem frame no Figma: botão de falar, tela de "ouvindo" com os pontinhos, cartão da voz (pergunta, o que falta, campo em vermelho), o interruptor "Salvar pela fala" e textos das permissões. Cada item do backlog (C4, C6) registra o que ficou sem frame em `docs/07-validacao-e-decisoes.md`.
 
 **3. Manutenção com alerta**
 

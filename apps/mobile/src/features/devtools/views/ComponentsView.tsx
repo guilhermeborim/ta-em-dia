@@ -297,15 +297,11 @@ export function ComponentsView() {
             ]}
           />
           <SpeechCard
-            tone="success"
-            title="Abastecimento salvo"
-            text="Shell · R$ 150,00 · 25 L · 45.300 km"
-            actions={[
-              { label: 'Desfazer', onPress: () => {}, variant: 'outline' },
-              { label: 'Editar', onPress: () => {} },
-            ]}
+            tone="warning"
+            title="Falta informar o km"
+            text="Preencha abaixo e toque em Salvar abastecimento."
           />
-          <SpeechCard tone="warning" title="Não ouvi nada. Toque em Falar de novo." />
+          <SpeechCard tone="danger" title="Confira os campos em vermelho e salve" />
         </Section>
 
         <Section title="Ouvindo (pontinhos)">

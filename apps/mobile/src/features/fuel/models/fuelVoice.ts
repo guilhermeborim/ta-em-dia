@@ -7,7 +7,7 @@ import {
   type FuelSpeechResult,
 } from '@ta-em-dia/shared';
 import type { NewFuelEntry } from '../../../core/fuel';
-import { formatBRL, formatKm, formatNumber, parseDecimal, parseKm } from '../../../core/format';
+import { formatBRL, formatKm, parseDecimal, parseKm } from '../../../core/format';
 import type { SpeechFailure } from '../../../core/speech';
 import {
   buildFuelEntryInput,
@@ -76,7 +76,7 @@ export type FuelVoiceOutcome =
   | { kind: 'invalid'; errors: FuelFormErrors; focus: FuelFocusField }
   /** Falta dado: campo em vermelho, nada salvo, e o card diz o que falta. */
   | { kind: 'missing'; errors: FuelFormErrors; focus: FuelFocusField; message: string }
-  | { kind: 'entry'; value: NewFuelEntry; summary: string };
+  | { kind: 'entry'; value: NewFuelEntry };
 
 export interface FuelVoiceContext {
   vehicleId: string;
@@ -84,6 +84,8 @@ export interface FuelVoiceContext {
   stations: readonly string[];
   /** O km do formulário foi dito ou digitado (o sugerido não conta). */
   kmTouched: boolean;
+  /** Exige o km dito ou digitado (salvar sozinho). Sem isso, o km sugerido vale. */
+  strictKm: boolean;
   /** Km do último abastecimento completo do veículo. */
   lastKm: number | null;
 }
@@ -112,21 +114,6 @@ export function fuelIssueErrors(
     }
   }
   return errors;
-}
-
-/** "Shell · R$ 150,00 · 25 L · 45.300 km": só o que existe. */
-export function fuelVoiceSummary(value: {
-  stationName?: string;
-  total?: number;
-  liters?: number;
-  km?: number;
-}): string {
-  const parts: string[] = [];
-  if (value.stationName) parts.push(value.stationName);
-  if (value.total !== undefined) parts.push(formatBRL(value.total));
-  if (value.liters !== undefined) parts.push(`${formatNumber(value.liters, 0, 2)} L`);
-  if (value.km !== undefined) parts.push(`${formatKm(String(value.km))} km`);
-  return parts.join(' · ');
 }
 
 /**
@@ -187,13 +174,13 @@ export function decideFuelVoice(
   }
 
   const entry = buildFuelEntryInput(form, ctx);
-  if (entry.value && ctx.kmTouched) {
-    return { kind: 'entry', value: entry.value, summary: fuelVoiceSummary(entry.value) };
+  if (entry.value && (ctx.kmTouched || !ctx.strictKm)) {
+    return { kind: 'entry', value: entry.value };
   }
 
   const errors: FuelFormErrors = { ...entry.errors };
   // O km que está no campo é só a sugestão: a pessoa precisa dizer ou confirmar.
-  if (!ctx.kmTouched) {
+  if (!ctx.kmTouched && ctx.strictKm) {
     errors.km = parseKm(form.km) === null ? 'Informe o km do painel' : 'Confirme o km do painel';
   }
   return { kind: 'missing', errors, focus: focusFor(errors, form), message: missingText(errors) };

@@ -59,6 +59,19 @@ export function SettingsView() {
           </ListGroup>
 
           <Text variant="caption" color="text3">
+            ABASTECIMENTO
+          </Text>
+          <ListGroup>
+            <SwitchRow
+              flat
+              label="Salvar pela fala"
+              hint="Ao terminar de falar, salva sem você tocar em Salvar"
+              value={vm.voiceAutoSave}
+              onValueChange={vm.setVoiceAutoSave}
+            />
+          </ListGroup>
+
+          <Text variant="caption" color="text3">
             UNIDADES E DADOS
           </Text>
           <ListGroup>

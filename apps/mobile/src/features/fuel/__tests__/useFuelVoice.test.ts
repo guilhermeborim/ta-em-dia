@@ -6,8 +6,6 @@ const actions = {
   stop: jest.fn(),
   cancel: jest.fn(),
   answer: jest.fn(),
-  undo: jest.fn(),
-  edit: jest.fn(),
   dismiss: jest.fn(),
 };
 
@@ -29,16 +27,6 @@ describe('voiceCard', () => {
     expect(labels(card)).toEqual(['Valor', 'Litros', 'Cancelar']);
     card?.actions[1]?.onPress();
     expect(actions.answer).toHaveBeenCalledWith('liters');
-  });
-
-  it('salvo: resumo com Desfazer e Editar', () => {
-    const card = voiceCard({ step: 'saved', id: 'x', summary: 'R$ 150,00' }, actions);
-    expect(card).toMatchObject({
-      tone: 'success',
-      title: 'Abastecimento salvo',
-      text: 'R$ 150,00',
-    });
-    expect(labels(card)).toEqual(['Desfazer', 'Editar']);
   });
 
   it('faltou dado: card avisa o que falta e manda preencher, sem botões', () => {
@@ -82,7 +70,8 @@ describe('talkButton', () => {
     expect(talkButton({ step: 'missing', message: 'x' }, actions)?.listening).toBe(false);
   });
 
-  it('some com pergunta ou resumo na tela', () => {
-    expect(talkButton({ step: 'saved', id: 'x', summary: '' }, actions)).toBeNull();
+  it('some com a pergunta na tela', () => {
+    const question = parseFuelSpeech('50').question!;
+    expect(talkButton({ step: 'question', text: '50', question }, actions)).toBeNull();
   });
 });

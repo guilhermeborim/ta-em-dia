@@ -7,7 +7,7 @@ import {
   loadSettings,
   saveToggle,
   type AppSettings,
-  type ToggleSetting,
+  type NotifySetting,
 } from '../../../core/settings';
 import { useToast } from '../../../core/toast/useToast';
 import { formatNotifyDays } from '../models/settingsView';
@@ -33,7 +33,7 @@ export function useSettingsViewModel() {
   );
 
   const toggle = useCallback(
-    async (key: ToggleSetting, value: boolean) => {
+    async (key: NotifySetting, value: boolean) => {
       setSettings((prev) => (prev ? { ...prev, [key]: value } : prev));
       await saveToggle(db, key, value);
       // Ligar um aviso sem a permissão do sistema não adiantaria: pede agora (só se ainda não foi dada).
@@ -48,16 +48,27 @@ export function useSettingsViewModel() {
     [db, show],
   );
 
+  // Salvar pela fala não usa notificação: só grava a preferência.
+  const setVoiceAutoSave = useCallback(
+    async (value: boolean) => {
+      setSettings((prev) => (prev ? { ...prev, voiceAutoSave: value } : prev));
+      await saveToggle(db, 'voiceAutoSave', value);
+    },
+    [db],
+  );
+
   return {
     loading: settings === null,
     toast,
     notifyMaintenance: settings?.notifyMaintenance ?? false,
     notifyDocuments: settings?.notifyDocuments ?? false,
     notifyOdometer: settings?.notifyOdometer ?? false,
+    voiceAutoSave: settings?.voiceAutoSave ?? false,
     documentNotifyDays: settings ? formatNotifyDays(settings.documentNotifyDays) : '',
     setNotifyMaintenance: (value: boolean) => void toggle('notifyMaintenance', value),
     setNotifyDocuments: (value: boolean) => void toggle('notifyDocuments', value),
     setNotifyOdometer: (value: boolean) => void toggle('notifyOdometer', value),
+    setVoiceAutoSave: (value: boolean) => void setVoiceAutoSave(value),
     openNotifyDays: () => router.push('/configuracoes/antecedencia'),
     exportData: () => show({ title: 'Em breve' }),
     back: () => router.back(),

@@ -91,58 +91,6 @@ export async function listFuelEntries(db: Db, vehicleId: string): Promise<FuelEn
   return rows.map(toFuelEntry);
 }
 
-/** Um abastecimento completo e ativo, ou `null`. */
-export async function getFuelRecord(db: Db, id: string): Promise<FuelEntry | null> {
-  const row = await db.getFirstAsync<FuelEntryRow>(
-    `SELECT ${COLUMNS} FROM fuel_entries WHERE id = ? AND deleted_at IS NULL AND status = 'complete'`,
-    id,
-  );
-  return row ? toFuelEntry(row) : null;
-}
-
-/**
- * Troca o abastecimento gravado pelo informado (mesmo `id`): é o "Editar" do resumo da voz. Devolve
- * `false` se o registro não existe mais (excluído).
- */
-export async function updateFuelRecord(
-  db: Db,
-  record: FuelEntry,
-  now: Date = new Date(),
-): Promise<boolean> {
-  const entry = fuelEntrySchema.parse(record);
-  const at = now.toISOString();
-  let updated = false;
-
-  await db.withTransactionAsync(async () => {
-    const exists = await db.getFirstAsync<{ id: string }>(
-      'SELECT id FROM fuel_entries WHERE id = ? AND deleted_at IS NULL',
-      entry.id,
-    );
-    if (!exists) return;
-    await db.runAsync(
-      `UPDATE fuel_entries
-          SET date = ?, km = ?, fuel_type = ?, liters = ?, price_per_liter = ?,
-              total = ?, full_tank = ?, station_name = ?, note = ?, updated_at = ?
-        WHERE id = ?`,
-      entry.date.toISOString(),
-      entry.km,
-      entry.fuelType,
-      entry.liters,
-      entry.pricePerLiter,
-      entry.total,
-      entry.fullTank ? 1 : 0,
-      entry.stationName ?? null,
-      entry.note ?? null,
-      at,
-      entry.id,
-    );
-    updated = true;
-    await enqueue(db, 'fuel_entries', entry.id, 'upsert', entry, at);
-  });
-
-  return updated;
-}
-
 /** Exclusão lógica: a linha fica com deleted_at para o sync propagar. */
 export async function deleteFuelEntry(db: Db, id: string, now: Date = new Date()): Promise<void> {
   const at = now.toISOString();

@@ -4,7 +4,6 @@ import {
   answerOptions,
   applyFuelSpeech,
   decideFuelVoice,
-  fuelVoiceSummary,
   missingText,
   speechFailureText,
   type FuelVoiceContext,
@@ -25,6 +24,7 @@ const ctx = (patch: Partial<FuelVoiceContext> = {}): FuelVoiceContext => ({
   date: DATE,
   stations: ['Shell'],
   kmTouched: false,
+  strictKm: true,
   lastKm: 45000,
   ...patch,
 });
@@ -95,7 +95,6 @@ describe('posto falado', () => {
     const { outcome } = run(`${phrase} km 45300`);
     expect(outcome).toMatchObject({
       kind: 'entry',
-      summary: 'Ipiranga · R$ 150,00 · 25 L · 45.300 km',
       value: { stationName: 'Ipiranga', fuelType: 'gasoline' },
     });
   });
@@ -116,7 +115,6 @@ describe('decideFuelVoice', () => {
     const { outcome } = run('150 reais, 25 litros, km 45300', opened({ station: 'Shell' }));
     expect(outcome).toMatchObject({
       kind: 'entry',
-      summary: 'Shell · R$ 150,00 · 25 L · 45.300 km',
       value: { total: 150, liters: 25, pricePerLiter: 6, km: 45300, stationName: 'Shell' },
     });
   });
@@ -227,12 +225,26 @@ describe('decideFuelVoice', () => {
   });
 });
 
-describe('textos', () => {
-  it('resumo só com o que existe', () => {
-    expect(fuelVoiceSummary({ liters: 25.5 })).toBe('25,5 L');
-    expect(fuelVoiceSummary({})).toBe('');
+describe('sem salvar sozinho (strictKm desligado)', () => {
+  const loose = { strictKm: false };
+
+  it('o km sugerido vale: completo vira entrada, como no formulário', () => {
+    const { outcome } = run('150 reais, 25 litros', opened({ station: 'Shell' }), loose);
+    expect(outcome).toMatchObject({ kind: 'entry', value: { km: 45000, total: 150 } });
   });
 
+  it('continua cobrando o que falta de verdade (posto) e foca o campo', () => {
+    const { outcome } = run('150 reais, 25 litros', opened(), loose);
+    expect(outcome).toMatchObject({ kind: 'missing', focus: 'station' });
+  });
+
+  it('valor fora da regra continua em vermelho', () => {
+    const { outcome } = run('150 reais 4 litros', opened({ station: 'Shell' }), loose);
+    expect(outcome).toMatchObject({ kind: 'invalid', focus: 'pricePerLiter' });
+  });
+});
+
+describe('textos', () => {
   it('o que falta, em lista, na ordem da tela', () => {
     expect(missingText({ station: 'x' })).toBe('Falta informar o posto');
     expect(missingText({ station: 'x', km: 'x' })).toBe('Falta informar o km e o posto');

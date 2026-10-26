@@ -7,8 +7,9 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Db } from '../../../core/db';
 import type { ButtonVariant, SpeechCardTone } from '../../../ui';
-import { addFuelEntry, deleteFuelEntry } from '../../../core/fuel';
+import { addFuelEntry } from '../../../core/fuel';
 import { refreshReminders } from '../../../core/reminders';
+import { loadSettings } from '../../../core/settings';
 import {
   isSpeechAvailable,
   requestSpeechPermission,
@@ -26,12 +27,9 @@ import {
   speechFailureText,
 } from '../models/fuelVoice';
 
-/** Quanto tempo o resumo fica na tela antes de sair (com "Desfazer" e "Editar"). */
-export const VOICE_SUMMARY_MS = 5000;
-
 export type FuelVoiceState =
   | { step: 'idle' }
-  /** O texto falado não aparece na tela: só os pontinhos no botão. */
+  /** O texto falado não aparece na tela: só os pontinhos em tela cheia. */
   | { step: 'listening' }
   /** `text` fica guardado para repetir a interpretação com a resposta; não aparece na tela. */
   | { step: 'question'; text: string; question: FuelSpeechQuestion }
@@ -39,8 +37,7 @@ export type FuelVoiceState =
   | { step: 'invalid' }
   /** Faltou dado: não salvou, o campo que falta ficou em vermelho e com o foco. */
   | { step: 'missing'; message: string }
-  | { step: 'failed'; message: string }
-  | { step: 'saved'; id: string; summary: string };
+  | { step: 'failed'; message: string };
 
 interface FuelVoiceDeps {
   db: Db;
@@ -52,22 +49,18 @@ interface FuelVoiceDeps {
   setKmTouched: (value: boolean) => void;
   setErrors: (errors: FuelFormErrors) => void;
   date: () => Date;
-  /** Fim dos 5 s do resumo: sai da tela. */
-  onDone: (id: string) => void;
+  /** A voz salvou o abastecimento (só com "Salvar pela fala" ligado): sai da tela. */
+  onSaved: (id: string) => void;
   /** Leva o cursor ao campo que falta ou está em vermelho. */
   onFocus: (field: FuelFocusField) => void;
-  /**
-   * Registro que a voz salvou e o formulário passa a atualizar (salvar de novo não cria outro);
-   * `null` quando a voz o desfez.
-   */
-  onTrack: (id: string | null) => void;
 }
 
 /**
- * Registro por voz na tela Abastecer: ouve, pergunta o que for ambíguo e salva sozinho quando está
- * completo e válido. Faltando dado ou com valor fora da regra, não salva: preenche o que entendeu,
- * deixa o campo em vermelho, leva o foco a ele e o card diz o que falta. Falha de reconhecimento
- * deixa o formulário como estava.
+ * Registro por voz na tela Abastecer: ouve, pergunta o que for ambíguo e preenche o formulário.
+ * Com "Salvar pela fala" ligado (Configurações), completo e válido já salva; desligado (padrão), a
+ * pessoa confere e toca em Salvar. Faltando dado ou com valor fora da regra, nunca salva: deixa o
+ * campo em vermelho, leva o foco a ele e o card diz o que falta. Falha de reconhecimento deixa o
+ * formulário como estava.
  */
 export function useFuelVoice(deps: FuelVoiceDeps) {
   const [state, setState] = useState<FuelVoiceState>({ step: 'idle' });
@@ -75,7 +68,6 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
   const transcript = useRef('');
   const failure = useRef<SpeechFailure | null>(null);
   const answers = useRef<FuelSpeechAnswers>({});
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Os callbacks do reconhecimento chegam depois: leem sempre o formulário mais recente.
   const latest = useRef(deps);
   latest.current = deps;
@@ -83,7 +75,6 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
   useEffect(
     () => () => {
       session.current?.abort();
-      if (timer.current) clearTimeout(timer.current);
     },
     [],
   );
@@ -105,6 +96,7 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
       setState({ step: 'question', text, question: result.question });
       return;
     }
+    const { voiceAutoSave } = await loadSettings(d.db);
     const applied = applyFuelSpeech(d.form, result);
     const kmTouched = d.kmTouched || applied.kmSpoken;
     const outcome = decideFuelVoice(result, applied.form, {
@@ -112,6 +104,8 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
       date: d.date(),
       stations: d.stations,
       kmTouched,
+      // Salvar sozinho só com km dito ou digitado; sem salvar, o km sugerido vale como no formulário.
+      strictKm: voiceAutoSave,
       lastKm: d.context?.lastFuelKm ?? null,
     });
 
@@ -132,13 +126,12 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
       return;
     }
     d.setErrors({});
+    setState({ step: 'idle' });
+    if (!voiceAutoSave) return;
 
     const { id } = await addFuelEntry(d.db, outcome.value);
     void refreshReminders(d.db);
-    setState({ step: 'saved', id, summary: outcome.summary });
-    // O formulário agora atualiza este registro (salvar depois não cria outro).
-    d.onTrack(id);
-    timer.current = setTimeout(() => latest.current.onDone(id), VOICE_SUMMARY_MS);
+    d.onSaved(id);
   }, []);
 
   const finish = useCallback(() => {
@@ -190,34 +183,12 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
     [interpret, state],
   );
 
-  const clearTimer = () => {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = null;
-  };
-
-  /** Apaga o que a voz salvou; o formulário fica preenchido para corrigir ou falar de novo. */
-  const undo = useCallback(async () => {
-    if (state.step !== 'saved') return;
-    clearTimer();
-    await deleteFuelEntry(latest.current.db, state.id);
-    latest.current.onTrack(null);
-    void refreshReminders(latest.current.db);
-    setState({ step: 'idle' });
-  }, [state]);
-
-  /** Fica na tela para corrigir; salvar atualiza o mesmo registro. */
-  const edit = useCallback(() => {
-    if (state.step !== 'saved') return;
-    clearTimer();
-    setState({ step: 'idle' });
-  }, [state]);
-
   const stop = useCallback(() => session.current?.stop(), []);
   const dismiss = useCallback(() => setState({ step: 'idle' }), []);
 
   return {
     state,
-    card: voiceCard(state, { talk, answer, undo, edit, dismiss }),
+    card: voiceCard(state, { talk, answer, dismiss }),
     talkButton: talkButton(state, { talk, stop }),
     /** Tela de "ouvindo" (escurece tudo e mostra os pontinhos no centro). */
     listening: state.step === 'listening',
@@ -225,8 +196,6 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
     /** Para de ouvir e interpreta o que já veio. */
     stop,
     answer,
-    undo,
-    edit,
     dismiss,
   };
 }
@@ -235,13 +204,11 @@ interface VoiceActions {
   talk: () => void;
   stop: () => void;
   answer: (field: FuelSpeechField) => void;
-  undo: () => void;
-  edit: () => void;
   dismiss: () => void;
 }
 
 /**
- * Botão de falar ao lado de "Salvar abastecimento". Some enquanto há pergunta ou resumo na tela.
+ * Botão de falar ao lado de "Salvar abastecimento". Some enquanto há pergunta na tela.
  * Ouvindo, a tela inteira mostra os pontinhos e tocar nela para de ouvir.
  */
 export function talkButton(
@@ -307,16 +274,6 @@ export function voiceCard(
         tone: 'warning',
         title: state.message,
         actions: [{ label: 'Fechar', onPress: a.dismiss, variant: 'ghost' }],
-      };
-    case 'saved':
-      return {
-        tone: 'success',
-        title: 'Abastecimento salvo',
-        text: state.summary || undefined,
-        actions: [
-          { label: 'Desfazer', onPress: a.undo, variant: 'outline' },
-          { label: 'Editar', onPress: a.edit },
-        ],
       };
   }
 }
