@@ -61,6 +61,20 @@ const config: ExpoConfig = {
           'O que você fala vai ao reconhecimento de fala da Apple para virar texto. O Tá em Dia não guarda o áudio.',
       },
     ],
+    // Posto pela localização na tela Abastecer: só "durante o uso" (o "sempre" é do C7, docs/05).
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission:
+          'O Tá em Dia usa a localização só na tela Abastecer, para sugerir o posto onde você está. Ela fica no celular.',
+        locationAlwaysAndWhenInUsePermission: false,
+        locationAlwaysPermission: false,
+        motionUsagePermission: false,
+        isIosBackgroundLocationEnabled: false,
+        isAndroidBackgroundLocationEnabled: false,
+        isAndroidForegroundServiceEnabled: false,
+      },
+    ],
     ...(googleIosUrlScheme
       ? [
           ['@react-native-google-signin/google-signin', { iosUrlScheme: googleIosUrlScheme }] as [

@@ -162,6 +162,9 @@ importers:
       expo-linking:
         specifier: ~57.0.13
         version: 57.0.13(expo@57.0.31)(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
+      expo-location:
+        specifier: ~57.0.22
+        version: 57.0.22(expo@57.0.31)(typescript@6.0.3)
       expo-network:
         specifier: ~57.0.3
         version: 57.0.3(expo@57.0.31)(react@19.2.3)
@@ -3711,6 +3714,11 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
+
+  expo-location@57.0.22:
+    resolution: {integrity: sha512-BcSWD4SLBXotfeSeITju/eLuuTl4bMIQv+ekBAn/a7SBH5uEjEAYy6NzRYzDg4TE+1gl/CxJ8EN2iXM+cS0EUA==}
+    peerDependencies:
+      expo: '*'
 
   expo-manifests@57.0.2:
     resolution: {integrity: sha512-pPIIcKR73OShwlWMg8H90WRzKUd2krDdKlKAwuQV1FtUwE7H3hQEFw0ePFQY9yFoGMF/77ryYwNKfI5umMcCog==}
@@ -10581,6 +10589,14 @@ snapshots:
     transitivePeerDependencies:
       - expo
       - supports-color
+
+  expo-location@57.0.22(expo@57.0.31)(typescript@6.0.3):
+    dependencies:
+      '@expo/image-utils': 0.11.6(typescript@6.0.3)
+      expo: 57.0.31(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.17)(expo-router@57.0.29)(react-dom@19.3.1(react@19.2.3))(react-native-worklets@0.10.1(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
 
   expo-manifests@57.0.2(expo@57.0.31):
     dependencies:

@@ -30,8 +30,8 @@ import { useNewFuelEntryViewModel } from '../viewmodels/useNewFuelEntryViewModel
 
 /**
  * Tela 9: novo abastecimento (e 9b, com tanque cheio marcado). Com `id` na rota, é o mesmo
- * formulário para completar um rascunho (sem frame no Figma). "Falar" e o cartão da voz também
- * não têm frame.
+ * formulário para editar (sem frame no Figma). "Falar", o cartão da voz, o cartão da localização e
+ * os chips do posto perto ("Trocar") também não têm frame.
  */
 /** Android: o teclado decimal esconde a vírgula em alguns aparelhos; o numérico mostra. */
 const decimalKeyboard = Platform.OS === 'android' ? 'numeric' : 'decimal-pad';
@@ -177,12 +177,30 @@ export function NewFuelEntryView() {
                 autoCapitalize="words"
                 maxLength={80}
               />
-              {vm.stationSuggestions.length > 0 ? (
+              {vm.stationChips.length > 0 || vm.locationOffer === 'chip' ? (
                 <View style={styles.chips}>
-                  {vm.stationSuggestions.map((name) => (
-                    <Chip key={name} label={name} onPress={() => vm.setStation(name)} />
+                  {vm.stationChips.map((chip) => (
+                    <Chip
+                      key={`${chip.kind}:${chip.label}`}
+                      label={chip.label}
+                      icon={chip.kind === 'switch' ? 'refresh' : undefined}
+                      onPress={() => vm.pressStationChip(chip)}
+                    />
                   ))}
+                  {vm.locationOffer === 'chip' ? (
+                    <Chip
+                      label={vm.locationCard.allow}
+                      icon="pin"
+                      tone="primary"
+                      onPress={vm.allowLocation}
+                    />
+                  ) : null}
                 </View>
+              ) : null}
+              {vm.stationAverage ? (
+                <Text variant="small" color="text2">
+                  {vm.stationAverage}
+                </Text>
               ) : null}
             </>
           ) : (
@@ -204,6 +222,17 @@ export function NewFuelEntryView() {
                 title={vm.voice.card.title}
                 text={vm.voice.card.text}
                 actions={vm.voice.card.actions}
+              />
+            ) : vm.locationOffer === 'card' ? (
+              // Explica antes do pedido do sistema (docs/05); "Agora não" deixa só um chip no Posto.
+              <SpeechCard
+                tone="info"
+                title={vm.locationCard.title}
+                text={vm.locationCard.text}
+                actions={[
+                  { label: vm.locationCard.allow, onPress: vm.allowLocation, variant: 'primary' },
+                  { label: vm.locationCard.dismiss, onPress: vm.dismissLocation, variant: 'ghost' },
+                ]}
               />
             ) : null}
             <View style={styles.saveRow}>

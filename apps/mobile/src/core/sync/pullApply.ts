@@ -5,7 +5,7 @@ import { setSyncSince } from './syncState';
 
 /** Grava uma linha vinda do servidor. `true` se mudou alguma coisa. */
 async function applyOne(db: Db, change: SyncPulledChange): Promise<boolean> {
-  // `table` já passou pelo enum do schema: só um destes seis nomes chega aqui.
+  // `table` já passou pelo enum do schema: só um nome de `SYNC_TABLES` chega aqui.
   const table: SyncTable = change.table;
   // O app ainda tem uma mudança desta linha para enviar: ela vale mais que a cópia do servidor (o
   // servidor decide quem ganha quando a mudança chegar).

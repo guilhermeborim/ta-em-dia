@@ -255,6 +255,47 @@ export const MIGRATIONS: Migration[] = [
          updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
    WHERE status = 'draft' AND deleted_at IS NULL;
   `,
+  `
+  -- Posto único (Fase C, C6). Só adiciona.
+  -- stations: postos do usuário (sincronizável), do OpenStreetMap (osm_id) ou locais. lat/lng do
+  -- posto local nascem da posição do usuário e não vão para o sync (docs/05-privacidade-lgpd.md).
+  CREATE TABLE stations (
+    id          TEXT PRIMARY KEY NOT NULL,
+    user_id     TEXT,
+    osm_id      TEXT,
+    name        TEXT,
+    brand       TEXT,
+    street      TEXT,
+    lat         REAL,
+    lng         REAL,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL,
+    deleted_at  TEXT,
+    version     INTEGER
+  );
+  CREATE INDEX idx_stations_osm ON stations (osm_id);
+
+  -- Posto do abastecimento (opcional; station_name continua). Sem chave estrangeira: no pull o
+  -- abastecimento pode chegar antes do posto.
+  ALTER TABLE fuel_entries ADD COLUMN station_id TEXT;
+
+  -- Postos do OpenStreetMap baixados da API por célula do geohash (dado público, não sincroniza):
+  -- a região fica no aparelho para achar o posto sem internet.
+  CREATE TABLE region_cells (
+    geohash     TEXT PRIMARY KEY NOT NULL,
+    fetched_at  TEXT NOT NULL
+  );
+  CREATE TABLE region_places (
+    osm_id   TEXT NOT NULL,
+    geohash  TEXT NOT NULL REFERENCES region_cells(geohash) ON DELETE CASCADE,
+    name     TEXT,
+    brand    TEXT,
+    street   TEXT,
+    lat      REAL NOT NULL,
+    lng      REAL NOT NULL,
+    PRIMARY KEY (geohash, osm_id)
+  );
+  `,
 ];
 
 export async function migrate(db: Db, migrations: Migration[] = MIGRATIONS): Promise<void> {

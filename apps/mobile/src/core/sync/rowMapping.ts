@@ -54,6 +54,7 @@ export function toColumns(table: SyncTable, payload: unknown): Record<string, Co
         total: p.total ?? null,
         full_tank: p.fullTank === undefined ? null : flag(p.fullTank, 0),
         station_name: p.stationName ?? null,
+        station_id: 'stationId' in p ? (p.stationId ?? null) : null,
         note: p.note ?? null,
       };
     }
@@ -98,6 +99,20 @@ export function toColumns(table: SyncTable, payload: unknown): Record<string, Co
         due_date: p.dueDate,
         notify_days: JSON.stringify(p.notifyDays),
         note: p.note ?? null,
+      };
+    }
+    case 'stations': {
+      const parsed = SYNC_UPSERT_SCHEMAS.stations.safeParse(payload);
+      if (!parsed.success) return null;
+      const p = parsed.data;
+      return {
+        osm_id: p.osmId ?? null,
+        name: p.name ?? null,
+        brand: p.brand ?? null,
+        street: p.street ?? null,
+        // Posto local chega sem coordenada (ela fica só no aparelho que o criou): sem lat/lng no
+        // payload, a coordenada local que já existe não é apagada.
+        ...(p.lat !== undefined && p.lng !== undefined ? { lat: p.lat, lng: p.lng } : {}),
       };
     }
   }

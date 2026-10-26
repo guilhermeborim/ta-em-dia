@@ -57,8 +57,13 @@ async function seed(db: Db) {
       pricePerLiter: 5.499,
       total: 165.65,
       fullTank: true,
+      stationName: 'Shell · Av. Paulista',
     },
-    { id: FUEL, now: minutes(1) },
+    {
+      id: FUEL,
+      now: minutes(1),
+      station: { osmId: 'node/9', name: 'Shell', street: 'Av. Paulista', lat: -23.56, lng: -46.65 },
+    },
   );
   await addManualReading(db, { vehicleId: GOL, km: 1300 }, { now: minutes(2) });
   await registerMaintenance(
@@ -101,6 +106,7 @@ describe('o que o app grava na outbox cabe no contrato da API', () => {
         'maintenance_plans',
         'maintenance_records',
         'documents',
+        'stations',
       ]),
     );
     for (const change of changes) {
@@ -234,6 +240,46 @@ describe('dois aparelhos', () => {
     }
     // O que chegou não volta para o servidor.
     expect(await outboxSize(b)).toBe(0);
+  });
+
+  it('postos: o do mapa chega com coordenada; o local chega sem e não apaga a do aparelho', async () => {
+    const server = createFakeServer();
+    const a = await newDevice();
+    const b = await newDevice();
+    await seed(a);
+    await addFuelEntry(
+      a,
+      {
+        vehicleId: GOL,
+        date: minutes(10),
+        km: 1400,
+        fuelType: 'gasoline',
+        liters: 20,
+        pricePerLiter: 6,
+        total: 120,
+        fullTank: false,
+        stationName: 'Posto do Zé',
+      },
+      { now: minutes(10), station: { name: 'Posto do Zé', lat: -23.5, lng: -46.6 } },
+    );
+    await syncNow(deps(a, server));
+    await syncNow(deps(b, server));
+    // O aparelho que criou o posto local recebe a cópia do servidor (sem coordenada) de volta.
+    await syncNow(deps(a, server));
+
+    const stations = (db: Db) =>
+      db.getAllAsync(
+        'SELECT id, osm_id, name, street, lat, lng FROM stations ORDER BY osm_id IS NULL, name',
+      );
+    const [osmA, localA] = (await stations(a)) as Record<string, unknown>[];
+    const [osmB, localB] = (await stations(b)) as Record<string, unknown>[];
+    expect(osmB).toEqual(osmA);
+    expect(osmB).toMatchObject({ osm_id: 'node/9', lat: -23.56, lng: -46.65 });
+    expect(localA).toMatchObject({ name: 'Posto do Zé', lat: -23.5, lng: -46.6 });
+    expect(localB).toMatchObject({ id: localA!.id, name: 'Posto do Zé', lat: null, lng: null });
+    // O abastecimento chega com o posto.
+    const entries = await listFuelEntries(b, GOL);
+    expect(entries.find((e) => e.stationName === 'Posto do Zé')?.stationId).toBe(localA!.id);
   });
 
   it('o pull em páginas pega tudo, e o since anda até a última versão', async () => {
