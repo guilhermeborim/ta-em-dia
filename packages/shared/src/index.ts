@@ -6,6 +6,7 @@ export * from './fuelRules';
 export * from './fuelSpeech';
 export * from './maintenance';
 export * from './odometer';
+export * from './places';
 export * from './reports';
 export * from './schemas';
 export * from './stations';
