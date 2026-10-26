@@ -102,7 +102,7 @@ São 22 telas, agrupadas por área.
 6. Se um valor não passar na validação (preço do litro fora de R$ 2 a R$ 12, km menor que o último), o campo fica em vermelho, recebe o cursor e o app **não salva sozinho**.
 7. Sem microfone, com barulho ou sem entender, a pessoa preenche o formulário atual na mesma tela.
 
-**2c. Aviso ao chegar no posto (C7, opcional, desligado por padrão)**
+**2c. Aviso ao chegar no posto (C7, Premium, opcional, desligado por padrão)**
 
 1. Em **Configurações → Abastecimento**, a pessoa liga **Aviso ao chegar no posto** ("Lembra de registrar quando você para num posto").
 2. Sem a localização "sempre", abre uma tela que explica: o que é (parou uns 2 minutos num posto, o app lembra de registrar), bateria, privacidade (a localização não sai do celular) e as regras (um aviso por posto a cada 12 horas, nenhum se já registrou hoje), com **Continuar** e **Agora não**. Continuar pede o "durante o uso"; a tela seguinte explica o "sempre" ("Permitir o tempo todo" no Android, "Mudar para Sempre Permitir" no iPhone) e pede. Recusado de vez: "Abrir ajustes". Depois, se as notificações estão desligadas, uma tela pede para ativar nos ajustes.

@@ -14,8 +14,8 @@ export interface FeatureFlags {
   'reports.advanced': boolean;
   'export.pdf': boolean;
   /**
-   * Aviso ao chegar no posto (C7, localização "sempre"). Ligada nos dois planos; a pessoa ainda
-   * liga o aviso em Configurações (vem desligado). Se as lojas recusarem, desliga aqui (docs/07).
+   * Aviso ao chegar no posto (C7, localização "sempre"). Só Premium (decisão do dono, 26/10/2026);
+   * a pessoa ainda liga o aviso em Configurações (vem desligado). Se as lojas recusarem, desliga aqui.
    */
   'geo.fuelReminder': boolean;
   /** Botão "Falar" no abastecimento. Ligada nos dois planos: se virar Premium, muda só aqui (docs/07). */
@@ -36,7 +36,7 @@ export const DEFAULT_FLAGS: Record<Plan, FeatureFlags> = {
     'sync.anonymous': false,
     'reports.advanced': true,
     'export.pdf': false,
-    'geo.fuelReminder': true,
+    'geo.fuelReminder': false,
     'fuel.voice': true,
     'fuel.nearbyStation': true,
     'fipe.value': false,

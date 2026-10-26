@@ -402,7 +402,7 @@ flowchart LR
 
 ## Localização em segundo plano (item C7 do backlog)
 
-O aviso ao chegar no posto (flag `geo.fuelReminder`, ligada nos dois planos) usa geofences do sistema operacional, não GPS contínuo: iOS e Android acordam o app só ao entrar ou sair de uma área, o que gasta quase nada de bateria. O recurso é opcional, desligado por padrão (`settings.station_arrival`), e o app funciona inteiro sem ele.
+O aviso ao chegar no posto (flag `geo.fuelReminder`, só no Premium, decisão do dono em 26/10/2026) usa geofences do sistema operacional, não GPS contínuo: iOS e Android acordam o app só ao entrar ou sair de uma área, o que gasta quase nada de bateria. O recurso é opcional, desligado por padrão (`settings.station_arrival`), e o app funciona inteiro sem ele.
 
 1. A pessoa liga **Aviso ao chegar no posto** em Configurações (grupo Abastecimento; o interruptor só aparece com a flag e num build com os módulos nativos e avisos locais, hoje só no Android).
 2. Sem o "sempre", abre `/configuracoes/aviso-no-posto` (`StationArrivalSetupView`): a primeira tela explica e pede o "durante o uso"; a segunda explica e pede o "sempre"; recusado de vez, "Abrir ajustes". Com o "sempre" já dado, liga direto. Depois de ligar, pede a permissão de notificações se ainda não foi dada.

@@ -47,10 +47,10 @@ describe('posto pela localização', () => {
 });
 
 describe('aviso ao chegar no posto', () => {
-  it('fica ligado nos dois planos e a API pode desligar', () => {
-    expect(DEFAULT_FLAGS.free['geo.fuelReminder']).toBe(true);
+  it('só no Premium e a API pode desligar', () => {
+    expect(DEFAULT_FLAGS.free['geo.fuelReminder']).toBe(false);
     expect(DEFAULT_FLAGS.premium['geo.fuelReminder']).toBe(true);
-    expect(flagsFor('free', { 'geo.fuelReminder': false })['geo.fuelReminder']).toBe(false);
+    expect(flagsFor('premium', { 'geo.fuelReminder': false })['geo.fuelReminder']).toBe(false);
   });
 });
 
