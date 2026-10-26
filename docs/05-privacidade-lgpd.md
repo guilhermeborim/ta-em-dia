@@ -4,7 +4,7 @@ Decisões sobre dados pessoais do Tá em Dia. Não substitui revisão jurídica:
 
 ## Princípio: coletar o mínimo
 
-O melhor jeito de proteger um dado é não ter o dado. O MVP **não guarda** número da CNH, foto de documento, CPF nem endereço da pessoa. Microfone e localização são usados só na tela Abastecer, com consentimento, e nenhum dos dois é guardado como dado da pessoa (ver "Microfone e localização"). Documentos são só lembretes com data (IPVA, licenciamento, seguro, validade da CNH), como em `docs/01-roadmap.md`.
+O melhor jeito de proteger um dado é não ter o dado. O MVP **não guarda** número da CNH, foto de documento, CPF nem endereço da pessoa. Microfone e localização são usados só na tela Abastecer (e a localização, no aviso ao chegar no posto, se a pessoa ligar), com consentimento, e nenhum dos dois é guardado como dado da pessoa (ver "Microfone e localização"). Documentos são só lembretes com data (IPVA, licenciamento, seguro, validade da CNH), como em `docs/01-roadmap.md`.
 
 ## Mapa dos dados
 
@@ -21,6 +21,7 @@ O melhor jeito de proteger um dado é não ter o dado. O MVP **não guarda** nú
 | Fotos de nota (Premium futuro)   | Armazenamento de arquivos                                           | Média         | Bucket privado, URL assinada e curta, nunca público                                              |
 | Fala do abastecimento (Fase C)   | Reconhecimento do sistema (Apple/Google), pela rede                 | Média         | O app descarta o áudio; só o texto interpretado vira dado do abastecimento                       |
 | Localização do usuário (Fase C)  | Só na memória do aparelho, na tela Abastecer                        | Alta          | Não é guardada nem enviada; serve para achar o posto mais perto                                  |
+| Aviso no posto (C7)              | Só no aparelho: geofences do sistema e `app_settings`               | Média         | Postos vigiados e centro da célula de ~5 km; hora do último aviso por posto, só das últimas 12 h |
 | Geohash de 5 caracteres (Fase C) | API (`places`), só na consulta                                      | Média         | Célula de ~5 km, sem usuário ligado; nunca em log                                                |
 | Postos (`stations`, Fase C)      | SQLite e API                                                        | Baixa         | Posto do OpenStreetMap: dado público. Posto local: `lat`/`lng` ficam só no aparelho (ver abaixo) |
 | Foto de documento (CNH, CRLV)    | **não coletamos**                                                   | Alta          | Só entra com decisão nova (ver "Se um dia houver documentos")                                    |
@@ -46,8 +47,11 @@ Decidido pelo dono em 26/10/2026. Vale para quem está logado e para o usuário 
 
 **Localização "sempre" (aviso ao chegar no posto, item C7)**
 
-- Opcional, desligado por padrão, com opt-in em Configurações e duas telas explicativas antes dos pedidos do sistema. Regras técnicas em `docs/03-arquitetura.md` ("Localização em segundo plano").
-- Depende da aprovação da Apple e do Google. Se recusarem, o aviso sai e o resto continua igual.
+- Opcional, desligado por padrão, com opt-in em Configurações (**Aviso ao chegar no posto**) e duas telas explicativas antes dos pedidos do sistema: a primeira diz o que é, que gasta pouca bateria, que a localização não sai do celular e as regras do aviso, com "Agora não" visível, e pede o "durante o uso"; a segunda explica o "sempre" ("Permitir o tempo todo" no Android, "Sempre" no iPhone) e pede. Recusado, a tela leva aos ajustes do aparelho. Regras técnicas em `docs/03-arquitetura.md` ("Localização em segundo plano").
+- **O que fica guardado (C7, só no aparelho):** as geofences registradas no sistema (coordenada pública dos postos vigiados e o **centro da célula de ~5 km**, nunca a posição da pessoa); a hora da última troca dos postos vigiados (sem lugar); e, por posto, a hora do último aviso, **só das últimas 12 h** (o que passa disso é apagado, então não forma um histórico de lugares). Nada disso sincroniza, vai para a API, para log ou para a `outbox`.
+- **O que sai do aparelho:** só o geohash de 5 caracteres, para baixar os postos da região (o mesmo do C6), quando a região ainda não está guardada. A posição de agora só passa pela memória para escolher os postos e o centro da área.
+- Desligar o aviso para as geofences, cancela o aviso pendente e apaga o registro dos avisos. Tirar o "sempre" nos ajustes do aparelho também para as geofences na próxima vez que o app abrir.
+- Depende da aprovação da Apple e do Google. Se recusarem, o aviso sai (flag `geo.fuelReminder` desligada e, se for preciso, o "sempre" sai do `app.config.ts`) e o resto continua igual.
 
 **Lojas:** Privacy Nutrition Label (Apple) e Data safety (Google) precisam declarar localização aproximada, "não vinculada à identidade, não usada para rastreamento", e uso do microfone para reconhecimento de fala, com o áudio enviado a terceiros (Apple e Google). Atualizar antes do envio.
 
@@ -84,13 +88,13 @@ Decidido pelo dono em 26/10/2026. Vale para quem está logado e para o usuário 
 
 **Direitos do titular (art. 18).** O app precisa permitir, sem pedir por e-mail:
 
-| Direito                | Como atender                                            |
-| ---------------------- | ------------------------------------------------------- |
-| Acesso e portabilidade | Exportar meus dados (JSON/CSV) em Configurações         |
-| Correção               | Editar nas telas                                        |
-| Eliminação             | "Excluir conta" apaga tudo no app e na API (ver abaixo) |
-| Informação             | Política de Privacidade clara, dentro do app e no site  |
-| Revogar consentimento  | Desligar notificações; recusar análise de uso           |
+| Direito                | Como atender                                                     |
+| ---------------------- | ---------------------------------------------------------------- |
+| Acesso e portabilidade | Exportar meus dados (JSON/CSV) em Configurações                  |
+| Correção               | Editar nas telas                                                 |
+| Eliminação             | "Excluir conta" apaga tudo no app e na API (ver abaixo)          |
+| Informação             | Política de Privacidade clara, dentro do app e no site           |
+| Revogar consentimento  | Desligar notificações e o aviso no posto; recusar análise de uso |
 
 **Exclusão de conta.** Apaga a conta e todos os dados do usuário na API (vale também para `deleted_at`: a exclusão lógica serve ao sync, não à LGPD). Remove push tokens e revoga o token da Apple. Backups do provedor expiram em até 30 dias, e a Política deve dizer isso.
 

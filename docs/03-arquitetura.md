@@ -208,7 +208,7 @@ Decidido pelo dono em 26/10/2026; itens C1 a C7 do `docs/06-backlog.md`. C0 a C6
 - **Média de preço por posto:** `stationPriceAverage` (`shared`) soma total ÷ soma litros dos abastecimentos completos do posto (pelo `station_id` ou pelo mesmo nome) e do combustível escolhido; aparece sob o Posto: "Média neste posto: R$ 5,89 o litro de gasolina (3 abastecimentos)".
 - **Flag:** `fuel.nearbyStation`, ligada nos dois planos. Exige development build novo (`expo-location`); o texto do pedido do iPhone está em `app.config.ts`.
 
-**Aviso ao chegar no posto (C7):** opcional, desligado por padrão. Segue "Localização em segundo plano" abaixo.
+**Aviso ao chegar no posto (C7):** opcional, desligado por padrão. Como está em "Localização em segundo plano" abaixo.
 
 ## Sync offline-first
 
@@ -402,16 +402,18 @@ flowchart LR
 
 ## Localização em segundo plano (item C7 do backlog)
 
-O aviso ao chegar no posto (`geo.fuelReminder`) usa geofences do sistema operacional, não GPS contínuo: iOS e Android acordam o app só ao entrar numa área, o que gasta quase nada de bateria. O recurso é opcional, desligado por padrão, e o app funciona inteiro sem ele.
+O aviso ao chegar no posto (flag `geo.fuelReminder`, ligada nos dois planos) usa geofences do sistema operacional, não GPS contínuo: iOS e Android acordam o app só ao entrar ou sair de uma área, o que gasta quase nada de bateria. O recurso é opcional, desligado por padrão (`settings.station_arrival`), e o app funciona inteiro sem ele.
 
-1. Usuário liga "Lembrete no posto" em Configurações (opt-in).
-2. O app pede localização "durante o uso"; só depois, numa segunda tela explicativa, pede "sempre".
-3. Com a localização aproximada, o app busca postos próximos (OpenStreetMap, `amenity=fuel`) e registra geofences de ~150 m nos 20 mais próximos (limite do iOS é 20 regiões por app; Android, 100).
-4. Ao entrar numa geofence e ficar ~2 min, dispara notificação local "Abastecendo? Registre agora".
-5. Quando o usuário se afasta muito (~5 km), o app troca as geofences pelas novas mais próximas.
-6. Máximo de 1 notificação por posto a cada 12 h, e nenhuma se já houve abastecimento registrado hoje.
+1. A pessoa liga **Aviso ao chegar no posto** em Configurações (grupo Abastecimento; o interruptor só aparece com a flag e num build com os módulos nativos e avisos locais, hoje só no Android).
+2. Sem o "sempre", abre `/configuracoes/aviso-no-posto` (`StationArrivalSetupView`): a primeira tela explica e pede o "durante o uso"; a segunda explica e pede o "sempre"; recusado de vez, "Abrir ajustes". Com o "sempre" já dado, liga direto. Depois de ligar, pede a permissão de notificações se ainda não foi dada.
+3. Com a posição de agora (só na memória; `getCurrentPosition` do C6), o app baixa os postos da região que faltam (`downloadRegionPlaces`, C6) e registra geofences de 150 m (`STATION_ARRIVAL_RADIUS_M`) em até **19 postos** mais uma **região da área** de 5 km (20 regiões, o limite do iOS; o Android aceita 100). `pickArrivalStations` (`shared/stationArrival.ts`) escolhe entre os postos da célula e das 8 vizinhas e os do usuário, a até 10 km: primeiro os já usados, do mais usado (contagem de abastecimentos por `station_id`) ao menos usado, depois os mais perto. O centro da área é o centro da célula do geohash de 5 caracteres (`arrivalAreaCenter`), não a posição.
+4. Ao **entrar** num posto, a tarefa em segundo plano (`core/stationArrival/task.ts`, `expo-task-manager`, definida no `_layout` raiz) confere as regras e agenda um aviso local para daqui a 2 min (`STATION_ARRIVAL_DWELL_MS`): "Abastecendo no Shell · Av. da Pista? Registre agora." (`stationArrivalMessage` com o `stationLabel` do C6). Ao **sair** antes dos 2 min, cancela o aviso e ele não conta nas 12 h. É assim que "ficar ~2 min" funciona: as geofences do `expo-location` só têm entrar e sair.
+5. Ao **sair da área**, a tarefa troca os postos vigiados pelos da posição de agora. Ao abrir o app (e voltar para a frente), troca também se a última troca tem mais de 6 h ou se as geofences não estão ligadas.
+6. Máximo de 1 aviso por posto a cada 12 h, e nenhum se já houve abastecimento completo registrado hoje (fuso do aparelho; `shouldNotifyStationArrival`). Salvar um abastecimento (`refreshReminders`) cancela o aviso que ainda ia sair. A hora do último aviso por posto fica em `app_settings` (`station_arrival.log`) só pelas últimas 12 h (`pruneArrivalLog`).
+7. Tocar no aviso abre o Novo abastecimento (`data.openNewFuelEntry`); o posto vem pela localização (C6).
+8. Desligar em Configurações para as geofences, cancela o aviso pendente e apaga o registro. Sem a flag, sem o "sempre" ou com o aviso desligado, a tarefa e a abertura do app param as geofences que sobraram.
 
-**Peças técnicas:** `expo-location` (`startGeofencingAsync`, precisão baixa) + `expo-task-manager`; postos via Overpass API com cache na nossa API (módulo `places`, ver "Abastecimento por voz e posto único"); a localização nunca sai do aparelho, a API recebe só a célula aproximada (geohash de 5 caracteres).
+**Peças técnicas:** `expo-location` (`startGeofencingAsync`, permissão "sempre") + `expo-task-manager` (`core/stationArrival`, os dois com `requireOptionalNativeModule`: num build sem eles o aviso fica indisponível e o interruptor não aparece). Sem `UIBackgroundModes: location` e sem serviço em primeiro plano no Android (`isIosBackgroundLocationEnabled: false`, `isAndroidForegroundServiceEnabled: false`); o Android ganha `ACCESS_BACKGROUND_LOCATION`. A tarefa abre o mesmo SQLite (`openDatabaseAsync` + `migrate`). Postos via Overpass API com cache na nossa API (módulo `places`, ver "Abastecimento por voz e posto único"); a localização nunca sai do aparelho, a API recebe só a célula aproximada (geohash de 5 caracteres). No iPhone o aviso ainda não existe: os avisos locais só funcionam com development build (`scheduler.ios.ts`), e o interruptor fica escondido até lá. Exige development build novo.
 
 **Para a Apple aprovar:** textos específicos em `NSLocationWhenInUseUsageDescription` e `NSLocationAlwaysAndWhenInUseUsageDescription`; `UIBackgroundModes: location` só se for necessário; notas para o revisor com vídeo curto; Privacy Nutrition Label "localização, não vinculada à identidade, não usada para rastreamento".
 
