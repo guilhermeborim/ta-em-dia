@@ -115,7 +115,7 @@ Aba Relatórios.
 
 - [ ] Cartão da conta "Sem login" com selo "Salvo no aparelho"; tocar mostra o aviso "Em breve".
 - [ ] Grupos de itens iguais ao Figma; número de veículos ao lado de Meus veículos; selo PREMIUM em Premium.
-- [ ] Ajuda e contato sem e-mail no build mostra "Em breve" (o aviso aparece **acima** do botão flutuante; com e-mail, ver 2.38).
+- [ ] Ajuda e contato sem e-mail no build mostra "Em breve" (o aviso aparece **acima** do botão flutuante; com e-mail, ver 2.39).
 - [ ] Botão flutuante "Abastecer" abre o formulário e não cobre o último item da lista.
 - [ ] Premium abre em modal: título, 5 recursos, "Tenho interesse". Depois de tocar, o botão some e aparece "Anotado! Obrigado pelo interesse." e isso continua ao reabrir o app.
 - [ ] Em produção (`APP_ENV=production`) os atalhos "Status do app" e "Catálogo de componentes" não aparecem.
@@ -325,7 +325,7 @@ Sem tela; o app só usa no C6. Em staging, depois do deploy (a migration `place_
 - [ ] Os logs do Render não mostram o geohash (nem na linha do pedido nem no aviso de falha do Overpass).
 - [ ] Primeira chamada de uma célula com o host acordando do sono: ver se cabe no tempo de espera do app (Overpass leva de 1 a 10 s).
 
-### 2.38 Ajuda e contato, Termos e Privacidade (Mais, Configurações e Login, PR #77)
+### 2.39 Ajuda e contato, Termos e Privacidade (Mais, Configurações e Login, PR #77)
 
 Sem e-mail e sem URLs no build (o padrão hoje), tudo mostra "Em breve". Para testar o caminho completo, ponha valores de teste em `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_TERMS_URL` e `EXPO_PUBLIC_PRIVACY_URL` (`apps/mobile/.env`) e reinicie o Expo.
 
@@ -479,7 +479,7 @@ Código puro em `shared`, sem tela; nada a validar no aparelho. O que o reconhec
 - **Se corrigindo, vale o último citado** ("paguei 100 reais, não, foram 150 reais" → 150). Alternativa: ignorar a frase inteira e perguntar. Recomendação: manter.
 - **Limites conhecidos:** nada de data ("ontem", "dia 20" é ignorado), posto falado só no C4 (ver 3.36), "gás" sozinho não é GNV (só "gás natural" ou "GNV"), e dois combustíveis na mesma frase ficam com o último.
 
-### 3.38 Ajuda e contato, Termos e Privacidade: escolhas que fiz
+### 3.39 Ajuda e contato, Termos e Privacidade: escolhas que fiz
 
 Valores por ambiente, decididos pelo dono em 26/10/2026: o e-mail de ajuda e as URLs públicas vêm de `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_TERMS_URL` e `EXPO_PUBLIC_PRIVACY_URL`, ainda vazias em `eas.json`. Falta o dono definir o e-mail e publicar os textos (`docs/05-privacidade-lgpd.md`, checklist antes de publicar). O resto foi escolha minha:
 
