@@ -298,7 +298,7 @@ Sem frame no Figma (é uma notificação). Android com development build, notifi
 - [ ] Sem permissão de notificações: nada é agendado e nenhum pedido aparece.
 - [ ] Os outros avisos (manutenção, documentos, atualizar o km) continuam chegando.
 
-### 2.35 Falar o abastecimento (C4, PR #PR)
+### 2.35 Falar o abastecimento (C4, PR #73)
 
 Sem frame no Figma (botão Falar, cartão da voz, aviso do áudio, pergunta, resumo de 5 s). Dependência nativa nova: `expo-speech-recognition` (exige development build; no Expo Go o "Falar" diz que a fala não está disponível). Nenhum emulador estava aberto: nada foi visto rodando. Android 13+ com development build e internet:
 
