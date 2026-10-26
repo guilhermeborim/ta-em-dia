@@ -1,5 +1,6 @@
 export { requestNotificationPermission, type NotificationPermission } from './permission';
 export {
+  localNotificationsAvailable,
   onNotificationOpened,
   reminderScheduler,
   setupNotificationPresentation,

@@ -7,6 +7,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAnonymousSession } from '../core/auth';
 import { DatabaseProvider } from '../core/db';
 import { useReminderLifecycle } from '../core/reminders';
+// Define a tarefa das geofences do aviso ao chegar no posto (precisa existir antes de tudo).
+import '../core/stationArrival/task';
 import { useSyncLifecycle } from '../core/sync';
 import { LoginProvider, useLogin } from '../features/login/LoginProvider';
 import { OnboardingProvider, useOnboarding } from '../features/onboarding/OnboardingProvider';
@@ -68,6 +70,7 @@ function AppReady() {
         <Stack.Screen name="excluir-conta" />
         <Stack.Screen name="configuracoes" />
         <Stack.Screen name="configuracoes/antecedencia" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="configuracoes/aviso-no-posto" options={{ presentation: 'modal' }} />
         <Stack.Screen name="alertas" />
         <Stack.Screen name="documentos" />
         <Stack.Screen name="documento/novo" options={{ presentation: 'modal' }} />
