@@ -8,6 +8,7 @@ import {
   FloatingButton,
   FuelItem,
   spacing,
+  SwipeToDelete,
   Text,
 } from '../../../ui';
 import { useFuelListViewModel } from '../viewmodels/useFuelListViewModel';
@@ -85,14 +86,20 @@ export function FuelListView() {
               </View>
               <View style={styles.group}>
                 {section.items.map((item) => (
-                  <FuelItem
+                  <SwipeToDelete
                     key={item.id}
-                    flat
-                    title={item.title}
-                    details={item.details}
-                    total={item.total}
-                    kmPerLiter={item.kmPerLiter}
-                  />
+                    onOpen={(close) => vm.confirmDelete(item.id, item.title, close)}
+                  >
+                    <FuelItem
+                      flat
+                      title={item.title}
+                      details={item.details}
+                      total={item.total}
+                      kmPerLiter={item.kmPerLiter}
+                      onPress={() => vm.openEntry(item.id)}
+                      onDelete={() => vm.confirmDelete(item.id, item.title, () => {})}
+                    />
+                  </SwipeToDelete>
                 ))}
               </View>
             </View>

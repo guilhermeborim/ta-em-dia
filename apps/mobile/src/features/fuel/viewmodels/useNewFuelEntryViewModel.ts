@@ -1,10 +1,15 @@
-import { suggestStations, type FuelAmountField } from '@ta-em-dia/shared';
-import { useRouter } from 'expo-router';
+import { suggestStations, type FuelAmountField, type FuelEntry } from '@ta-em-dia/shared';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatKm } from '../../../core/format';
 import { useDb } from '../../../core/db';
 import { loadFuelFormContext, type FuelFormContext } from '../models/fuelContext';
-import { addFuelEntry, listStationNames } from '../../../core/fuel';
+import {
+  addFuelEntry,
+  getFuelRecord,
+  listStationNames,
+  updateFuelRecord,
+} from '../../../core/fuel';
 import { useFlag } from '../../../core/flags/useFlag';
 import { refreshReminders } from '../../../core/reminders';
 import {
@@ -13,6 +18,7 @@ import {
   emptyFuelForm,
   entryDateFor,
   formatEntryDate,
+  fuelFormFromEntry,
   fuelTypeOptions,
   sanitizeAmount,
   touchAmount,
@@ -25,6 +31,8 @@ import { useFuelVoice } from './useFuelVoice';
 
 /**
  * ViewModel do Novo abastecimento: sugestões, cálculo do terceiro valor, validação e gravação local.
+ * Aberto com `id` na rota, é o "Editar abastecimento": carrega o registro, salva por cima dele e não
+ * tem o botão de falar.
  * O botão de falar preenche o formulário; salva sozinho só se "Salvar pela fala" estiver ligado e
  * tudo certo. Se falta dado, não salva: mostra o card do que falta e leva o foco ao campo
  * (`focusRequest`).
@@ -32,6 +40,9 @@ import { useFuelVoice } from './useFuelVoice';
 export function useNewFuelEntryViewModel() {
   const db = useDb();
   const router = useRouter();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const editId = typeof params.id === 'string' ? params.id : undefined;
+  const [entry, setEntry] = useState<FuelEntry | null>(null);
   const [stations, setStations] = useState<string[]>([]);
   const [context, setContext] = useState<FuelFormContext | null>(null);
   const [form, setForm] = useState<FuelForm>(emptyFuelForm);
@@ -51,6 +62,20 @@ export function useNewFuelEntryViewModel() {
     let active = true;
     loadFuelFormContext(db).then(async (value) => {
       if (!active) return;
+      if (editId) {
+        const record = await getFuelRecord(db, editId);
+        if (!active) return;
+        // Excluído por outro caminho (ex.: sync) ou id inválido: nada a editar.
+        if (!record) {
+          router.back();
+          return;
+        }
+        setEntry(record);
+        setKmTouched(true);
+        setForm(fuelFormFromEntry(record));
+        setContext(value);
+        return;
+      }
       setContext(value);
       setForm((prev) => ({
         ...prev,
@@ -64,7 +89,7 @@ export function useNewFuelEntryViewModel() {
     return () => {
       active = false;
     };
-  }, [db]);
+  }, [db, editId, router]);
 
   const amounts = useMemo(() => deriveAmounts(form), [form]);
   const stationSuggestions = useMemo(
@@ -81,10 +106,14 @@ export function useNewFuelEntryViewModel() {
     setErrors((prev) => ({ ...prev, amounts: undefined, pricePerLiter: undefined }));
   }, []);
 
-  const dateToSave = useCallback(() => entryDateFor(pickedDate), [pickedDate]);
+  // Editando, a data e a hora originais ficam, a menos que a pessoa escolha outro dia.
+  const dateToSave = useCallback(
+    () => (pickedDate === null && entry ? entry.date : entryDateFor(pickedDate)),
+    [entry, pickedDate],
+  );
 
   const save = useCallback(async () => {
-    const vehicleId = context?.vehicle?.id;
+    const vehicleId = entry?.vehicleId ?? context?.vehicle?.id;
     if (!vehicleId) return;
     const result = buildFuelEntryInput(form, { vehicleId, date: dateToSave(), stations });
     if (result.errors) {
@@ -93,6 +122,12 @@ export function useNewFuelEntryViewModel() {
     }
     setBusy(true);
     try {
+      if (entry) {
+        await updateFuelRecord(db, { ...result.value, id: entry.id });
+        void refreshReminders(db);
+        router.back();
+        return;
+      }
       const { id } = await addFuelEntry(db, result.value);
       // O km mudou: os avisos de manutenção dependem dele.
       void refreshReminders(db);
@@ -100,7 +135,7 @@ export function useNewFuelEntryViewModel() {
     } finally {
       setBusy(false);
     }
-  }, [context, dateToSave, db, form, router, stations]);
+  }, [context, dateToSave, db, entry, form, router, stations]);
 
   const voice = useFuelVoice({
     db,
@@ -117,13 +152,14 @@ export function useNewFuelEntryViewModel() {
   });
 
   return {
-    title: 'Novo abastecimento',
+    title: entry ? 'Editar abastecimento' : 'Novo abastecimento',
+    isEditing: editId !== undefined,
     loading: context === null,
     vehicle: context?.vehicle ?? null,
-    dateLabel: formatEntryDate(pickedDate ?? new Date()),
+    dateLabel: formatEntryDate(pickedDate ?? entry?.date ?? new Date()),
     pickerOpen,
     /** Data mostrada ao abrir o calendário. */
-    pickerValue: pickedDate ?? new Date(),
+    pickerValue: pickedDate ?? entry?.date ?? new Date(),
     /** Abastecimento no futuro não faz sentido; antes de 1990, também não. */
     pickerMin: new Date(1990, 0, 1),
     pickerMax: new Date(),
@@ -155,7 +191,7 @@ export function useNewFuelEntryViewModel() {
     close: () => router.back(),
     addVehicle: () => router.replace('/primeiro-veiculo'),
     save,
-    canTalk: voiceEnabled,
+    canTalk: voiceEnabled && editId === undefined,
     focusRequest,
     voice,
     talkButton: voice.talkButton,

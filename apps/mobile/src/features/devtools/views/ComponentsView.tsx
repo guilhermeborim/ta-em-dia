@@ -56,6 +56,7 @@ import {
   ProgressSheet,
   ListeningDots,
   SpeechCard,
+  SwipeToDelete,
   Toast,
   typography,
   VehicleCard,
@@ -302,6 +303,17 @@ export function ComponentsView() {
             text="Preencha abaixo e toque em Salvar abastecimento."
           />
           <SpeechCard tone="danger" title="Confira os campos em vermelho e salve" />
+        </Section>
+
+        <Section title="Arrastar para excluir">
+          <SwipeToDelete onOpen={(close) => close()}>
+            <FuelItem
+              flat
+              title="26 out · Shell"
+              details="25,0 L · Gasolina · cheio"
+              total="R$ 150,00"
+            />
+          </SwipeToDelete>
         </Section>
 
         <Section title="Ouvindo (pontinhos)">

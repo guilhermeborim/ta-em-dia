@@ -5,6 +5,7 @@ import {
   entryDateFor,
   formatDecimal,
   formatEntryDate,
+  fuelFormFromEntry,
   parseDecimal,
   sanitizeAmount,
   sanitizeDecimal,
@@ -210,6 +211,65 @@ describe('buildFuelEntryInput', () => {
     expect(result.errors).toEqual({
       km: 'Informe o km do painel',
       amounts: 'Preencha 2 dos 3 valores: preço por litro, litros e total',
+    });
+  });
+});
+
+describe('fuelFormFromEntry', () => {
+  const entry = {
+    id: '018bcfe5-6800-7000-8000-0000000000e1',
+    vehicleId: VEHICLE_ID,
+    date: DATE,
+    km: 48910,
+    fuelType: 'ethanol' as const,
+    liters: 38.25,
+    pricePerLiter: 5.99,
+    total: 229.1,
+    fullTank: true,
+    stationName: 'Posto Ipiranga',
+  };
+
+  it('preenche o formulário com o que foi salvo', () => {
+    expect(fuelFormFromEntry(entry)).toEqual({
+      fuelType: 'ethanol',
+      pricePerLiter: '',
+      liters: '38,25',
+      total: '229,10',
+      amountOrder: ['liters', 'total'],
+      km: '48.910',
+      fullTank: true,
+      station: 'Posto Ipiranga',
+    });
+  });
+
+  it('mostra o preço por litro calculado de litros e total', () => {
+    expect(deriveAmounts(fuelFormFromEntry(entry))).toMatchObject({
+      pricePerLiter: '5,99',
+      calculated: 'pricePerLiter',
+    });
+  });
+
+  it('salvar sem mexer mantém litros, total, km e posto', () => {
+    const result = buildFuelEntryInput(fuelFormFromEntry(entry), {
+      vehicleId: VEHICLE_ID,
+      date: DATE,
+      stations: ['Posto Ipiranga'],
+    });
+    expect(result.value).toMatchObject({
+      km: 48910,
+      liters: 38.25,
+      total: 229.1,
+      pricePerLiter: 5.99,
+      fullTank: true,
+      stationName: 'Posto Ipiranga',
+    });
+  });
+
+  it('abastecimento antigo sem posto abre com o campo vazio (posto é obrigatório ao salvar)', () => {
+    const form = fuelFormFromEntry({ ...entry, stationName: undefined });
+    expect(form.station).toBe('');
+    expect(buildFuelEntryInput(form, { vehicleId: VEHICLE_ID, date: DATE }).errors).toEqual({
+      station: 'Informe o posto',
     });
   });
 });

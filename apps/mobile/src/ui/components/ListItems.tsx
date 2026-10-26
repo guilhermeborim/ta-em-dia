@@ -19,14 +19,29 @@ interface FuelItemProps {
   /** Sem cantos arredondados: para itens empilhados dentro de um grupo arredondado. */
   flat?: boolean;
   onPress?: () => void;
+  /** Excluir por leitor de tela, que não arrasta: aparece como ação "Excluir" do item. */
+  onDelete?: () => void;
 }
 
 /** Item da lista de abastecimentos. */
-export function FuelItem({ title, details, total, kmPerLiter, flat, onPress }: FuelItemProps) {
+export function FuelItem({
+  title,
+  details,
+  total,
+  kmPerLiter,
+  flat,
+  onPress,
+  onDelete,
+}: FuelItemProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${title}, ${total}`}
+      accessibilityHint={onPress ? 'Toque para editar' : undefined}
+      accessibilityActions={onDelete ? [{ name: 'delete', label: 'Excluir' }] : undefined}
+      onAccessibilityAction={(event) => {
+        if (event.nativeEvent.actionName === 'delete') onDelete?.();
+      }}
       onPress={onPress}
       style={[styles.row, styles.fuel, flat && styles.flat]}
     >
