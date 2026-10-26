@@ -18,7 +18,7 @@ flowchart LR
   S <-->|HTTPS| SY
   A -->|valida id_token| GA[Google / Apple]
   API --> PG[(PostgreSQL - Neon)]
-  API -.->|Fase 2| OSM[OpenStreetMap]
+  API -.->|Fase C: places| OSM[OpenStreetMap]
 ```
 
 As telas leem só o SQLite. O motor de sync envia e busca mudanças quando há internet; sem internet nada para de funcionar.
@@ -67,7 +67,7 @@ apps/api/src/
    ├─ health/         # GET /health
    ├─ config/         # GET /v1/config (feature flags por plano)
    └─ (a criar) users, vehicles, odometer, fuel, maintenance,
-      documents, reports, sync; Fase 2: fipe, fines, billing, places
+      documents, reports, sync; Fase C: places; Fase 2: fipe, fines, billing
 ```
 
 Dentro de cada módulo: `x.module.ts`, `x.controller.ts` (rotas REST, só validação e chamada do service), `x.service.ts` (regras), `x.repository.ts` (Prisma), `dto/` (schemas de `@ta-em-dia/shared`) e `x.service.spec.ts`.
@@ -122,19 +122,21 @@ apps/mobile/
 
 As mesmas tabelas existem no PostgreSQL (`apps/api/prisma/schema.prisma`) e no SQLite. Toda tabela sincronizável tem `id` (UUID v7 gerado no app), `user_id`, `created_at`, `updated_at`, `deleted_at` (exclusão lógica) e `version` (número do servidor para o sync).
 
-| Tabela                | Campos principais                                                                                                                                                              | Relação       |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-| `users`               | email, name, plan (`free`/`premium`), is_anonymous                                                                                                                             | —             |
-| `auth_identities`     | user_id, provider (`google`/`apple`/`anonymous`), provider_subject, email                                                                                                      | N por usuário |
-| `devices`             | user_id, installation_id, platform, push_token, last_sync_at                                                                                                                   | N por usuário |
-| `refresh_tokens`      | device_id, token_hash, expires_at, revoked_at                                                                                                                                  | só servidor   |
-| `vehicles`            | user_id, name, type (`combustion`, `flex`, `electric` ou `motorcycle`), brand, model, year, plate, initial_km, photo_url, archived, sort_order                                 | N por usuário |
-| `odometer_readings`   | vehicle_id, km, read_at, source (`manual`/`fuel`/`maintenance`)                                                                                                                | N por veículo |
-| `fuel_entries`        | vehicle_id, date, km, fuel_type, liters, price_per_liter, total, full_tank, station_name, note                                                                                 | N por veículo |
-| `maintenance_plans`   | vehicle_id, type (código da lista pronta ou nome digitado em "Outro"), interval_km, interval_months, last_done_km, last_done_at, enabled, notify_before_km, notify_before_days | N por veículo |
-| `maintenance_records` | vehicle_id, plan_id (opcional), type, date, km, cost, shop, note                                                                                                               | N por veículo |
-| `documents`           | user_id, vehicle_id (nulo para CNH), kind, due_date, notify_days[], note                                                                                                       | N por usuário |
-| `feature_flags`       | key, plan, value (json)                                                                                                                                                        | só servidor   |
+| Tabela                 | Campos principais                                                                                                                                                                 | Relação       |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `users`                | email, name, plan (`free`/`premium`), is_anonymous                                                                                                                                | —             |
+| `auth_identities`      | user_id, provider (`google`/`apple`/`anonymous`), provider_subject, email                                                                                                         | N por usuário |
+| `devices`              | user_id, installation_id, platform, push_token, last_sync_at                                                                                                                      | N por usuário |
+| `refresh_tokens`       | device_id, token_hash, expires_at, revoked_at                                                                                                                                     | só servidor   |
+| `vehicles`             | user_id, name, type (`combustion`, `flex`, `electric` ou `motorcycle`), brand, model, year, plate, initial_km, photo_url, archived, sort_order                                    | N por usuário |
+| `odometer_readings`    | vehicle_id, km, read_at, source (`manual`/`fuel`/`maintenance`)                                                                                                                   | N por veículo |
+| `fuel_entries`         | vehicle_id, date, km, fuel_type, liters, price_per_liter, total, full_tank, station_name, note; Fase C: `status` (`complete`/`draft`, padrão `complete`), `station_id` (opcional) | N por veículo |
+| `stations` (Fase C)    | user_id, osm_id (opcional), name, brand, street, lat, lng, deleted_at; posto local não envia lat/lng no sync                                                                      | N por usuário |
+| `maintenance_plans`    | vehicle_id, type (código da lista pronta ou nome digitado em "Outro"), interval_km, interval_months, last_done_km, last_done_at, enabled, notify_before_km, notify_before_days    | N por veículo |
+| `maintenance_records`  | vehicle_id, plan_id (opcional), type, date, km, cost, shop, note                                                                                                                  | N por veículo |
+| `documents`            | user_id, vehicle_id (nulo para CNH), kind, due_date, notify_days[], note                                                                                                          | N por usuário |
+| `feature_flags`        | key, plan, value (json)                                                                                                                                                           | só servidor   |
+| `place_cells` (Fase C) | geohash (5 caracteres), places (json com os postos do OpenStreetMap), fetched_at; sem `user_id`, dado público                                                                     | só servidor   |
 
 Os atalhos de tipos criados pelo usuário em "Outro" vêm dos nomes distintos já usados nos planos e registros dele; não há tabela própria.
 
@@ -164,6 +166,34 @@ Os atalhos de tipos criados pelo usuário em "Outro" vêm dos nomes distintos j�
 - **Histórico (tela 13):** tela empilhada aberta por "Histórico" na aba Mais (não é aba). Junta abastecimentos e serviços de manutenção do veículo ativo numa linha do tempo por mês, do mais recente ao mais antigo; no mesmo dia, o de maior km vem primeiro. Filtros: tipo (Tudo, Abastecimentos, Manutenções) e período (Tudo, Mês, 3 meses, Ano), este pelo botão do calendário. O km/l de cada abastecimento é o do trecho, calculado antes dos filtros. Documentos entram na linha do tempo (chip "Docs") no item Documentos e prazos. Abrir o item fica para quando existir tela de detalhe/edição de abastecimento e de serviço. Fica em `features/history`; a leitura dos serviços (`listRecords`) vive em `core/maintenance` para as features não se importarem.
 - **Resumo do mês (Início):** gasto do mês e do mês anterior (variação em %), nº de abastecimentos, km rodados e custo por km (`monthFuelSummary`). Km rodados = último abastecimento do mês − último antes do mês (sem ele, o primeiro do mês marca a partida e seu valor não entra no custo por km).
 - **Projeção do mês:** gasto até hoje ÷ dias passados × dias do mês.
+
+## Abastecimento por voz e posto único (Fase C)
+
+Decidido pelo dono em 26/10/2026; itens C1 a C7 do `docs/06-backlog.md`. **A implementar:** esta seção descreve o desenho, e cada item do backlog a confirma ao ser feito. Privacidade em `docs/05-privacidade-lgpd.md` ("Microfone e localização").
+
+**Fluxo de voz (tela Abastecer)**
+
+1. Toque em **Falar**: o app pede o microfone (só aqui) e liga o reconhecimento de fala do sistema (`expo-speech-recognition`, development build). O texto aparece enquanto o usuário fala. O áudio não é gravado nem enviado pelo app.
+2. O texto passa por `parseFuelSpeech` (`packages/shared`, puro, C3): acha valor em R$, litros, preço do litro, km, combustível e tanque cheio. Palavra junto do número define o campo; número solto se resolve por perto do último km, centavos entre R$ 2 e R$ 12 ou valor ÷ litros entre R$ 2 e R$ 12. Com 2 de 3 entre valor, litros e preço, calcula o terceiro (`calculateMissingFuelAmount`). Número só ou ambíguo vira pergunta ("50 é o valor ou os litros?"). Combustível: o dito, senão o do último abastecimento.
+3. Com tudo o que a regra de **completo** exige, salva sozinho e mostra por 5 s o resumo com **Desfazer** e **Editar**. Falta dado: salva como **rascunho**. Falha de validação: campo em vermelho e **não** salva sozinho.
+4. Sem microfone, sem permissão ou com barulho, o formulário atual segue na mesma tela. Nada depende da voz.
+
+**Rascunho (C1, C2)**
+
+- `fuel_entries.status`: `complete` (padrão, então a versão antiga do app e os registros existentes continuam valendo) ou `draft`. Migration só adiciona a coluna (SQLite e Prisma) e o contrato de sync em `shared` ganha o campo opcional.
+- **Completo** (`isFuelEntryComplete`, em `shared`): posto, valor, litros ou 2 de 3 entre valor, litros e preço, km, combustível e tanque cheio.
+- **Validações** (`shared`, com teste): km menor que o último ou mais de 2.000 km acima do último; preço do litro ou valor ÷ litros fora de R$ 2 a R$ 12; valor, litros e preço que não batem (mais de 2% de diferença). Não existe capacidade do tanque, nem campo nem limite.
+- **Rascunho fica fora** de km/l, custo por km, médias, projeção e relatórios. Aparece com a etiqueta "Incompleto" na lista e no Histórico e se completa pelo formulário.
+- **Lembrete (C2):** notificação local às 20h do mesmo dia ("Falta o km do abastecimento de hoje no Shell"), repete no dia seguinte e para; tocar abre o rascunho. É reagendada junto dos outros avisos em `refreshReminders`.
+
+**Posto único (C5, C6)**
+
+- **API, módulo `places`:** `GET /v1/places?geohash=<5 caracteres>` (exige token, inclusive o anônimo; limite de chamadas). Devolve os postos do OpenStreetMap (`amenity=fuel`) da célula, buscados no Overpass e guardados em `place_cells` por 30 dias (o host grátis dorme, então o cache vai para o banco, não para a memória). Sem serviço pago; uma chamada ao Overpass por célula e por validade, nunca por usuário. O geohash não é ligado ao usuário nem vai para log.
+- **App:** `expo-location` com permissão "durante o uso", pedida só na tela Abastecer. A posição fica na memória e serve para achar o posto mais perto num raio de ~150 m entre os postos guardados no SQLite; o app baixa a célula do geohash e as vizinhas quando há internet. Sugere o mais perto, com chip "Trocar" e o segundo mais perto em outro chip; mostra "Shell · Av. da Pista", nunca o ID.
+- **`stations`:** `id` UUID v7 gerado no app, `osm_id` opcional, `name`, `brand`, `street`, `lat`, `lng`, `deleted_at`; sincroniza como as outras tabelas. Posto fora do OpenStreetMap vira posto local (UUID, sem `osm_id`), e o sync dele **não leva `lat`/`lng`** (`docs/05`). `fuel_entries.station_id` é opcional; `station_name` continua para os registros antigos e para quem está sem permissão.
+- **Sem permissão ou sem internet:** sugere os postos já usados (chips de hoje). A média de preço por posto é calculada no app com os abastecimentos completos.
+
+**Aviso ao chegar no posto (C7):** opcional, desligado por padrão. Segue "Localização em segundo plano" abaixo.
 
 ## Sync offline-first
 
@@ -355,9 +385,9 @@ flowchart LR
 
 **Migrations:** sempre compatíveis com a versão anterior do app (adicionar coluna antes de usar, remover só depois), porque usuários ficam semanas em versões antigas.
 
-## Localização em segundo plano (Fase 2)
+## Localização em segundo plano (item C7 do backlog)
 
-O lembrete no posto usa geofences do sistema operacional, não GPS contínuo: iOS e Android acordam o app só ao entrar numa área, o que gasta quase nada de bateria. O recurso é opcional, desligado por padrão, e o app funciona inteiro sem ele.
+O aviso ao chegar no posto (`geo.fuelReminder`) usa geofences do sistema operacional, não GPS contínuo: iOS e Android acordam o app só ao entrar numa área, o que gasta quase nada de bateria. O recurso é opcional, desligado por padrão, e o app funciona inteiro sem ele.
 
 1. Usuário liga "Lembrete no posto" em Configurações (opt-in).
 2. O app pede localização "durante o uso"; só depois, numa segunda tela explicativa, pede "sempre".
@@ -366,7 +396,7 @@ O lembrete no posto usa geofences do sistema operacional, não GPS contínuo: iO
 5. Quando o usuário se afasta muito (~5 km), o app troca as geofences pelas novas mais próximas.
 6. Máximo de 1 notificação por posto a cada 12 h, e nenhuma se já houve abastecimento registrado hoje.
 
-**Peças técnicas:** `expo-location` (`startGeofencingAsync`, precisão baixa) + `expo-task-manager`; postos via Overpass API com cache na nossa API (módulo `places`); a localização nunca sai do aparelho, a API recebe só a célula aproximada (geohash de 5 caracteres).
+**Peças técnicas:** `expo-location` (`startGeofencingAsync`, precisão baixa) + `expo-task-manager`; postos via Overpass API com cache na nossa API (módulo `places`, ver "Abastecimento por voz e posto único"); a localização nunca sai do aparelho, a API recebe só a célula aproximada (geohash de 5 caracteres).
 
 **Para a Apple aprovar:** textos específicos em `NSLocationWhenInUseUsageDescription` e `NSLocationAlwaysAndWhenInUseUsageDescription`; `UIBackgroundModes: location` só se for necessário; notas para o revisor com vídeo curto; Privacy Nutrition Label "localização, não vinculada à identidade, não usada para rastreamento".
 
@@ -374,18 +404,18 @@ O lembrete no posto usa geofences do sistema operacional, não GPS contínuo: iO
 
 ## Decisões registradas
 
-| Decisão       | Escolha                                                                                                    | Por quê                                                               |
-| ------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| App           | Expo React Native                                                                                          | Um código para iOS e Android, EAS para build e lojas                  |
-| Backend       | API própria NestJS + PostgreSQL, sem Supabase                                                              | Controle total e sem dependência de BaaS                              |
-| Dados no app  | SQLite local, offline-first, sync com a API                                                                | Uso no posto e na garagem, muitas vezes sem sinal                     |
-| Login         | Google (iOS e Android) + Apple (só iOS) + "Continuar sem login" (anônimo por instalação, vinculado depois) | Menos atrito na entrada, backup quando quiser                         |
-| Abastecimento | Manual no MVP; tanque cheio opcional; duas médias de consumo; OCR na Fase 2; NFC-e fora por enquanto       | Entregar rápido, sem serviços pagos, e servir quem não enche o tanque |
-| Manutenção    | Lista pronta + "Outro" com nome livre                                                                      | Cobrir qualquer serviço sem engessar                                  |
-| Monetização   | Grátis agora, Premium preparado por feature flags                                                          | Cobrar depois sem reescrever                                          |
-| Repositório   | Monorepo GitHub com pnpm + Turborepo                                                                       | App, API e tipos mudam juntos                                         |
-| Fluxo         | PR + CI obrigatório, squash merge, Conventional Commits                                                    | Histórico limpo                                                       |
-| Ambientes     | dev, staging e produção desde o início                                                                     | Testar sem tocar dados reais                                          |
-| Deploy        | API: merge em `main` → staging → aprovação → produção. App: EAS por tag de versão                          | Automático, mas produção com um clique consciente                     |
-| Custos        | Nada pago agora, só planos gratuitos                                                                       | Validar antes de gastar; contas das lojas são a exceção               |
-| Localização   | Fase 2, opt-in, geofences, OpenStreetMap                                                                   | Bateria baixa e aprovação nas lojas                                   |
+| Decisão       | Escolha                                                                                                                                            | Por quê                                                               |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| App           | Expo React Native                                                                                                                                  | Um código para iOS e Android, EAS para build e lojas                  |
+| Backend       | API própria NestJS + PostgreSQL, sem Supabase                                                                                                      | Controle total e sem dependência de BaaS                              |
+| Dados no app  | SQLite local, offline-first, sync com a API                                                                                                        | Uso no posto e na garagem, muitas vezes sem sinal                     |
+| Login         | Google (iOS e Android) + Apple (só iOS) + "Continuar sem login" (anônimo por instalação, vinculado depois)                                         | Menos atrito na entrada, backup quando quiser                         |
+| Abastecimento | Manual ou por voz; o que faltar vira rascunho; tanque cheio opcional; duas médias de consumo; sem OCR (a voz o substitui); NFC-e fora por enquanto | No posto são ~10 s; sem serviços pagos; serve quem não enche o tanque |
+| Manutenção    | Lista pronta + "Outro" com nome livre                                                                                                              | Cobrir qualquer serviço sem engessar                                  |
+| Monetização   | Grátis agora, Premium preparado por feature flags                                                                                                  | Cobrar depois sem reescrever                                          |
+| Repositório   | Monorepo GitHub com pnpm + Turborepo                                                                                                               | App, API e tipos mudam juntos                                         |
+| Fluxo         | PR + CI obrigatório, squash merge, Conventional Commits                                                                                            | Histórico limpo                                                       |
+| Ambientes     | dev, staging e produção desde o início                                                                                                             | Testar sem tocar dados reais                                          |
+| Deploy        | API: merge em `main` → staging → aprovação → produção. App: EAS por tag de versão                                                                  | Automático, mas produção com um clique consciente                     |
+| Custos        | Nada pago agora, só planos gratuitos                                                                                                               | Validar antes de gastar; contas das lojas são a exceção               |
+| Localização   | "Durante o uso" na tela Abastecer (posto único, coordenada só no aparelho); "sempre" opt-in com geofences (C7); OpenStreetMap                      | Achar o posto sem digitar, bateria baixa e aprovação nas lojas        |
