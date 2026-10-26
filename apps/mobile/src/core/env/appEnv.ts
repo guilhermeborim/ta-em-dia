@@ -7,6 +7,9 @@ interface AppExtra {
   apiUrl?: string;
   googleWebClientId?: string;
   googleIosClientId?: string;
+  supportEmail?: string;
+  termsUrl?: string;
+  privacyUrl?: string;
 }
 
 const extra = (Constants.expoConfig?.extra ?? {}) as AppExtra;
@@ -17,3 +20,7 @@ export const apiUrl: string = extra.apiUrl ?? 'http://localhost:3000';
 /** Client IDs do Google deste ambiente (vazios quando o build não tem o login do Google). */
 export const googleWebClientId: string = extra.googleWebClientId ?? '';
 export const googleIosClientId: string = extra.googleIosClientId ?? '';
+/** E-mail de ajuda e URLs públicas de Termos e Privacidade (vazios: o app mostra "Em breve"). */
+export const supportEmail: string = extra.supportEmail ?? '';
+export const termsUrl: string = extra.termsUrl ?? '';
+export const privacyUrl: string = extra.privacyUrl ?? '';

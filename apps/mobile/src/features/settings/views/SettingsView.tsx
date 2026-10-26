@@ -13,7 +13,7 @@ import {
 import { useSettingsViewModel } from '../viewmodels/useSettingsViewModel';
 
 /**
- * Tela 20: Configurações. Avisos por tipo, antecedência padrão dos prazos, unidades e exportar.
+ * Tela 20: Configurações. Avisos por tipo, antecedência padrão dos prazos, unidades, exportar, Termos e Privacidade.
  * Sem o seletor de aparência: o app é só tema claro.
  */
 export function SettingsView() {
@@ -78,6 +78,18 @@ export function SettingsView() {
             <SettingItem title="Distância" value="km" chevron={false} />
             <SettingItem title="Volume" value="litros" chevron={false} />
             <SettingItem title="Exportar dados" hint="Em breve" onPress={vm.exportData} />
+          </ListGroup>
+
+          <Text variant="caption" color="text3">
+            SOBRE
+          </Text>
+          <ListGroup>
+            <SettingItem title="Termos de uso" hint={vm.termsHint} onPress={vm.openTerms} />
+            <SettingItem
+              title="Política de privacidade"
+              hint={vm.privacyHint}
+              onPress={vm.openPrivacy}
+            />
           </ListGroup>
         </ScrollView>
       )}
