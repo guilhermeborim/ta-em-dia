@@ -242,6 +242,15 @@ model Document {
   @@map("documents")
 }
 
+// Cache dos postos do OpenStreetMap por célula do geohash (Fase C). Dado público, sem usuário.
+model PlaceCell {
+  geohash   String   @id @db.VarChar(5)
+  places    Json
+  fetchedAt DateTime
+
+  @@map("place_cells")
+}
+
 model FeatureFlag {
   key   String
   plan  Plan

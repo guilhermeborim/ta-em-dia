@@ -13,6 +13,8 @@ export const envSchema = z.object({
   CORS_ORIGINS: z.string().default(''),
   // Quantos proxies ficam entre a internet e a API (o Render é 1). O rate limit usa o IP do cliente.
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
+  // Postos do OpenStreetMap (módulo places). Instância pública e gratuita do Overpass.
+  OVERPASS_URL: z.url().default('https://overpass-api.de/api/interpreter'),
 });
 
 export type Env = z.infer<typeof envSchema>;

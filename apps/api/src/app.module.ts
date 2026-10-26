@@ -9,6 +9,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AppConfigModule } from './modules/config/config.module';
 import { HealthModule } from './modules/health/health.module';
+import { PlacesModule } from './modules/places/places.module';
 import { SyncModule } from './modules/sync/sync.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { SyncModule } from './modules/sync/sync.module';
     HealthModule,
     AppConfigModule,
     SyncModule,
+    PlacesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: AppThrottlerGuard }],
 })
