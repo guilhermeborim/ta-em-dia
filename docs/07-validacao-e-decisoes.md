@@ -279,10 +279,9 @@ Precisa do login com Google funcionando e da API no ar com `DELETE /v1/auth/acco
 Sem frame no Figma. No Android, com um aparelho que já tem abastecimentos (atualizando de uma versão anterior):
 
 - [ ] **Migration 9** (recria `fuel_entries`): depois de atualizar, os abastecimentos antigos continuam na lista, no Histórico e no Início, com os mesmos km/l, médias e totais.
-- [ ] Novo abastecimento → preencher só posto e total → **Salvar como rascunho**: a tela fecha e o item aparece na aba Abastecer com a etiqueta âmbar "Incompleto", total "—" (ou o valor) e sem km/l; no mês, o resumo mostra "N incompleto" à parte do total.
+- [ ] Criar um rascunho pela voz (falar só o valor, sem posto; ver 2.35): a tela fecha e o item aparece na aba Abastecer com a etiqueta âmbar "Incompleto", total "—" (ou o valor) e sem km/l; no mês, o resumo mostra "N incompleto" à parte do total.
 - [ ] O mesmo rascunho aparece no Histórico com "Incompleto". Os totais do Início, os relatórios, o km/l e o "km atual" **não** mudam por causa dele.
 - [ ] Tocar no rascunho (Abastecer ou Histórico) abre "Completar abastecimento" com os campos preenchidos, o km sugerido e a data original. Preencher o que falta e salvar: ele vira abastecimento comum (sem etiqueta), o Início mostra o toast e o resumo conta o gasto.
-- [ ] Salvar como rascunho sem nada preenchido mostra "Preencha ao menos um dado para guardar o rascunho". Com tudo preenchido, o botão salva como abastecimento completo.
 - [ ] "Incompleto" legível em fonte grande, nos dois cartões (lista e Histórico); alvo de toque do cartão ≥ 44 pt.
 - [ ] Com sync ligado (conta com login): o rascunho aparece no outro aparelho e, depois de completo, deixa de ser rascunho lá também.
 
@@ -290,7 +289,7 @@ Sem frame no Figma. No Android, com um aparelho que já tem abastecimentos (atua
 
 Sem frame no Figma (é uma notificação). Android com development build, notificações permitidas. Para não esperar as 20h, ajuste data e hora do aparelho para perto das 20h e abra o app (ele reagenda ao abrir e ao voltar para a frente).
 
-- [ ] Salvar um rascunho (Novo abastecimento → preencher posto e total → Salvar como rascunho) às 19h50: às 20h chega "Falta o km do abastecimento de hoje no Shell"; sem posto, "Falta o posto do abastecimento de hoje"; com vários dados faltando, "Falta completar o abastecimento de hoje no Shell".
+- [ ] Salvar um rascunho (pela voz: posto no chip e falar só o valor) às 19h50: às 20h chega "Falta o km do abastecimento de hoje no Shell"; sem posto, "Falta o posto do abastecimento de hoje"; com vários dados faltando, "Falta completar o abastecimento de hoje no Shell".
 - [ ] No dia seguinte, às 20h, chega o segundo aviso ("... de ontem ..."). Depois disso, nada mais.
 - [ ] Rascunho criado depois das 20h: só o aviso do dia seguinte.
 - [ ] Tocar no aviso abre "Completar abastecimento" com o rascunho (app fechado e app aberto).
@@ -302,11 +301,11 @@ Sem frame no Figma (é uma notificação). Android com development build, notifi
 
 Sem frame no Figma (botão Falar, cartão da voz, aviso do áudio, pergunta, resumo de 5 s). Dependência nativa nova: `expo-speech-recognition` (exige development build; no Expo Go o "Falar" diz que a fala não está disponível). Nenhum emulador estava aberto: nada foi visto rodando. Android 13+ com development build e internet:
 
-- [ ] Primeiro toque em **Falar**: aparece o cartão "Antes de falar"; "Agora não" fecha; "Continuar" pede o microfone com o texto em português e começa a ouvir. No segundo uso, o cartão não volta.
+- [ ] Primeiro toque no microfone: aparece o cartão "Antes de falar"; "Agora não" fecha; "Continuar" pede o microfone com o texto em português e começa a ouvir. No segundo uso, o cartão não volta.
 - [ ] Recusar o microfone: cartão "Sem acesso ao microfone..." e o formulário segue normal.
-- [ ] Ouvindo: o texto aparece enquanto fala; 2 s de silêncio encerram sozinho; **Pronto** encerra; **Cancelar** volta sem mudar nada.
+- [ ] O microfone fica ao lado de "Salvar abastecimento"; ouvindo, vira três pontinhos animados e **nenhum texto falado aparece**; 2 s de silêncio encerram; tocar nos pontinhos encerra.
 - [ ] Com o posto escolhido antes (chip), falar "150 reais, 25 litros, km [último + 300], encheu": salva sozinho, cartão verde "Abastecimento salvo" com "Shell · R$ 150,00 · 25 L · 45.300 km"; após 5 s volta ao Início com o toast do km/l.
-- [ ] **Desfazer** no resumo: o abastecimento some (lista, Início) e o formulário fica preenchido. **Editar**: fica na tela, o botão Falar some, mudar um campo e salvar atualiza o mesmo abastecimento (não cria outro).
+- [ ] **Desfazer** no resumo: o abastecimento some (lista, Início) e o formulário fica preenchido. **Editar**: fica na tela, o microfone some, mudar um campo e salvar atualiza o mesmo abastecimento (não cria outro).
 - [ ] Sem posto: salva como rascunho ("Salvo como rascunho · Falta o posto"), volta após 5 s e o rascunho aparece "Incompleto"; às 20h chega o lembrete (C2).
 - [ ] Sem falar o km: rascunho "Falta o km" (o km sugerido não conta).
 - [ ] Falar "50": pergunta "50 é o valor ou os litros?" com os botões; responder continua o fluxo.
@@ -314,7 +313,7 @@ Sem frame no Figma (botão Falar, cartão da voz, aviso do áudio, pergunta, res
 - [ ] Modo avião: cartão "Falar precisa de internet. Preencha abaixo."
 - [ ] Aparelho sem o app Google / serviço "Reconhecimento e síntese de fala": "A fala não está disponível neste aparelho".
 - [ ] Barulho de posto (ou rádio ligado): ver o que o reconhecimento devolve e se o interpretador acerta; anotar frases que falharam para novos testes em `shared`.
-- [ ] Fonte grande: cartão e botões da voz legíveis, botões ≥ 44 pt; leitor de tela anuncia o texto ao vivo.
+- [ ] Fonte grande: cartão e botões da voz legíveis, botões ≥ 44 pt; leitor de tela lê "Falar o abastecimento" e, ouvindo, "Parar de ouvir".
 - [ ] iOS (quando houver development build): pedido de microfone e de reconhecimento de fala em português, Ditado/Siri desligado mostra "não está disponível".
 
 ### 2.12 O que veio antes (não revisado aqui)
@@ -425,8 +424,7 @@ Alternativa: enviar a coordenada arredondada (~1 km). Recomendação: manter só
 
 ### 3.33 Rascunho de abastecimento: escolhas que fiz (C1)
 
-- **Botão "Salvar como rascunho" no formulário (sem frame no Figma):** o item C1 só pedia a etiqueta e o completar pelo formulário, mas sem um jeito de criar rascunho o recurso não se testa antes da voz (C4). Botão `ghost` abaixo de "Salvar abastecimento". Alternativa: tirar o botão e criar rascunho só pela voz. Recomendação: manter até o C4 e decidir com o botão da voz na tela.
-- **Etiqueta e textos meus:** "Incompleto" (âmbar, `StatusPill`), "Completar abastecimento", "Salvar como rascunho", "Faltam dados", "N incompleto(s)" no resumo do mês e "Preencha ao menos um dado para guardar o rascunho". Recomendação: manter.
+- **Etiqueta e textos meus:** "Incompleto" (âmbar, `StatusPill`), "Completar abastecimento", "Faltam dados" e "N incompleto(s)" no resumo do mês. Recomendação: manter.
 - **Rascunho só aparece em "Tudo"** na lista de abastecimentos (filtros de combustível e "Só tanque cheio" o escondem) e fica fora do total e da contagem do mês. Alternativa: mostrar também nos filtros. Recomendação: manter.
 - **Sem excluir rascunho pela tela:** quem não quer um rascunho precisa completá-lo; abastecimento completo também não tem exclusão na tela hoje. A exclusão existe no Model (`deleteFuelEntry`). Alternativa: botão "Excluir rascunho" com confirmação no formulário. Recomendação: fazer num PR pequeno junto da edição de abastecimento.
 - **Validações novas (km, faixa de R$ 2 a R$ 12, 2%) não valem no formulário manual:** estão em `shared` (`fuelEntryIssues`) e entram com a voz (C4), para não mudar o que o formulário aceita hoje (por exemplo, registrar um abastecimento antigo com km menor). Alternativa: aplicar já no formulário manual como aviso. Recomendação: manter até o C4.
@@ -442,15 +440,15 @@ Alternativa: enviar a coordenada arredondada (~1 km). Recomendação: manter só
 ### 3.36 Falar o abastecimento: escolhas que fiz (C4)
 
 - **Dependência nativa nova:** `expo-speech-recognition` 58 (biblioteca da comunidade, não do time do Expo; o Expo não tem módulo próprio de reconhecimento de fala). Exige development build; sem ele o botão avisa que a fala não está disponível. Alternativa: nenhuma grátis sem módulo nativo. Recomendação: manter.
-- **Telas sem frame no Figma:** botão "Falar" (variante `accent`, com ícone de microfone, no topo do formulário), cartão da voz (`SpeechCard`, novo no catálogo) para aviso, ouvindo, pergunta, resumo, inválido e falha. Recomendação: pedir os frames ao designer com o fluxo 2b.
-- **Textos meus:** "Antes de falar" e o aviso do áudio, "Ouvindo…", o exemplo de frase, "Pronto", "Cancelar", "Confira os campos em vermelho e salve", "Salvo como rascunho · Falta o posto", "Falar de novo", as mensagens de falha ("Falar precisa de internet...", "Não ouvi nada...", "Não entendi os valores...", "Sem acesso ao microfone...") e os pedidos do sistema em `app.config.ts`. Recomendação: revisar junto com a Política de Privacidade.
+- **Telas sem frame no Figma:** botão redondo de microfone (cor `accent`, 44 pt) ao lado de "Salvar abastecimento", posição escolhida pelo dono; ouvindo, três pontinhos animados (`ListeningDots`, novo no catálogo) e nenhum texto falado na tela; cartão da voz (`SpeechCard`, no catálogo) acima dos botões para aviso, pergunta, resumo, inválido e falha. Recomendação: pedir os frames ao designer com o fluxo 2b.
+- **Textos meus:** "Antes de falar" e o aviso do áudio, "Confira os campos em vermelho e salve", "Salvo como rascunho · Falta o posto", "Fechar", os rótulos de acessibilidade "Falar o abastecimento" e "Parar de ouvir", as mensagens de falha ("Falar precisa de internet...", "Não ouvi nada...", "Não entendi os valores...", "Sem acesso ao microfone...") e os pedidos do sistema em `app.config.ts`. Recomendação: revisar junto com a Política de Privacidade.
 - **Tanque cheio não dito vale "não":** a regra de completo do C1 exige sim ou não, e o formulário já vem desligado. Sem isso, quase toda fala viraria rascunho. Alternativa: perguntar "Encheu o tanque?". Recomendação: manter.
 - **Km sugerido não conta:** sem km falado ou digitado, vira rascunho "Falta o km" (como o fluxo 2b descreve). Alternativa: aceitar o sugerido. Recomendação: manter.
 - **O posto não é falado:** vem do formulário (chip antes de falar) até o C6; sem posto, a fala vira rascunho. Alternativa: entender "no Shell" na frase. Recomendação: esperar o C6.
 - **Desfazer deixa o formulário preenchido** (para corrigir ou falar de novo) e **Editar fica na tela** atualizando o mesmo registro, já que abastecimento completo ainda não tem tela de edição. Recomendação: manter.
 - **"Falar" só no Novo abastecimento**, não no Completar rascunho (salvar sozinho sobre um rascunho existente é outro fluxo). Recomendação: manter.
 - **Validações só na voz:** o formulário manual continua aceitando km menor (abastecimento antigo). O item 3.33 sobre isso segue em aberto.
-- **Botão "Salvar como rascunho" (3.33):** ficou, agora ao lado do Falar. Decidir com o botão na tela.
+- **Sem "Cancelar" enquanto ouve:** tocar nos pontinhos encerra e o que foi dito é interpretado. Quem não quer o resultado usa "Desfazer". Alternativa: toque longo para cancelar. Recomendação: manter.
 - **Aviso do áudio guardado só no aparelho** (`app_settings`, chave `fuel.voice_notice_seen`): reinstalar mostra de novo. Recomendação: manter.
 
 ### 3.35 Interpretador de fala: escolhas que fiz (C3)
