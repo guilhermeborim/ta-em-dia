@@ -130,7 +130,7 @@ Aba Relatórios.
 - [ ] Atualizar o km (ou abastecer) empurra o próximo lembrete.
 - [ ] **Antecedência** abre em modal, salva e a linha mostra o novo valor ao voltar. Prazo novo já vem com esses dias marcados; os prazos que já existem não mudam.
 - [ ] Sem nenhum dia marcado, "Salvar" mostra "Marque ao menos um dia".
-- [ ] Exportar dados mostra "Em breve" (o aviso aparece sem cobrir o conteúdo).
+- [ ] Exportar dados: ver 2.41.
 - [ ] Distância e Volume não têm seta nem abrem nada.
 - [ ] No iOS nada é agendado até haver development build (como nos outros avisos).
 - [ ] Fonte grande do sistema: nenhuma linha corta o valor à direita.
@@ -241,7 +241,6 @@ Exige um **development build novo** (`@react-native-community/datetimepicker` é
 - [ ] Android: teclado de preço por litro, litros e total pago mostra a vírgula (`numeric`). Se não mostrar no seu aparelho, avise.
 - [ ] Preço por litro: digitar `65` mostra `6,5`; `655` mostra `6,55`.
 - [ ] Relatórios abre em "Mês".
-- [ ] Configurações → Exportar dados: o aviso "Em breve" aparece acima da barra de navegação do Android.
 - [ ] Início → Próximos alertas → Ver todos: abre "Todos os alertas" com manutenções e documentos juntos; tocar num card abre o item; voltar retorna ao Início.
 
 **Decisão aberta:** a tela "Todos os alertas" não tem frame no Figma; usei o layout do Início (barra de topo + cartões). Alternativa: pedir o frame ao designer. Recomendo manter até lá.
@@ -379,6 +378,18 @@ Sem frame no Figma (interruptor e telas que explicam as permissões). Dependênc
 - [ ] Logs da API (Render): só chamadas a `/v1/places` de regiões novas; nenhuma coordenada.
 - [ ] Fonte grande e TalkBack: as telas do aviso rolam sem cortar; botões com toque ≥ 44 pt.
 - [ ] Play Console: declaração de localização em segundo plano com o vídeo (até 30 s) da tela que explica, do pedido e do aviso; Data safety com localização aproximada e precisa. O manifest passa a pedir `ACCESS_BACKGROUND_LOCATION`.
+
+### 2.41 Exportar dados (Configurações, PR #?)
+
+Dependências nativas novas: `expo-file-system` e `expo-sharing` (exigem development build novo; num build antigo, tocar mostra "Não foi possível exportar"). Nenhum emulador estava aberto: nada foi visto rodando.
+
+- [ ] Configurações → Exportar dados: "Preparando o arquivo..." aparece abaixo do título e abre o menu de compartilhar do sistema com `ta-em-dia-dados-<data de hoje>.json`.
+- [ ] Mandar por e-mail, salvar no Drive e no app Arquivos: o arquivo abre e é um JSON legível (veículos, abastecimentos, postos, km, manutenções, documentos, conta e preferências).
+- [ ] Com login: a conta aparece com nome e e-mail. Sem login: `"account": null`.
+- [ ] Um abastecimento excluído aparece com `deletedAt` preenchido.
+- [ ] Muitos dados (centenas de abastecimentos): o arquivo sai em poucos segundos e a tela não trava.
+- [ ] Tocar duas vezes rápido não abre dois menus.
+- [ ] iPhone (quando houver build): o menu oferece "Salvar em Arquivos".
 
 ### 2.12 O que veio antes (não revisado aqui)
 
@@ -565,3 +576,13 @@ Valores por ambiente, decididos pelo dono em 26/10/2026: o e-mail de ajuda e as 
 - **iPhone:** o interruptor fica escondido enquanto não houver development build no iOS (`scheduler.ios.ts` não agenda avisos). Quando houver, apagar os arquivos `.ios.ts` de `core/notifications` liga o aviso também lá; o iOS reporta o estado inicial das regiões ao registrar, então quem liga o aviso dentro de um posto pode receber um aviso logo (as regras valem). Recomendação: manter.
 - **Plano B se as lojas recusarem o "sempre":** desligar a flag (o interruptor some) e, para o Google, tirar `isAndroidBackgroundLocationEnabled` do `app.config.ts` (o manifest com `ACCESS_BACKGROUND_LOCATION` já exige a declaração, mesmo com o aviso desligado). As alternativas do `docs/03` (lembrete só com o app aberto ou notificação periódica "Abasteceu esta semana?") não foram feitas. Recomendação: só decidir se recusarem.
 - **Dependência nativa nova:** `expo-task-manager` (do Expo, gratuita); sem `UIBackgroundModes: location` e sem serviço em primeiro plano. Recomendação: manter.
+
+### 3.41 Exportar dados: escolhas que fiz
+
+Arquivo `.json` pelo menu de compartilhar e só JSON, decididos pelo dono em 26/10/2026. O resto foi escolha minha:
+
+- **Exporta do aparelho, não da API:** funciona sem internet e para quem não tem login (os dados de quem não tem login só existem no aparelho). Com login, o aparelho já tem tudo o que a conta tem (o login baixa os dados). Alternativa: rota na API para quem perdeu o celular. Recomendação: manter; quem perdeu o celular entra de novo e exporta.
+- **Itens excluídos vão no arquivo** (com `deletedAt`): a exclusão é lógica e a LGPD dá direito a tudo o que é guardado. Alternativa: só os ativos, mais fácil de ler. Recomendação: manter.
+- **O que fica fora:** a fila do sync (`outbox`), o estado do sync, o cache de postos do OpenStreetMap (dado público), o registro dos avisos no posto (só as últimas 12 h), o `version` de cada linha e os segredos (`expo-secure-store`). Os postos locais vão com a coordenada guardada no aparelho.
+- **Rótulo continua "Exportar dados"**, como no Figma (a LGPD chama de "Exportar meus dados"). Sem frame no Figma para o estado "Preparando o arquivo...".
+- **Textos meus:** "Preparando o arquivo...", "Não foi possível exportar", "Este aparelho não compartilha arquivos.", "Tente de novo." e o título do menu "Exportar meus dados".

@@ -11,10 +11,6 @@ Dor: no posto o usuário tem uns 10 segundos e o formulário pede tudo digitado.
 
 Plano completo: doc "Abastecimento por voz e posto único" (Claude Docs do projeto). Essas fases puxam para o MVP o que o roadmap deixava na Fase 2; os docs já refletem isso (`docs/01`, `02`, `03` e `05`).
 
-## Fase B — Com API
-
-- [ ] **Exportar meus dados** (LGPD, ver `docs/05-privacidade-lgpd.md`).
-
 ## Decisões do dono (23/10/2026)
 
 Escolhas tomadas sobre os itens 3.9 a 3.23 de `docs/07-validacao-e-decisoes.md`. Cada item é um PR.
