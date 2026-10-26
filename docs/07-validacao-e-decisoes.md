@@ -430,3 +430,16 @@ Alternativa: enviar a coordenada arredondada (~1 km). Recomendação: manter só
 - **Sem interruptor em Configurações:** o lembrete segue só a permissão de notificações. Os outros avisos têm interruptor (manutenção, documentos, km). Alternativa: um interruptor "Lembrar de completar abastecimentos" (sem frame no Figma). Recomendação: manter até alguém reclamar.
 - **O dia conta do `created_at` do rascunho**, não da data do abastecimento (que pode ser outro dia). Num segundo aparelho, o rascunho que chega pelo sync ganha o `created_at` do momento do pull, então ele também lembra (às 20h do dia da chegada); completar em qualquer aparelho tira os avisos dos dois depois do sync. Alternativa: sincronizar a data de criação. Recomendação: manter.
 - **Todos os veículos ativos** entram (não só o do Início), como os prazos de documentos. Rascunho de veículo arquivado não avisa.
+
+### 3.35 Interpretador de fala: escolhas que fiz (C3)
+
+Código puro em `shared`, sem tela; nada a validar no aparelho. O que o reconhecimento de fala do celular entrega de verdade só se vê no C4 (o texto de teste foi escrito como o Android costuma devolver: dígitos, "R$", "45 mil e 300").
+
+- **Número que sobra com um só campo em aberto não vira pergunta:** "150 reais 4" grava 4 como litros (preço R$ 37,50) e deixa a validação deixar o preço em vermelho. Só pergunta quando valor **e** litros estão em aberto. Alternativa: perguntar também aqui ("4 são os litros?"). Recomendação: manter; pergunta com uma opção só é atrito no posto.
+- **Perguntas, uma por vez:** o interpretador devolve só a primeira; o app responde e chama de novo. Texto da pergunta é o do backlog ("50 é o valor ou os litros?"); a opção "km" não aparece na pergunta (inteiro de 1.000 para cima já é km). Recomendação: manter.
+- **Inteiro de 1.000 para cima sem palavra é sempre km**, mesmo longe do último (a validação do C1 marca "km mais de 2.000 acima"). Alternativa: só km quando perto do último. Recomendação: manter, para o erro aparecer em vermelho em vez de sumir.
+- **"45 300" (milhar com espaço) só junta perto de "km"**; sem "km" ao lado, são dois números.
+- **"6.299" sem palavra:** vira o preço R$ 6,299 (e "45.300" vira km 45.300). Com "km", o ponto é milhar.
+- **Decimal por extenso só entra no preço** ("seis e vinte e nove o litro"). "Vinte litros e meio" e outras frações por extenso não são entendidas.
+- **Se corrigindo, vale o último citado** ("paguei 100 reais, não, foram 150 reais" → 150). Alternativa: ignorar a frase inteira e perguntar. Recomendação: manter.
+- **Limites conhecidos:** nada de data ("ontem", "dia 20" é ignorado), nada de posto falado ("no Shell" não preenche o posto; o posto vem da localização ou do formulário), "gás" sozinho não é GNV (só "gás natural" ou "GNV"), e dois combustíveis na mesma frase ficam com o último.
