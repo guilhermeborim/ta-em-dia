@@ -166,6 +166,8 @@ export function useNewFuelEntryViewModel() {
     try {
       if (draft) await updateFuelRecord(db, { ...result.value, id: draft.id, status: 'draft' });
       else await addFuelDraft(db, result.value);
+      // O lembrete das 20h depende do rascunho.
+      void refreshReminders(db);
       router.back();
     } finally {
       setBusy(false);

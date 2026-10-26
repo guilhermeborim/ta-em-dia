@@ -6,8 +6,8 @@ import { onNotificationOpened, setupNotificationPresentation } from '../notifica
 import { refreshReminders } from './refreshReminders';
 
 /**
- * Mantém os avisos (manutenção, documentos e atualizar o km) em dia enquanto o app vive: reagenda ao abrir e sempre que
- * o app volta para a frente (a data muda), e abre o item (a lista de prazos, ou Atualizar km) quando a pessoa toca num aviso.
+ * Mantém os avisos (manutenção, documentos, rascunhos de abastecimento e atualizar o km) em dia enquanto o app vive: reagenda ao abrir e sempre que
+ * o app volta para a frente (a data muda), e abre o item (a lista de prazos, o rascunho ou Atualizar km) quando a pessoa toca num aviso.
  * Só liga depois da entrada (boas-vindas e login concluídos).
  */
 export function useReminderLifecycle(enabled: boolean): void {
@@ -24,7 +24,7 @@ export function useReminderLifecycle(enabled: boolean): void {
       if (state === 'active') void refreshReminders(db);
     });
     const stopOpened = onNotificationOpened((data) => {
-      const { planId, documentId, vehicleId } = data;
+      const { planId, documentId, fuelDraftId, vehicleId } = data;
       if (typeof planId === 'string') {
         router.push({ pathname: '/plano-manutencao/[id]', params: { id: planId } });
       } else if (typeof documentId === 'string') {
@@ -34,6 +34,8 @@ export function useReminderLifecycle(enabled: boolean): void {
             ? { pathname: '/documentos', params: { vehicleId } }
             : '/documentos',
         );
+      } else if (typeof fuelDraftId === 'string') {
+        router.push({ pathname: '/abastecimento/[id]', params: { id: fuelDraftId } });
       } else if (typeof vehicleId === 'string') {
         router.push({ pathname: '/veiculo/[id]/atualizar-km', params: { id: vehicleId } });
       }
