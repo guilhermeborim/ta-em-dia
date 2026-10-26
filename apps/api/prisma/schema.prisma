@@ -67,6 +67,7 @@ model User {
   devices     Device[]
   vehicles    Vehicle[]
   documents   Document[]
+  stations    Station[]
 
   @@map("users")
 }
@@ -169,6 +170,9 @@ model FuelEntry {
   total         Decimal?        @db.Decimal(10, 2)
   fullTank      Boolean?
   stationName   String?
+  // Posto em `stations` (Fase C). Sem chave estrangeira: o abastecimento pode chegar antes do posto
+  // no sync e um id que não é do usuário não revela nada (o posto nunca é lido por ele).
+  stationId     String?         @db.Uuid
   note          String?
   createdAt     DateTime
   updatedAt     DateTime
@@ -240,6 +244,27 @@ model Document {
 
   @@index([userId, version])
   @@map("documents")
+}
+
+// Posto do usuário (Fase C): do OpenStreetMap (`osmId`) ou local. Posto local não guarda
+// coordenada aqui: `lat`/`lng` dele ficam só no aparelho (docs/05-privacidade-lgpd.md).
+model Station {
+  id        String    @id @db.Uuid
+  userId    String    @db.Uuid
+  osmId     String?
+  name      String?
+  brand     String?
+  street    String?
+  lat       Float?
+  lng       Float?
+  createdAt DateTime
+  updatedAt DateTime
+  deletedAt DateTime?
+  version   BigInt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, version])
+  @@map("stations")
 }
 
 // Cache dos postos do OpenStreetMap por célula do geohash (Fase C). Dado público, sem usuário.

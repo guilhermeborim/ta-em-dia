@@ -4,6 +4,7 @@ export {
   deleteFuelEntry,
   getFuelRecord,
   listFuelEntries,
+  listFuelPriceRows,
   listStationNames,
   updateFuelRecord,
   type NewFuelEntry,

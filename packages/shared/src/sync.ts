@@ -5,13 +5,17 @@ import {
   maintenancePlanSchema,
   maintenanceRecordSchema,
   odometerReadingSchema,
+  stationSchema,
   vehicleSchema,
 } from './schemas';
 
 /** Contrato de `POST /v1/sync/push` e `GET /v1/sync/pull`; ver docs/03-arquitetura.md ("Sync offline-first"). */
 
-/** Número do protocolo: o app manda o dele e a API recusa um que não conhece. */
-export const SYNC_PROTOCOL_VERSION = 1;
+/**
+ * Número do protocolo: o app manda o dele e a API recusa um que não conhece. O 2 trouxe a tabela
+ * `stations` (Fase C); a API não manda `stations` para quem fala o 1 (o app antigo não a conhece).
+ */
+export const SYNC_PROTOCOL_VERSION = 2;
 
 /** Mudanças por `push` (o motor do app envia lotes desse tamanho). */
 export const SYNC_PUSH_MAX_CHANGES = 100;
@@ -27,9 +31,18 @@ export const SYNC_TABLES = [
   'maintenance_plans',
   'maintenance_records',
   'documents',
+  'stations',
 ] as const;
 export const syncTableSchema = z.enum(SYNC_TABLES);
 export type SyncTable = z.infer<typeof syncTableSchema>;
+
+/** Em que protocolo cada tabela entrou (as que não estão aqui existem desde o 1). */
+const TABLE_SINCE_PROTOCOL: Partial<Record<SyncTable, number>> = { stations: 2 };
+
+/** As tabelas que um app com esse protocolo conhece (o pull não manda as outras). */
+export function syncTablesFor(protocol: number): SyncTable[] {
+  return SYNC_TABLES.filter((table) => (TABLE_SINCE_PROTOCOL[table] ?? 1) <= protocol);
+}
 
 /** O schema do payload de `upsert` de cada tabela (o mesmo que o app usa nos formulários). */
 export const SYNC_UPSERT_SCHEMAS = {
@@ -39,6 +52,7 @@ export const SYNC_UPSERT_SCHEMAS = {
   maintenance_plans: maintenancePlanSchema,
   maintenance_records: maintenanceRecordSchema,
   documents: documentSchema,
+  stations: stationSchema,
 } as const;
 
 /** Payload de `delete`: exclusão lógica; a linha continua no servidor com `deletedAt`. */

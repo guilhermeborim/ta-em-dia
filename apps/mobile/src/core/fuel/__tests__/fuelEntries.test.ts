@@ -6,6 +6,7 @@ import {
   deleteFuelEntry,
   getFuelRecord,
   listFuelEntries,
+  listFuelPriceRows,
   updateFuelRecord,
 } from '..';
 
@@ -102,5 +103,58 @@ describe('deleteFuelEntry', () => {
     expect(row?.deleted_at).toBe(later.toISOString());
     const rows = await queue();
     expect(rows.at(-1)).toMatchObject({ row_id: saved.id, op: 'delete' });
+  });
+});
+
+describe('posto do abastecimento', () => {
+  const station = {
+    osmId: 'node/9',
+    name: 'Shell',
+    street: 'Av. da Pista',
+    lat: -23.5,
+    lng: -46.6,
+  };
+
+  it('cria o posto na mesma transação, antes do abastecimento na fila, e guarda o stationId', async () => {
+    const saved = await addFuelEntry(
+      db,
+      { ...input(1500), stationName: 'Shell · Av. da Pista' },
+      { now: T0, station },
+    );
+    expect(saved.stationId).toEqual(expect.any(String));
+    expect((await getFuelRecord(db, saved.id))?.stationId).toBe(saved.stationId);
+    const rows = await db.getAllAsync<{ table_name: string; payload: string }>(
+      'SELECT table_name, payload FROM outbox ORDER BY id',
+    );
+    expect(rows.map((r) => r.table_name)).toEqual(['stations', 'fuel_entries']);
+    expect(JSON.parse(rows[1]!.payload)).toMatchObject({ stationId: saved.stationId });
+  });
+
+  it('sem posto escolhido, fica sem stationId (como antes)', async () => {
+    const saved = await addFuelEntry(db, input(1500), { now: T0 });
+    expect(saved.stationId).toBeUndefined();
+  });
+
+  it('a edição pode trocar o posto', async () => {
+    const saved = await addFuelEntry(db, input(1500), { now: T0, station });
+    await updateFuelRecord(db, { ...saved, stationName: 'Ipiranga' }, later, { name: 'Ipiranga' });
+    const record = await getFuelRecord(db, saved.id);
+    expect(record?.stationName).toBe('Ipiranga');
+    expect(record?.stationId).not.toBe(saved.stationId);
+  });
+
+  it('listFuelPriceRows traz os completos de todos os veículos, sem os excluídos', async () => {
+    const a = await addFuelEntry(db, input(1500), { now: T0, station });
+    const b = await addFuelEntry(db, input(1600), { now: T0 });
+    await deleteFuelEntry(db, b.id, later);
+    expect(await listFuelPriceRows(db)).toEqual([
+      {
+        stationId: a.stationId,
+        stationName: 'Shell',
+        fuelType: 'gasoline',
+        liters: 40,
+        total: 240,
+      },
+    ]);
   });
 });

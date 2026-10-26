@@ -61,6 +61,23 @@ const config: ExpoConfig = {
           'O que você fala vai ao reconhecimento de fala da Apple para virar texto. O Tá em Dia não guarda o áudio.',
       },
     ],
+    // Posto pela localização na tela Abastecer ("durante o uso", C6) e aviso ao chegar no posto
+    // ("sempre", opcional e desligado por padrão, C7). Geofences do sistema: sem GPS contínuo, sem
+    // `UIBackgroundModes: location` e sem serviço em primeiro plano no Android (docs/03 e docs/05).
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission:
+          'O Tá em Dia usa a localização na tela Abastecer, para sugerir o posto onde você está, e no aviso ao chegar no posto, se você ligar. Ela fica no celular.',
+        locationAlwaysAndWhenInUsePermission:
+          'Com o aviso ao chegar no posto ligado, o Tá em Dia percebe quando você para num posto e lembra de registrar o abastecimento, mesmo com o app fechado. A localização fica no celular.',
+        locationAlwaysPermission: false,
+        motionUsagePermission: false,
+        isIosBackgroundLocationEnabled: false,
+        isAndroidBackgroundLocationEnabled: true,
+        isAndroidForegroundServiceEnabled: false,
+      },
+    ],
     ...(googleIosUrlScheme
       ? [
           ['@react-native-google-signin/google-signin', { iosUrlScheme: googleIosUrlScheme }] as [

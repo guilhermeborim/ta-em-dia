@@ -325,6 +325,29 @@ Sem tela; o app só usa no C6. Em staging, depois do deploy (a migration `place_
 - [ ] Os logs do Render não mostram o geohash (nem na linha do pedido nem no aviso de falha do Overpass).
 - [ ] Primeira chamada de uma célula com o host acordando do sono: ver se cabe no tempo de espera do app (Overpass leva de 1 a 10 s).
 
+### 2.38 Posto pela localização (C6, PR #78)
+
+Sem frame no Figma (cartão da localização, chips "Trocar" e "Usar localização", linha da média). Dependência nativa nova: `expo-location` (exige development build novo; num build antigo a localização só fica indisponível). Nenhum emulador estava aberto: nada foi visto rodando. Android com development build, staging no ar (deploy da API com a migration `stations`) e internet:
+
+- [ ] Primeiro Novo abastecimento: o cartão "Achar o posto pela localização" aparece acima de "Salvar abastecimento"; "Usar localização" abre o pedido do sistema (no iPhone, com o texto do `app.config.ts`). Ao permitir, perto de um posto, o campo Posto se preenche sozinho em poucos segundos com "Nome · Rua" (nunca um ID).
+- [ ] "Agora não": o cartão some e não volta (sair e abrir de novo); sob o Posto fica o chip roxo "Usar localização", que abre o pedido do sistema.
+- [ ] Recusar no sistema até ele não perguntar mais: nada de cartão nem chip; os chips do Posto são os postos já usados, como antes.
+- [ ] No posto: o campo traz o mais perto; os chips trazem o segundo mais perto (se houver outro a até ~150 m) e "Trocar". Tocar no segundo troca o campo; "Trocar" limpa o campo, abre o teclado e os chips voltam com os postos perto e os já usados.
+- [ ] Longe de posto (em casa): campo vazio, chips dos postos já usados.
+- [ ] GPS lento: se a pessoa já digitou ou falou o posto antes de a localização chegar, o campo não é trocado.
+- [ ] Posto do OpenStreetMap sem nome e sem bandeira aparece como "Posto · Rua tal".
+- [ ] Salvar com o posto sugerido: a lista, o Início e o Histórico mostram "Nome · Rua". Abastecer de novo no mesmo posto não cria outro posto (com sync, conferir no outro aparelho que há um posto só).
+- [ ] Posto fora do mapa: digitar um nome novo no posto e salvar. Na próxima vez, nesse lugar, ele é sugerido. Num segundo aparelho (mesma conta), ele aparece pelo nome nos chips, mas não é sugerido pela localização.
+- [ ] Registrar um abastecimento de outro dia (calendário) com um posto novo digitado: na próxima vez, em outro lugar, ele não é sugerido (não guardou a posição).
+- [ ] Sem internet, num lugar cuja região já foi baixada: a sugestão funciona. Região nunca baixada e sem internet: nada é sugerido e nada quebra.
+- [ ] Logs da API (Render): a primeira vez numa região faz até 9 chamadas a `/v1/places` e as seguintes nenhuma; nenhum log mostra coordenada.
+- [ ] Voz com o posto sugerido no campo e "Salvar pela fala" ligado: falar só os valores e o km salva com o posto sugerido.
+- [ ] "Média neste posto: R$ ... o litro de gasolina (N abastecimentos)" aparece sob o Posto depois do primeiro abastecimento nele e muda ao trocar o combustível.
+- [ ] Editar abastecimento: sem cartão nem localização; trocar o texto do posto troca o posto; não mexer mantém.
+- [ ] Atualizar o app com dados antigos (migration 11): abastecimentos, km/l e listas iguais; postos antigos continuam pelo nome.
+- [ ] Fonte grande e TalkBack: cartão, chips e linha da média legíveis; chips com toque ≥ 44 pt.
+- [ ] iOS (quando houver build): pedido "durante o uso" em português; nenhum pedido de "sempre" nem de movimento.
+
 ### 2.39 Ajuda e contato, Termos e Privacidade (Mais, Configurações e Login, PR #77)
 
 Sem e-mail e sem URLs no build (o padrão hoje), tudo mostra "Em breve". Para testar o caminho completo, ponha valores de teste em `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_TERMS_URL` e `EXPO_PUBLIC_PRIVACY_URL` (`apps/mobile/.env`) e reinicie o Expo.
@@ -334,6 +357,28 @@ Sem e-mail e sem URLs no build (o padrão hoje), tudo mostra "Em breve". Para te
 - [ ] Com URLs: Termos de uso e Política de privacidade abrem no navegador do aparelho, em Configurações (seção nova "SOBRE") e no Login.
 - [ ] Login: "Termos de uso" e "Política de privacidade" aparecem em roxo dentro da frase; o toque pega mesmo sendo texto pequeno (fica abaixo de 44 pt).
 - [ ] Fonte grande do sistema: a frase do Login quebra sem cortar os links.
+
+### 2.40 Aviso ao chegar no posto (C7, PR #79)
+
+Sem frame no Figma (interruptor e telas que explicam as permissões). Dependências nativas: `expo-task-manager` (nova) e o "sempre" do `expo-location` (`ACCESS_BACKGROUND_LOCATION` no Android): exige development build novo; num build antigo o interruptor não aparece. No iPhone o aviso ainda não existe (sem build, os avisos locais não funcionam). Nenhum emulador estava aberto: nada foi visto rodando. **Só Premium** (decisão do dono, 26/10/2026): para testar, ligue `'geo.fuelReminder': true` em `DEFAULT_FLAGS.free` (`packages/shared/src/flags.ts`) no seu build. Android com development build, staging no ar e internet:
+
+- [ ] Plano grátis, flag padrão: o interruptor "Aviso ao chegar no posto" não aparece em Configurações.
+- [ ] Configurações → Abastecimento: "Aviso ao chegar no posto" aparece desligado. Num build sem `expo-task-manager`, não aparece.
+- [ ] Ligar sem o "sempre": abre a tela "Aviso ao chegar no posto" (ilustração com o exemplo do aviso, quatro itens e "Continuar"/"Agora não"). "Agora não" volta e o interruptor fica desligado.
+- [ ] "Continuar": pede o "durante o uso" (se ainda não foi dado no Abastecer); depois a tela "Permita a localização o tempo todo"; "Continuar" abre a página do Android; escolher "Permitir o tempo todo" e voltar: o aviso liga, pede as notificações se ainda não foram dadas e volta a Configurações com o interruptor ligado.
+- [ ] Recusar o "sempre" (ou "durante o uso") até o sistema não perguntar mais: tela "O aviso precisa da localização" com "Abrir ajustes" (abre os ajustes do app).
+- [ ] Notificações desativadas: depois de ligar, tela "Ative as notificações" com "Abrir ajustes".
+- [ ] No posto (um já usado ou perto de casa), com o app fechado (em segundo plano), parar ~2 min: chega "Abastecendo no Nome · Rua? Registre agora.". Tocar abre o Novo abastecimento com o posto sugerido pela localização.
+- [ ] Passar pelo posto sem parar: nenhum aviso. Anotar se a saída da geofence demora no Android e o aviso chega mesmo assim (falso aviso).
+- [ ] Voltar ao mesmo posto em menos de 12 h: nenhum aviso; outro posto avisa. Depois de 12 h, o mesmo posto avisa de novo.
+- [ ] Com abastecimento registrado hoje: nenhum aviso. Registrar o abastecimento nos 2 min depois de chegar: o aviso não chega.
+- [ ] Viajar (mais de ~5 km): os postos da região nova avisam sem abrir o app (a troca é feita ao sair da área).
+- [ ] App encerrado (deslizado dos recentes) e celular reiniciado: conferir se o aviso ainda chega (a documentação do `expo-location` diz que o Android não reabre o app encerrado para geofence; depois de reiniciar, as geofences voltam quando o app abre). Ver 3.40.
+- [ ] Desligar o interruptor: nenhum aviso mais, inclusive o que ia sair. Tirar o "sempre" nos ajustes do Android e abrir o app: nada quebra e nenhum aviso chega.
+- [ ] Bateria: um dia com o aviso ligado; o consumo do app nos ajustes do Android fica baixo.
+- [ ] Logs da API (Render): só chamadas a `/v1/places` de regiões novas; nenhuma coordenada.
+- [ ] Fonte grande e TalkBack: as telas do aviso rolam sem cortar; botões com toque ≥ 44 pt.
+- [ ] Play Console: declaração de localização em segundo plano com o vídeo (até 30 s) da tela que explica, do pedido e do aviso; Data safety com localização aproximada e precisa. O manifest passa a pedir `ACCESS_BACKGROUND_LOCATION`.
 
 ### 2.12 O que veio antes (não revisado aqui)
 
@@ -479,6 +524,23 @@ Código puro em `shared`, sem tela; nada a validar no aparelho. O que o reconhec
 - **Se corrigindo, vale o último citado** ("paguei 100 reais, não, foram 150 reais" → 150). Alternativa: ignorar a frase inteira e perguntar. Recomendação: manter.
 - **Limites conhecidos:** nada de data ("ontem", "dia 20" é ignorado), posto falado só no C4 (ver 3.36), "gás" sozinho não é GNV (só "gás natural" ou "GNV"), e dois combustíveis na mesma frase ficam com o último.
 
+### 3.38 Posto pela localização: escolhas que fiz (C6)
+
+- **Telas sem frame no Figma:** cartão "Achar o posto pela localização" (o `SpeechCard`, tom info) acima de "Salvar abastecimento", com "Usar localização" e "Agora não"; chips sob o Posto: o segundo posto perto e "Trocar" (ícone de atualizar); chip roxo "Usar localização" (ícone de pino) depois do "Agora não"; linha "Média neste posto" sob os chips. O Figma (tela 9) só mostra o campo com "Posto Ipiranga · Av. Paulista". Recomendação: pedir os frames ao designer.
+- **Textos meus:** "Achar o posto pela localização", "Com a localização, o app sugere o posto onde você está. Ela fica só no celular.", "Usar localização", "Agora não", "Trocar", "Média neste posto: R$ 5,89 o litro de gasolina (3 abastecimentos)" e o pedido do iPhone ("O Tá em Dia usa a localização só na tela Abastecer, para sugerir o posto onde você está. Ela fica no celular."). Recomendação: revisar junto com a Política de Privacidade.
+- **Rótulo pelo nome, não pela bandeira:** "Nome · Rua"; sem nome, a bandeira; sem as duas, "Posto · Rua" (como no Figma, "Posto Ipiranga · Av. Paulista"). Alternativa: bandeira primeiro ("Ipiranga · Av. Paulista"), que pode ser mais reconhecível mas some com postos sem bandeira. Recomendação: manter.
+- **Cartão no rodapé, não junto do Posto:** o Posto fica no fim do formulário e o cartão ali passaria despercebido. Alternativa: no topo, sob o banner roxo. Recomendação: manter.
+- **"Agora não" é para sempre:** o cartão não volta; fica o chip "Usar localização". Alternativa: mostrar o cartão de novo depois de 30 dias. Recomendação: manter.
+- **Só os postos usados vão para `stations` (e para o sync):** os postos da região baixados ficam numa tabela local à parte (`region_places`), sem sync; o posto do mapa entra em `stations` ao ser usado num abastecimento. Alternativa: guardar a região inteira em `stations` (centenas de linhas por usuário no servidor). Recomendação: manter.
+- **9 chamadas por região nova:** a célula da posição e as 8 vizinhas, uma vez a cada 30 dias por célula (o C5 deixou para o C6 rever). Alternativa: só as células que tocam o raio de 150 m (1 a 4) e as outras depois. Recomendação: manter e olhar os logs (2.38).
+- **Posição do posto local só se o abastecimento é de hoje** (registro de outro dia não foi feito no posto) e a posição vem da última do sistema se tem até 60 s e 100 m de precisão. Mesmo assim, quem digita um posto novo em casa no mesmo dia grava a posição de casa. Alternativa: só guardar a posição quando estiver perto de um posto do mapa ou perguntar. Recomendação: manter e ver no uso.
+- **Média de preço:** pesa pelos litros, junta todos os veículos, separa por combustível e aparece com 1 abastecimento já. Abastecimentos antigos entram pelo mesmo nome. Alternativa: só com 2 ou mais, ou só dos últimos 90 dias. Recomendação: manter.
+- **Flag `fuel.nearbyStation`** ligada nos dois planos (não decide nada: só deixa a troca a um passo, como a voz). Recomendação: grátis.
+- **Protocolo de sync 2:** a tabela `stations` entrou no sync; a API não manda postos para o app do protocolo 1, e o app novo com a API antiga recebe 400 até o deploy. O deploy da API vem com o merge, antes de qualquer build do app. Recomendação: manter a ordem (API primeiro).
+- **`station_id` sem chave estrangeira** (no SQLite e no Postgres): o abastecimento pode chegar antes do posto no pull. Recomendação: manter.
+- **Sem tela "Seus postos":** não dá para renomear nem excluir um posto; o posto errado se corrige editando o abastecimento. Recomendação: fazer quando houver pedido.
+- **Dependência nativa nova:** `expo-location` (do Expo), só "durante o uso" (sem "sempre", sem movimento, sem serviço em primeiro plano). O C7 acrescenta o "sempre". Recomendação: manter.
+
 ### 3.39 Ajuda e contato, Termos e Privacidade: escolhas que fiz
 
 Valores por ambiente, decididos pelo dono em 26/10/2026: o e-mail de ajuda e as URLs públicas vêm de `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_TERMS_URL` e `EXPO_PUBLIC_PRIVACY_URL`, ainda vazias em `eas.json`. Falta o dono definir o e-mail e publicar os textos (`docs/05-privacidade-lgpd.md`, checklist antes de publicar). O resto foi escolha minha:
@@ -488,3 +550,18 @@ Valores por ambiente, decididos pelo dono em 26/10/2026: o e-mail de ajuda e as 
 - **Links abrem no navegador do sistema**, não dentro do app: `expo-web-browser` seria dependência nativa nova (exige development build). Recomendação: manter.
 - **Só `https://`:** URL `http://` ou e-mail inválido no build contam como vazio ("Em breve").
 - **Textos meus:** "SOBRE", "Nenhum app de e-mail", "Escreva para ...", "Não foi possível abrir o link" e o assunto do e-mail.
+
+### 3.40 Aviso ao chegar no posto: escolhas que fiz (C7)
+
+- **Telas sem frame no Figma:** o interruptor "Aviso ao chegar no posto" (Configurações, grupo Abastecimento) e as telas `/configuracoes/aviso-no-posto` (o que é, o "sempre", a recusa e as notificações), no estilo da tela 6 (permissão de notificações), com o ícone de pino e o exemplo do aviso. O Figma só tem o item na tela 21 (Premium em breve). Recomendação: pedir os frames ao designer.
+- **Textos meus:** "Aviso ao chegar no posto", "Lembra de registrar quando você para num posto", "Quando você para uns 2 minutos num posto, o app lembra de registrar o abastecimento.", os quatro itens (localização com o app fechado que não sai do celular, bateria, 12 horas e "já registrou hoje", desligar em Configurações), "Permita a localização o tempo todo" (texto do Android e do iPhone), "O aviso precisa da localização", "Ative as notificações", "Aviso indisponível", o aviso "Abastecendo no Shell · Av. da Pista? Registre agora." (título "Tá em Dia") e os pedidos do iPhone no `app.config.ts` (o "durante o uso" agora cita o aviso). Recomendação: revisar junto com a Política de Privacidade; o Google exige que a primeira tela ("prominent disclosure") diga que a localização é usada com o app fechado.
+- **19 postos + 1 região da área**, não 20 postos: o iOS aceita 20 regiões por app e a área (5 km) é o que troca os postos quando a pessoa viaja. Alternativa: 20 postos e trocar só ao abrir o app. Recomendação: manter.
+- **"Mais usados ou próximos":** primeiro os já usados (do mais usado), depois os mais perto, todos a até 10 km. Quem tem muitos postos usados perto pode não ter vigiado um posto novo do lado. Alternativa: metade usados, metade perto. Recomendação: manter.
+- **"~2 min parado" é "2 min dentro dos 150 m":** as geofences do `expo-location` só têm entrar e sair; o app agenda o aviso ao entrar e cancela se sair antes. Trânsito parado ao lado de um posto por 2 min também avisa, e no Android a saída pode chegar atrasada. Alternativa: conferir a velocidade com uma leitura de GPS ao fim dos 2 min (gasta mais e no Android pede serviço em primeiro plano). Recomendação: manter e ver no uso (2.40).
+- **Regras:** "abastecimento hoje" é qualquer veículo, no fuso do aparelho; as 12 h contam da hora do aviso; aviso cancelado (saiu antes) não conta. Recomendação: manter.
+- **O que fica no aparelho:** o centro da área é o centro da célula de ~5 km (não a posição), então a troca pode acontecer antes de andar 5 km; a hora do último aviso por posto fica só pelas últimas 12 h; nada sincroniza (`docs/05`). Recomendação: manter.
+- **Troca dos postos ao abrir o app** a cada 6 h (ou se as geofences não estão ligadas, ex.: depois de reiniciar o celular). Recomendação: manter.
+- **Android com o app encerrado ou depois de reiniciar:** segundo a documentação do `expo-location`, o Android não reabre o app encerrado para a geofence, e o sistema apaga as geofences ao reiniciar (voltam quando o app abre). Alternativa: código nativo para registrar de novo no boot (fora do Expo). Recomendação: ver no aparelho (2.40) antes de decidir.
+- **iPhone:** o interruptor fica escondido enquanto não houver development build no iOS (`scheduler.ios.ts` não agenda avisos). Quando houver, apagar os arquivos `.ios.ts` de `core/notifications` liga o aviso também lá; o iOS reporta o estado inicial das regiões ao registrar, então quem liga o aviso dentro de um posto pode receber um aviso logo (as regras valem). Recomendação: manter.
+- **Plano B se as lojas recusarem o "sempre":** desligar a flag (o interruptor some) e, para o Google, tirar `isAndroidBackgroundLocationEnabled` do `app.config.ts` (o manifest com `ACCESS_BACKGROUND_LOCATION` já exige a declaração, mesmo com o aviso desligado). As alternativas do `docs/03` (lembrete só com o app aberto ou notificação periódica "Abasteceu esta semana?") não foram feitas. Recomendação: só decidir se recusarem.
+- **Dependência nativa nova:** `expo-task-manager` (do Expo, gratuita); sem `UIBackgroundModes: location` e sem serviço em primeiro plano. Recomendação: manter.

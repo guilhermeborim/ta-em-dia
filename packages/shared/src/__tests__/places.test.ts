@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { encodeGeohash, geohashBounds, placeSchema, placesQuerySchema } from '../places';
+import {
+  encodeGeohash,
+  geohashBounds,
+  geohashNeighborhood,
+  placeSchema,
+  placesQuerySchema,
+} from '../places';
 
 describe('encodeGeohash', () => {
   it('confere com o exemplo clássico (57.64911, 10.40744 → u4pruydqqvj)', () => {
@@ -55,5 +61,33 @@ describe('placeSchema', () => {
     expect(placeSchema.safeParse({ ...place, osmId: 'node/123' }).success).toBe(true);
     expect(placeSchema.safeParse({ ...place, osmId: 'way/45' }).success).toBe(true);
     expect(placeSchema.safeParse({ ...place, osmId: '123' }).success).toBe(false);
+  });
+});
+
+describe('geohashNeighborhood', () => {
+  it('a própria célula primeiro e as 8 vizinhas, todas diferentes', () => {
+    const cells = geohashNeighborhood('6gyf4');
+    expect(cells[0]).toBe('6gyf4');
+    expect(cells).toHaveLength(9);
+    expect(new Set(cells).size).toBe(9);
+  });
+
+  it('as vizinhas encostam na célula (uma célula de distância em cada direção)', () => {
+    const box = geohashBounds('6gyf4');
+    const h = box.north - box.south;
+    const w = box.east - box.west;
+    const above = encodeGeohash(box.north + h / 2, (box.west + box.east) / 2);
+    const right = encodeGeohash((box.south + box.north) / 2, box.east + w / 2);
+    expect(geohashNeighborhood('6gyf4')).toEqual(expect.arrayContaining([above, right]));
+  });
+
+  it('na linha de data, a vizinha do outro lado volta a -180', () => {
+    const cell = encodeGeohash(0.01, 179.99);
+    const west = encodeGeohash(0.01, -179.99);
+    expect(geohashNeighborhood(cell)).toContain(west);
+  });
+
+  it('no polo, sem vizinhas acima', () => {
+    expect(geohashNeighborhood(encodeGeohash(89.99, 0))).toHaveLength(6);
   });
 });

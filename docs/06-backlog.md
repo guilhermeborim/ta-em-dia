@@ -11,9 +11,6 @@ Dor: no posto o usuário tem uns 10 segundos e o formulário pede tudo digitado.
 
 Plano completo: doc "Abastecimento por voz e posto único" (Claude Docs do projeto). Essas fases puxam para o MVP o que o roadmap deixava na Fase 2; os docs já refletem isso (`docs/01`, `02`, `03` e `05`).
 
-- [ ] **C6. App: posto único pela localização**: `expo-location` ("durante o uso", pedida só na tela Abastecer), tabela `stations` (`id` UUID v7, `osm_id` opcional, `name`, `brand`, `street`, `lat`, `lng`, `deleted_at`) e `station_id` opcional em `fuel_entries` (`station_name` continua para os registros antigos). Sugere o posto mais perto num raio de ~150 m, com chip "Trocar" (e o segundo mais perto em outro chip); aparece "Shell · Av. da Pista", nunca o ID. Posto do OpenStreetMap sem nome e sem bandeira aparece como "Posto · rua". Posto fora do OpenStreetMap vira posto local com coordenada e UUID. Postos da região ficam guardados no aparelho para uso sem internet. Sem permissão: sugere os postos já usados, como hoje. Média de preço por posto no app.
-- [ ] **C7. Aviso ao chegar no posto** (opcional, desligado por padrão, "sempre"): geofence nos 20 postos mais usados ou próximos, notificação depois de ~2 min parado ("Abastecendo no Shell · Av. da Pista? Registre agora."), no máximo 1 por posto a cada 12 h e nenhuma se já houve abastecimento hoje; tocar abre Abastecer. Segue `docs/03-arquitetura.md` ("Localização em segundo plano"). Declarações e vídeos para Apple e Google; plano B se recusarem o "sempre": sem esse aviso, o resto do fluxo funciona igual.
-
 ## Fase B — Com API
 
 - [ ] **Exportar meus dados** (LGPD, ver `docs/05-privacidade-lgpd.md`).

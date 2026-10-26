@@ -17,6 +17,9 @@ describe('migrate', () => {
       'maintenance_records',
       'odometer_readings',
       'outbox',
+      'region_cells',
+      'region_places',
+      'stations',
       'sync_state',
       'vehicles',
     ]);
@@ -250,5 +253,35 @@ describe('migrate', () => {
     expect(queue).toHaveLength(1);
     expect(queue[0]).toMatchObject({ row_id: 'f2', op: 'delete' });
     expect(JSON.parse(queue[0]!.payload)).toEqual({ id: 'f2', deletedAt: expect.any(String) });
+  });
+
+  it('acrescenta postos e station_id sem mexer nos abastecimentos antigos', async () => {
+    const db = createTestDb();
+    await migrate(db, MIGRATIONS.slice(0, 10));
+    const at = '2026-10-01T10:00:00.000Z';
+    await db.runAsync(
+      `INSERT INTO vehicles (id, name, type, initial_km, created_at, updated_at)
+       VALUES ('v1', 'Gol', 'flex', 0, ?, ?)`,
+      at,
+      at,
+    );
+    await db.runAsync(
+      `INSERT INTO fuel_entries (id, vehicle_id, date, km, fuel_type, liters, price_per_liter, total, full_tank, station_name, created_at, updated_at)
+       VALUES ('f1', 'v1', ?, 200, 'gasoline', 10, 6, 60, 1, 'Shell', ?, ?)`,
+      at,
+      at,
+      at,
+    );
+
+    await migrate(db);
+
+    expect(
+      await db.getFirstAsync(
+        'SELECT station_name, station_id FROM fuel_entries WHERE id = ?',
+        'f1',
+      ),
+    ).toEqual({ station_name: 'Shell', station_id: null });
+    expect(await db.getAllAsync('SELECT * FROM stations')).toEqual([]);
+    expect(await db.getAllAsync('SELECT * FROM outbox')).toEqual([]);
   });
 });

@@ -6,7 +6,8 @@ export type OutboxTable =
   | 'maintenance_plans'
   | 'maintenance_records'
   | 'odometer_readings'
-  | 'documents';
+  | 'documents'
+  | 'stations';
 
 type OutboxListener = () => void;
 const listeners = new Set<OutboxListener>();

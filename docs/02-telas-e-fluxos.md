@@ -65,15 +65,15 @@ São 22 telas, agrupadas por área.
 
 ### Veículos, documentos e conta
 
-| #   | Tela                   | Conteúdo                                                                                                                                | Ações                                    |
-| --- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| 16  | Meus veículos          | Cartões com ícone (carro ou moto), apelido, modelo, km atual                                                                            | Adicionar, abrir, reordenar (arrastar)   |
-| 17  | Detalhe/editar veículo | Dados completos, placa, km atual, média diária de km calculada                                                                          | Atualizar km, editar, arquivar, excluir  |
-| 18  | Documentos e prazos    | IPVA, licenciamento, seguro (por veículo) e CNH (por pessoa), com data e status (em dia / vence em X dias / vencido)                    | Adicionar data, editar lembrete, renovar |
-| 19  | Conta                  | Modo anônimo: chamada "Salve seus dados" com Google (e Apple, no iPhone). Logado: nome, e-mail, último sync                             | Vincular conta, sair, excluir conta      |
-| 20  | Configurações          | Notificações por tipo, antecedência dos alertas, "Salvar pela fala" (abastecimento), unidades (só km e litros), exportar dados (Fase B) | Alterar                                  |
-| 21  | Premium (em breve)     | Lista de recursos Premium com selo, sem preço                                                                                           | Tenho interesse                          |
-| 22  | Excluir conta          | Aviso claro do que será apagado, confirmação                                                                                            | Confirmar exclusão                       |
+| #   | Tela                   | Conteúdo                                                                                                                                                             | Ações                                    |
+| --- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| 16  | Meus veículos          | Cartões com ícone (carro ou moto), apelido, modelo, km atual                                                                                                         | Adicionar, abrir, reordenar (arrastar)   |
+| 17  | Detalhe/editar veículo | Dados completos, placa, km atual, média diária de km calculada                                                                                                       | Atualizar km, editar, arquivar, excluir  |
+| 18  | Documentos e prazos    | IPVA, licenciamento, seguro (por veículo) e CNH (por pessoa), com data e status (em dia / vence em X dias / vencido)                                                 | Adicionar data, editar lembrete, renovar |
+| 19  | Conta                  | Modo anônimo: chamada "Salve seus dados" com Google (e Apple, no iPhone). Logado: nome, e-mail, último sync                                                          | Vincular conta, sair, excluir conta      |
+| 20  | Configurações          | Notificações por tipo, antecedência dos alertas, "Salvar pela fala" e "Aviso ao chegar no posto" (abastecimento), unidades (só km e litros), exportar dados (Fase B) | Alterar                                  |
+| 21  | Premium (em breve)     | Lista de recursos Premium com selo, sem preço                                                                                                                        | Tenho interesse                          |
+| 22  | Excluir conta          | Aviso claro do que será apagado, confirmação                                                                                                                         | Confirmar exclusão                       |
 
 ## Fluxos principais
 
@@ -102,7 +102,14 @@ São 22 telas, agrupadas por área.
 6. Se um valor não passar na validação (preço do litro fora de R$ 2 a R$ 12, km menor que o último), o campo fica em vermelho, recebe o cursor e o app **não salva sozinho**.
 7. Sem microfone, com barulho ou sem entender, a pessoa preenche o formulário atual na mesma tela.
 
-Telas novas sem frame no Figma: botão de falar, tela de "ouvindo" com os pontinhos, cartão da voz (pergunta, o que falta, campo em vermelho), o interruptor "Salvar pela fala" e textos das permissões. Cada item do backlog (C4, C6) registra o que ficou sem frame em `docs/07-validacao-e-decisoes.md`.
+**2c. Aviso ao chegar no posto (C7, Premium, opcional, desligado por padrão)**
+
+1. Em **Configurações → Abastecimento**, a pessoa liga **Aviso ao chegar no posto** ("Lembra de registrar quando você para num posto").
+2. Sem a localização "sempre", abre uma tela que explica: o que é (parou uns 2 minutos num posto, o app lembra de registrar), bateria, privacidade (a localização não sai do celular) e as regras (um aviso por posto a cada 12 horas, nenhum se já registrou hoje), com **Continuar** e **Agora não**. Continuar pede o "durante o uso"; a tela seguinte explica o "sempre" ("Permitir o tempo todo" no Android, "Mudar para Sempre Permitir" no iPhone) e pede. Recusado de vez: "Abrir ajustes". Depois, se as notificações estão desligadas, uma tela pede para ativar nos ajustes.
+3. Parado ~2 min num dos postos vigiados, chega o aviso "Abastecendo no Shell · Av. da Pista? Registre agora."; tocar abre o **Novo abastecimento** com o posto sugerido pela localização.
+4. Desligar o interruptor para tudo na hora. Se as lojas recusarem o "sempre", o interruptor some e o resto do fluxo funciona igual.
+
+Telas novas sem frame no Figma: botão de falar, tela de "ouvindo" com os pontinhos, cartão da voz (pergunta, o que falta, campo em vermelho), o interruptor "Salvar pela fala" e textos das permissões. Do C6 (posto pela localização): o cartão "Achar o posto pela localização" (antes do pedido do sistema), os chips do posto perto e "Trocar", o chip "Usar localização" e a linha "Média neste posto" sob o Posto. Do C7: o interruptor "Aviso ao chegar no posto" e as telas que explicam o "durante o uso", o "sempre", a recusa e as notificações. Cada item do backlog (C4, C6, C7) registra o que ficou sem frame em `docs/07-validacao-e-decisoes.md`.
 
 **2c. Editar e excluir um abastecimento**
 
@@ -153,13 +160,14 @@ Telas sem frame no Figma: edição de abastecimento, ação de arrastar "Excluir
 
 **Notificações (texto e ícone)**
 
-| Tipo                 | Exemplo de texto                       |
-| -------------------- | -------------------------------------- |
-| Manutenção por km    | "Troca de óleo do Gol em ~500 km"      |
-| Manutenção por tempo | "Alinhamento do Gol vence em 7 dias"   |
-| IPVA / licenciamento | "IPVA do Gol vence em 10 dias"         |
-| CNH                  | "Sua CNH vence em 30 dias"             |
-| Atualizar km         | "Faz 7 dias sem atualizar o km do Gol" |
+| Tipo                 | Exemplo de texto                                       |
+| -------------------- | ------------------------------------------------------ |
+| Manutenção por km    | "Troca de óleo do Gol em ~500 km"                      |
+| Manutenção por tempo | "Alinhamento do Gol vence em 7 dias"                   |
+| IPVA / licenciamento | "IPVA do Gol vence em 10 dias"                         |
+| CNH                  | "Sua CNH vence em 30 dias"                             |
+| Atualizar km         | "Faz 7 dias sem atualizar o km do Gol"                 |
+| Chegada ao posto     | "Abastecendo no Shell · Av. da Pista? Registre agora." |
 
 **Componentes**
 
@@ -174,14 +182,12 @@ Telas sem frame no Figma: edição de abastecimento, ação de arrastar "Excluir
 
 Não precisam de design final agora, mas o layout do MVP deve deixar espaço para elas.
 
-| Tela / recurso                                  | Fase   | Nota para o design                                                                                                                                               |
-| ----------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Permissão de localização "sempre" (tela prévia) | Fase 2 | Explicar "lembrete ao chegar no posto" antes do pedido do sistema; opção "agora não" visível. A permissão "durante o uso" da tela Abastecer já é do MVP (Fase C) |
-| Configuração do lembrete no posto               | Fase 2 | Liga/desliga, explicação de bateria e privacidade                                                                                                                |
-| Widgets                                         | Fase 2 | Tamanhos pequeno e médio: próximo alerta, gasto do mês, km/l                                                                                                     |
-| FIPE                                            | Fase 2 | Cartão no detalhe do veículo com valor e variação (no MVP, só o cartão "Em breve" Premium)                                                                       |
-| Multas                                          | Fase 2 | Lista por veículo com status e vencimento                                                                                                                        |
-| Exportar PDF                                    | Fase 2 | Prévia do relatório                                                                                                                                              |
-| Paywall Premium                                 | Fase 2 | Comparação grátis × Premium, preço mensal/anual, restaurar compra                                                                                                |
-| Carro elétrico                                  | Futuro | Recarga (kWh) no lugar de litros, autonomia                                                                                                                      |
-| Adesivo do vidro                                | Futuro | Leitura por foto ou QR                                                                                                                                           |
+| Tela / recurso   | Fase   | Nota para o design                                                                         |
+| ---------------- | ------ | ------------------------------------------------------------------------------------------ |
+| Widgets          | Fase 2 | Tamanhos pequeno e médio: próximo alerta, gasto do mês, km/l                               |
+| FIPE             | Fase 2 | Cartão no detalhe do veículo com valor e variação (no MVP, só o cartão "Em breve" Premium) |
+| Multas           | Fase 2 | Lista por veículo com status e vencimento                                                  |
+| Exportar PDF     | Fase 2 | Prévia do relatório                                                                        |
+| Paywall Premium  | Fase 2 | Comparação grátis × Premium, preço mensal/anual, restaurar compra                          |
+| Carro elétrico   | Futuro | Recarga (kWh) no lugar de litros, autonomia                                                |
+| Adesivo do vidro | Futuro | Leitura por foto ou QR                                                                     |

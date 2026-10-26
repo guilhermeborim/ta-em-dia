@@ -8,6 +8,7 @@ import {
   syncDeletePayloadSchema,
   syncPullQuerySchema,
   syncPushRequestSchema,
+  syncTablesFor,
 } from '../sync';
 
 const ID = '018bcfe5-6800-7000-8000-000000000001';
@@ -81,5 +82,57 @@ describe('payloads', () => {
       syncDeletePayloadSchema.parse({ id: ID, deletedAt: '2026-10-23T12:00:00.000Z' }),
     ).toEqual({ id: ID, deletedAt: new Date('2026-10-23T12:00:00.000Z') });
     expect(syncDeletePayloadSchema.safeParse({ id: ID }).success).toBe(false);
+  });
+});
+
+describe('syncTablesFor', () => {
+  it('o protocolo 1 (app antigo) não recebe postos; o 2 recebe todas as tabelas', () => {
+    expect(syncTablesFor(1)).not.toContain('stations');
+    expect(syncTablesFor(1)).toContain('fuel_entries');
+    expect(syncTablesFor(2)).toEqual([...SYNC_TABLES]);
+  });
+});
+
+describe('stations', () => {
+  const schema = SYNC_UPSERT_SCHEMAS.stations;
+
+  it('posto do OpenStreetMap leva coordenada; posto local, só o nome', () => {
+    expect(
+      schema.safeParse({
+        id: ID,
+        osmId: 'node/123',
+        name: 'Shell',
+        brand: 'Shell',
+        street: 'Av. da Pista',
+        lat: -23.5,
+        lng: -46.6,
+      }).success,
+    ).toBe(true);
+    expect(schema.safeParse({ id: ID, name: 'Posto do Zé' }).success).toBe(true);
+  });
+
+  it('recusa coordenada pela metade, osmId fora do formato e nome vazio', () => {
+    expect(schema.safeParse({ id: ID, name: 'X', lat: -23.5 }).success).toBe(false);
+    expect(schema.safeParse({ id: ID, osmId: '123', name: 'X' }).success).toBe(false);
+    expect(schema.safeParse({ id: ID, name: '' }).success).toBe(false);
+  });
+
+  it('abastecimento aceita stationId opcional', () => {
+    const entry = {
+      id: ID,
+      vehicleId: ID,
+      date: '2026-10-26T12:00:00.000Z',
+      km: 45300,
+      fuelType: 'gasoline',
+      liters: 25,
+      pricePerLiter: 6,
+      total: 150,
+      fullTank: true,
+      stationName: 'Shell · Av. da Pista',
+    };
+    const fuel = SYNC_UPSERT_SCHEMAS.fuel_entries;
+    expect(fuel.parse({ ...entry, stationId: ID })).toMatchObject({ stationId: ID });
+    expect(fuel.safeParse(entry).success).toBe(true);
+    expect(fuel.safeParse({ ...entry, stationId: 'abc' }).success).toBe(false);
   });
 });

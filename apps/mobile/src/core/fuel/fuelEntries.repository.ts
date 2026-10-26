@@ -1,5 +1,6 @@
-import { fuelEntrySchema, type FuelEntry } from '@ta-em-dia/shared';
+import { fuelEntrySchema, type FuelEntry, type StationPriceRow } from '@ta-em-dia/shared';
 import { enqueue, newId, type Db } from '../db';
+import { ensureStation, type StationInput } from '../stations';
 
 type FuelEntryRow = {
   id: string;
@@ -13,11 +14,12 @@ type FuelEntryRow = {
   total: number | null;
   full_tank: number | null;
   station_name: string | null;
+  station_id: string | null;
   note: string | null;
 };
 
 const COLUMNS = `id, vehicle_id, date, status, km, fuel_type, liters, price_per_liter, total,
-            full_tank, station_name, note`;
+            full_tank, station_name, station_id, note`;
 
 export type NewFuelEntry = Omit<FuelEntry, 'id'>;
 
@@ -37,25 +39,31 @@ function toFuelEntry(row: FuelEntryRow): FuelEntry {
     total: row.total!,
     fullTank: row.full_tank === 1,
     stationName: row.station_name ?? undefined,
+    ...(row.station_id ? { stationId: row.station_id } : {}),
     note: row.note ?? undefined,
   };
 }
 
-/** Valida, grava no SQLite e enfileira para o sync, tudo na mesma transação. */
+/**
+ * Valida, grava no SQLite e enfileira para o sync, tudo na mesma transação. Com `station`, liga o
+ * abastecimento a um posto de `stations` (criando o posto, se for novo, na mesma transação).
+ */
 export async function addFuelEntry(
   db: Db,
   input: NewFuelEntry,
-  ctx: { id?: string; now?: Date } = {},
+  ctx: { id?: string; now?: Date; station?: StationInput } = {},
 ): Promise<FuelEntry> {
-  const entry = fuelEntrySchema.parse({ ...input, id: ctx.id ?? newId() });
+  let entry = fuelEntrySchema.parse({ ...input, id: ctx.id ?? newId() });
   const now = (ctx.now ?? new Date()).toISOString();
 
   await db.withTransactionAsync(async () => {
+    const stationId = ctx.station ? await ensureStation(db, ctx.station, now) : null;
+    if (stationId) entry = { ...entry, stationId };
     await db.runAsync(
       `INSERT INTO fuel_entries
          (id, vehicle_id, date, status, km, fuel_type, liters, price_per_liter, total,
-          full_tank, station_name, note, created_at, updated_at)
-       VALUES (?, ?, ?, 'complete', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          full_tank, station_name, station_id, note, created_at, updated_at)
+       VALUES (?, ?, ?, 'complete', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       entry.id,
       entry.vehicleId,
       entry.date.toISOString(),
@@ -66,6 +74,7 @@ export async function addFuelEntry(
       entry.total,
       entry.fullTank ? 1 : 0,
       entry.stationName ?? null,
+      entry.stationId ?? null,
       entry.note ?? null,
       now,
       now,
@@ -102,14 +111,16 @@ export async function getFuelRecord(db: Db, id: string): Promise<FuelEntry | nul
 
 /**
  * Troca os dados do abastecimento (mesmo `id`): é a edição. Grava no SQLite e enfileira o envio na
- * mesma transação. Devolve `false` se o registro não existe mais (excluído, por exemplo pelo sync).
+ * mesma transação. Com `station`, troca o posto (criando-o, se for novo). Devolve `false` se o
+ * registro não existe mais (excluído, por exemplo pelo sync).
  */
 export async function updateFuelRecord(
   db: Db,
   record: FuelEntry,
   now: Date = new Date(),
+  station?: StationInput,
 ): Promise<boolean> {
-  const entry = fuelEntrySchema.parse(record);
+  let entry = fuelEntrySchema.parse(record);
   const at = now.toISOString();
   let updated = false;
 
@@ -119,10 +130,12 @@ export async function updateFuelRecord(
       entry.id,
     );
     if (!exists) return;
+    const stationId = station ? await ensureStation(db, station, at) : null;
+    if (stationId) entry = { ...entry, stationId };
     await db.runAsync(
       `UPDATE fuel_entries
           SET date = ?, km = ?, fuel_type = ?, liters = ?, price_per_liter = ?,
-              total = ?, full_tank = ?, station_name = ?, note = ?, updated_at = ?
+              total = ?, full_tank = ?, station_name = ?, station_id = ?, note = ?, updated_at = ?
         WHERE id = ?`,
       entry.date.toISOString(),
       entry.km,
@@ -132,6 +145,7 @@ export async function updateFuelRecord(
       entry.total,
       entry.fullTank ? 1 : 0,
       entry.stationName ?? null,
+      entry.stationId ?? null,
       entry.note ?? null,
       at,
       entry.id,
@@ -167,4 +181,29 @@ export async function listStationNames(db: Db): Promise<string[]> {
       ORDER BY COUNT(*) DESC, MAX(date) DESC`,
   );
   return rows.map((row) => row.station_name);
+}
+
+/**
+ * Abastecimentos completos de todos os veículos, só com o que a média de preço por posto usa
+ * (`stationPriceAverage`, em `shared`).
+ */
+export async function listFuelPriceRows(db: Db): Promise<StationPriceRow[]> {
+  const rows = await db.getAllAsync<{
+    station_id: string | null;
+    station_name: string | null;
+    fuel_type: string;
+    liters: number;
+    total: number;
+  }>(
+    `SELECT station_id, station_name, fuel_type, liters, total
+       FROM fuel_entries
+      WHERE deleted_at IS NULL AND status = 'complete'`,
+  );
+  return rows.map((row) => ({
+    stationId: row.station_id,
+    stationName: row.station_name,
+    fuelType: row.fuel_type,
+    liters: row.liters,
+    total: row.total,
+  }));
 }

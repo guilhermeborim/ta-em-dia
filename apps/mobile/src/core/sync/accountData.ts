@@ -1,7 +1,10 @@
 import type { Db } from '../db';
 import { syncNow, type SyncEngineDeps, type SyncOutcome } from './syncEngine';
 
-/** As tabelas de dados do usuário (filhas antes de `vehicles`, por causa da chave estrangeira). */
+/**
+ * As tabelas de dados do usuário (filhas antes de `vehicles`, por causa da chave estrangeira). Os
+ * postos baixados da região (`region_cells`, `region_places`) são dado público e ficam.
+ */
 const DATA_TABLES = [
   'fuel_entries',
   'odometer_readings',
@@ -9,6 +12,7 @@ const DATA_TABLES = [
   'maintenance_records',
   'maintenance_plans',
   'vehicles',
+  'stations',
 ] as const;
 
 /** Quantas mudanças esperam na fila para ir à API. */

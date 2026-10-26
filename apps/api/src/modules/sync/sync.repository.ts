@@ -125,11 +125,17 @@ export class SyncRepository {
   /**
    * As mudanças do usuário com `version` maior que `since`, do menor para o maior, até `limit`
    * linhas no total (de todas as tabelas). Cada tabela traz no máximo `limit`: juntas e
-   * ordenadas, as primeiras `limit` são exatamente as próximas do usuário.
+   * ordenadas, as primeiras `limit` são exatamente as próximas do usuário. `tables` limita às
+   * tabelas que o app conhece (protocolo antigo).
    */
-  async listChanges(userId: string, since: bigint, limit: number): Promise<PulledRow[]> {
+  async listChanges(
+    userId: string,
+    since: bigint,
+    limit: number,
+    tables: readonly SyncTable[] = SYNC_TABLES,
+  ): Promise<PulledRow[]> {
     const perTable = await Promise.all(
-      SYNC_TABLES.map(async (table) => {
+      tables.map(async (table) => {
         const rows = await delegateOf(this.prisma, table).findMany({
           where: { version: { gt: since }, ...ownedBy(table, userId) },
           orderBy: { version: 'asc' },

@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   SYNC_PROTOCOL_VERSION,
   syncDeletePayloadSchema,
+  syncTablesFor,
   type SyncChange,
   type SyncPullQuery,
   type SyncPullResponse,
@@ -55,7 +56,10 @@ export class SyncService {
     return { protocol: SYNC_PROTOCOL_VERSION, results };
   }
 
-  /** O que mudou para o usuário depois de `since`, do mais antigo ao mais novo, em páginas. */
+  /**
+   * O que mudou para o usuário depois de `since`, do mais antigo ao mais novo, em páginas. Só as
+   * tabelas que o protocolo do app conhece (o app do protocolo 1 não recebe `stations`).
+   */
   async pull(
     userId: string,
     query: SyncPullQuery,
@@ -63,7 +67,12 @@ export class SyncService {
   ): Promise<SyncPullResponse> {
     this.assertProtocol(query.protocol);
     const since = BigInt(query.since);
-    const rows = await this.repository.listChanges(userId, since, query.limit);
+    const rows = await this.repository.listChanges(
+      userId,
+      since,
+      query.limit,
+      syncTablesFor(query.protocol),
+    );
     const page = rows.slice(0, query.limit);
     await this.repository.touchDevices(userId, now);
 

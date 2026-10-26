@@ -17,6 +17,7 @@ import {
   type SpeechFailure,
   type SpeechSession,
 } from '../../../core/speech';
+import type { StationInput } from '../../../core/stations';
 import type { FuelFormContext } from '../models/fuelContext';
 import type { FuelForm, FuelFormErrors } from '../models/fuelForm';
 import {
@@ -43,6 +44,8 @@ interface FuelVoiceDeps {
   db: Db;
   context: FuelFormContext | null;
   stations: readonly string[];
+  /** O posto a gravar para o nome do formulário (perto, digitado ou o que já estava). */
+  stationFor: (stationName: string) => StationInput;
   form: FuelForm;
   kmTouched: boolean;
   setForm: (form: FuelForm) => void;
@@ -129,7 +132,9 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
     setState({ step: 'idle' });
     if (!voiceAutoSave) return;
 
-    const { id } = await addFuelEntry(d.db, outcome.value);
+    const { id } = await addFuelEntry(d.db, outcome.value, {
+      station: d.stationFor(outcome.value.stationName ?? ''),
+    });
     void refreshReminders(d.db);
     d.onSaved(id);
   }, []);
