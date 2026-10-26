@@ -7,7 +7,7 @@ Figma: arquivo `ESJceLVFjGNDdSSAvoguPo`, página "Telas — Claro". Telas de ref
 
 ## Fase C — Registro rápido de abastecimento
 
-Dor: no posto o usuário tem uns 10 segundos e o formulário pede tudo digitado. Decidido pelo dono em 26/10/2026: nenhum dado do formulário sai; no posto o usuário **fala** em vez de digitar; o que faltar vira **rascunho** e o app lembra de completar; o posto é identificado pela localização com um **ID único** (OpenStreetMap). A voz **substitui** a foto da bomba (OCR). **Não existe capacidade do tanque** (nem campo nem limite): as regras usam a conta valor ÷ litros entre R$ 2 e R$ 12. Sem serviço pago: voz e localização rodam no aparelho.
+Dor: no posto o usuário tem uns 10 segundos e o formulário pede tudo digitado. Decidido pelo dono em 26/10/2026: nenhum dado do formulário sai; no posto o usuário **fala** em vez de digitar; se a fala não trouxer tudo, nada é salvo: o app mostra o que falta e leva o cursor ao campo (não existe rascunho, decidido em 26/10/2026); o posto é identificado pela localização com um **ID único** (OpenStreetMap). A voz **substitui** a foto da bomba (OCR). **Não existe capacidade do tanque** (nem campo nem limite): as regras usam a conta valor ÷ litros entre R$ 2 e R$ 12. Sem serviço pago: voz e localização rodam no aparelho.
 
 Plano completo: doc "Abastecimento por voz e posto único" (Claude Docs do projeto). Essas fases puxam para o MVP o que o roadmap deixava na Fase 2; os docs já refletem isso (`docs/01`, `02`, `03` e `05`).
 
