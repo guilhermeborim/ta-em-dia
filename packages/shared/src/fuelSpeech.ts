@@ -4,7 +4,7 @@ import {
   FUEL_MAX_KM_JUMP,
   FUEL_PRICE_MAX,
   FUEL_PRICE_MIN,
-} from './fuelDraft';
+} from './fuelRules';
 import type { FuelEntry } from './schemas';
 
 /**
