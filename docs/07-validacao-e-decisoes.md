@@ -379,7 +379,7 @@ Sem frame no Figma (interruptor e telas que explicam as permissões). Dependênc
 - [ ] Fonte grande e TalkBack: as telas do aviso rolam sem cortar; botões com toque ≥ 44 pt.
 - [ ] Play Console: declaração de localização em segundo plano com o vídeo (até 30 s) da tela que explica, do pedido e do aviso; Data safety com localização aproximada e precisa. O manifest passa a pedir `ACCESS_BACKGROUND_LOCATION`.
 
-### 2.41 Exportar dados (Configurações, PR #?)
+### 2.41 Exportar dados (Configurações, PR #80)
 
 Dependências nativas novas: `expo-file-system` e `expo-sharing` (exigem development build novo; num build antigo, tocar mostra "Não foi possível exportar"). Nenhum emulador estava aberto: nada foi visto rodando.
 
