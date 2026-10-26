@@ -1,6 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { useDb } from '../../../core/db';
+import { appVersion } from '../../../core/env/appEnv';
 import { useFlag } from '../../../core/flags/useFlag';
 import { hasExternalLink, openExternalLink, type ExternalLink } from '../../../core/links';
 import { requestNotificationPermission } from '../../../core/notifications';
@@ -18,6 +19,8 @@ import {
   type NotifySetting,
 } from '../../../core/settings';
 import { useToast } from '../../../core/toast/useToast';
+import { exportFileName } from '../models/exportData';
+import { loadExport } from '../models/exportData.repository';
 import { formatNotifyDays } from '../models/settingsView';
 
 /**
@@ -96,6 +99,29 @@ export function useSettingsViewModel() {
     [arrivalDeps, router, show],
   );
 
+  // Exportar meus dados (LGPD): gera o JSON com tudo do aparelho e abre o menu de compartilhar.
+  const [exporting, setExporting] = useState(false);
+  const exportData = useCallback(async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const now = new Date();
+      const doc = await loadExport(db, { now, appVersion });
+      // Carregado só aqui: num build sem os módulos nativos, o erro vira aviso em vez de quebrar a tela.
+      const { shareJsonFile } = await import('../models/shareFile');
+      if (!(await shareJsonFile(exportFileName(now), JSON.stringify(doc, null, 2)))) {
+        show({
+          title: 'Não foi possível exportar',
+          message: 'Este aparelho não compartilha arquivos.',
+        });
+      }
+    } catch {
+      show({ title: 'Não foi possível exportar', message: 'Tente de novo.' });
+    } finally {
+      setExporting(false);
+    }
+  }, [db, exporting, show]);
+
   const openLink = useCallback(
     async (kind: ExternalLink) => {
       const notice = await openExternalLink(kind);
@@ -120,7 +146,9 @@ export function useSettingsViewModel() {
     setVoiceAutoSave: (value: boolean) => void setVoiceAutoSave(value),
     setStationArrival: (value: boolean) => void setStationArrival(value),
     openNotifyDays: () => router.push('/configuracoes/antecedencia'),
-    exportData: () => show({ title: 'Em breve' }),
+    /** "Preparando o arquivo..." enquanto o arquivo é gerado. */
+    exportHint: exporting ? 'Preparando o arquivo...' : undefined,
+    exportData: () => void exportData(),
     /** "Em breve" abaixo de Termos e Privacidade enquanto o build não tem as URLs. */
     termsHint: hasExternalLink('terms') ? undefined : 'Em breve',
     privacyHint: hasExternalLink('privacy') ? undefined : 'Em breve',

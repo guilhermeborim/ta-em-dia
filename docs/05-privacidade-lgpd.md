@@ -90,7 +90,7 @@ Decidido pelo dono em 26/10/2026. Vale para quem está logado e para o usuário 
 
 | Direito                | Como atender                                                     |
 | ---------------------- | ---------------------------------------------------------------- |
-| Acesso e portabilidade | Exportar meus dados (JSON/CSV) em Configurações                  |
+| Acesso e portabilidade | Exportar dados (arquivo JSON) em Configurações                   |
 | Correção               | Editar nas telas                                                 |
 | Eliminação             | "Excluir conta" apaga tudo no app e na API (ver abaixo)          |
 | Informação             | Política de Privacidade clara, dentro do app e no site           |
@@ -128,7 +128,7 @@ Essa decisão é separada, porque muda o risco. Antes de implementar:
 - [ ] Política de Privacidade e Termos revisados por advogado, em URL pública.
 - [ ] URLs de Termos e Privacidade e o e-mail de ajuda em `EXPO_PUBLIC_TERMS_URL`, `EXPO_PUBLIC_PRIVACY_URL` e `EXPO_PUBLIC_SUPPORT_EMAIL` no perfil `production` do `eas.json` (o app já abre os links; sem valor, mostra "Em breve").
 - [ ] Excluir conta funcionando no app e na API (implementado; falta validar no aparelho e revogar o token da Apple, `docs/07` 2.23 e 3.28).
-- [ ] Exportar meus dados funcionando.
+- [ ] Exportar meus dados funcionando (implementado; falta validar no aparelho, `docs/07` 2.41).
 - [ ] Nenhum dado pessoal em log (app e API), inclusive geohash e coordenada.
 - [ ] Declarações de microfone e localização nas lojas (Nutrition Label e Data safety).
 - [ ] Segredos fora do repositório (`.env` ignorado).

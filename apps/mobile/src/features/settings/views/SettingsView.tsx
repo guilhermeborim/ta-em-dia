@@ -86,7 +86,7 @@ export function SettingsView() {
           <ListGroup>
             <SettingItem title="Distância" value="km" chevron={false} />
             <SettingItem title="Volume" value="litros" chevron={false} />
-            <SettingItem title="Exportar dados" hint="Em breve" onPress={vm.exportData} />
+            <SettingItem title="Exportar dados" hint={vm.exportHint} onPress={vm.exportData} />
           </ListGroup>
 
           <Text variant="caption" color="text3">
