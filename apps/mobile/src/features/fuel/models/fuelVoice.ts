@@ -6,7 +6,6 @@ import {
   type FuelSpeechQuestion,
   type FuelSpeechResult,
 } from '@ta-em-dia/shared';
-import { getSetting, setSetting, type Db } from '../../../core/db';
 import type { NewFuelEntry } from '../../../core/fuel';
 import { formatBRL, formatKm, formatNumber, parseDecimal, parseKm } from '../../../core/format';
 import type { SpeechFailure } from '../../../core/speech';
@@ -51,6 +50,7 @@ export function applyFuelSpeech(
   if (fields.km !== undefined) next.km = formatKm(String(fields.km));
   if (fields.fuelType !== undefined && !result.fuelTypeFromContext) next.fuelType = fields.fuelType;
   if (fields.fullTank !== undefined) next.fullTank = fields.fullTank;
+  if (fields.stationName !== undefined) next.station = fields.stationName;
 
   return { form: next, kmSpoken: fields.km !== undefined };
 }
@@ -61,6 +61,7 @@ function understoodNothing(result: FuelSpeechResult): boolean {
   return (
     [...AMOUNTS, 'km' as const].every((field) => fields[field] === undefined) &&
     fields.fullTank === undefined &&
+    fields.stationName === undefined &&
     (fields.fuelType === undefined || result.fuelTypeFromContext)
   );
 }
@@ -214,17 +215,6 @@ export function speechFailureText(failure: SpeechFailure | 'nothing'): string {
     case 'error':
       return 'Não deu para ouvir agora. Preencha abaixo.';
   }
-}
-
-const NOTICE_KEY = 'fuel.voice_notice_seen';
-
-/** O aviso do áudio (uma vez, antes do primeiro uso) já foi aceito? */
-export async function voiceNoticeSeen(db: Db): Promise<boolean> {
-  return (await getSetting(db, NOTICE_KEY)) === '1';
-}
-
-export async function markVoiceNoticeSeen(db: Db): Promise<void> {
-  await setSetting(db, NOTICE_KEY, '1');
 }
 
 const ANSWER_LABELS: Record<FuelSpeechQuestion['options'][number], string> = {

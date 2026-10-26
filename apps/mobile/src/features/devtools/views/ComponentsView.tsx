@@ -11,6 +11,7 @@ import {
   Chip,
   DatePicker,
   colors,
+  radius,
   ConsumptionCard,
   DocumentItem,
   EmptyState,
@@ -308,7 +309,9 @@ export function ComponentsView() {
         </Section>
 
         <Section title="Ouvindo (pontinhos)">
-          <ListeningDots />
+          <View style={styles.dark}>
+            <ListeningDots color={colors.accent} dot={16} />
+          </View>
         </Section>
 
         <Section title="Toast">
@@ -661,6 +664,12 @@ const styles = StyleSheet.create({
   section: { gap: spacing.md },
   sectionBody: { gap: spacing.md },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md },
+  dark: {
+    alignItems: 'center',
+    padding: spacing.xxl,
+    borderRadius: radius.card,
+    backgroundColor: colors.text,
+  },
   swatch: { width: 84, gap: 4 },
   swatchColor: { height: 40, borderRadius: 8, borderWidth: 1, borderColor: colors.border },
   // A barra de topo já tem a margem lateral da tela.

@@ -23,9 +23,7 @@ import {
   applyFuelSpeech,
   decideFuelVoice,
   type FuelFocusField,
-  markVoiceNoticeSeen,
   speechFailureText,
-  voiceNoticeSeen,
 } from '../models/fuelVoice';
 
 /** Quanto tempo o resumo fica na tela antes de sair (com "Desfazer" e "Editar"). */
@@ -33,8 +31,6 @@ export const VOICE_SUMMARY_MS = 5000;
 
 export type FuelVoiceState =
   | { step: 'idle' }
-  /** Aviso de uma vez só: o áudio vai à Apple ou ao Google e o app o descarta. */
-  | { step: 'notice' }
   /** O texto falado não aparece na tela: só os pontinhos no botão. */
   | { step: 'listening' }
   /** `text` fica guardado para repetir a interpretação com a resposta; não aparece na tela. */
@@ -101,6 +97,7 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
       {
         lastKm: d.context?.lastFuelKm ?? d.context?.suggestedKm ?? null,
         lastFuelType: d.context?.lastFuelType ?? null,
+        stations: d.stations,
       },
       answers.current,
     );
@@ -180,15 +177,7 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
       setState({ step: 'failed', message: speechFailureText('unavailable') });
       return;
     }
-    if (!(await voiceNoticeSeen(latest.current.db))) {
-      setState({ step: 'notice' });
-      return;
-    }
-    await listen();
-  }, [listen]);
-
-  const acceptNotice = useCallback(async () => {
-    await markVoiceNoticeSeen(latest.current.db);
+    // A permissão do microfone é pedida aqui, no primeiro toque.
     await listen();
   }, [listen]);
 
@@ -228,10 +217,11 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
 
   return {
     state,
-    card: voiceCard(state, { talk, acceptNotice, answer, undo, edit, dismiss }),
+    card: voiceCard(state, { talk, answer, undo, edit, dismiss }),
     talkButton: talkButton(state, { talk, stop }),
+    /** Tela de "ouvindo" (escurece tudo e mostra os pontinhos no centro). */
+    listening: state.step === 'listening',
     talk,
-    acceptNotice,
     /** Para de ouvir e interpreta o que já veio. */
     stop,
     answer,
@@ -243,7 +233,6 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
 
 interface VoiceActions {
   talk: () => void;
-  acceptNotice: () => void;
   stop: () => void;
   answer: (field: FuelSpeechField) => void;
   undo: () => void;
@@ -252,8 +241,8 @@ interface VoiceActions {
 }
 
 /**
- * Botão de falar ao lado de "Salvar abastecimento": microfone parado, pontinhos ouvindo (tocar
- * para de ouvir). Some enquanto há aviso, pergunta ou resumo na tela.
+ * Botão de falar ao lado de "Salvar abastecimento". Some enquanto há pergunta ou resumo na tela.
+ * Ouvindo, a tela inteira mostra os pontinhos e tocar nela para de ouvir.
  */
 export function talkButton(
   state: FuelVoiceState,
@@ -286,16 +275,6 @@ export function voiceCard(
   switch (state.step) {
     case 'idle':
       return null;
-    case 'notice':
-      return {
-        tone: 'info',
-        title: 'Antes de falar',
-        text: 'Para virar texto, o áudio vai pela internet ao reconhecimento de fala da Apple ou do Google. O Tá em Dia não guarda o áudio, só os valores entendidos.',
-        actions: [
-          { label: 'Continuar', onPress: a.acceptNotice, variant: 'primary' },
-          { label: 'Agora não', onPress: a.dismiss, variant: 'ghost' },
-        ],
-      };
     case 'listening':
       return null;
     case 'question':

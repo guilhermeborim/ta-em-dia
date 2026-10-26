@@ -10,10 +10,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { colors } from '../theme/tokens';
 
-const DOT = 6;
 const STEP_MS = 300;
 
-function Dot({ index, color }: { index: number; color: string }) {
+function Dot({ index, color, dot }: { index: number; color: string; dot: number }) {
   const lift = useSharedValue(0);
 
   useEffect(() => {
@@ -28,24 +27,38 @@ function Dot({ index, color }: { index: number; color: string }) {
 
   const style = useAnimatedStyle(() => ({
     opacity: 0.4 + lift.value * 0.6,
-    transform: [{ translateY: -lift.value * 4 }],
+    transform: [{ translateY: -lift.value * dot * 0.7 }],
   }));
 
-  return <Animated.View style={[styles.dot, { backgroundColor: color }, style]} />;
+  return (
+    <Animated.View
+      style={[{ width: dot, height: dot, borderRadius: dot / 2, backgroundColor: color }, style]}
+    />
+  );
 }
 
-/** Três pontinhos pulando em sequência: "ouvindo" no botão de falar. */
-export function ListeningDots({ color = colors.text }: { color?: string }) {
+/** Três pontinhos pulando em sequência: "ouvindo" enquanto a pessoa fala. */
+export function ListeningDots({
+  color = colors.text,
+  dot = 6,
+}: {
+  color?: string;
+  /** Diâmetro de cada ponto, em pt. */
+  dot?: number;
+}) {
   return (
-    <View style={styles.row} accessibilityElementsHidden importantForAccessibility="no">
+    <View
+      style={[styles.row, { gap: dot * 0.7, height: dot * 2.4 }]}
+      accessibilityElementsHidden
+      importantForAccessibility="no"
+    >
       {[0, 1, 2].map((index) => (
-        <Dot key={index} index={index} color={color} />
+        <Dot key={index} index={index} color={color} dot={dot} />
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 4, height: DOT + 8 },
-  dot: { width: DOT, height: DOT, borderRadius: DOT / 2 },
+  row: { flexDirection: 'row', alignItems: 'center' },
 });

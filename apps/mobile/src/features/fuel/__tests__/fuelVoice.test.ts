@@ -31,7 +31,11 @@ const ctx = (patch: Partial<FuelVoiceContext> = {}): FuelVoiceContext => ({
 
 /** Interpreta a frase, aplica no formulário e decide, como a tela faz. */
 function run(text: string, form: FuelForm = opened(), patch: Partial<FuelVoiceContext> = {}) {
-  const result = parseFuelSpeech(text, { lastKm: 45000, lastFuelType: 'gasoline' });
+  const result = parseFuelSpeech(text, {
+    lastKm: 45000,
+    lastFuelType: 'gasoline',
+    stations: ['Shell'],
+  });
   const applied = applyFuelSpeech(form, result);
   const context = ctx({ ...patch, kmTouched: (patch.kmTouched ?? false) || applied.kmSpoken });
   return { applied, outcome: decideFuelVoice(result, applied.form, context) };
@@ -70,6 +74,40 @@ describe('applyFuelSpeech', () => {
   it('só troca o combustível quando foi dito', () => {
     expect(run('150 reais', opened({ fuelType: 'ethanol' })).applied.form.fuelType).toBe('ethanol');
     expect(run('150 reais de diesel').applied.form.fuelType).toBe('diesel');
+  });
+});
+
+describe('posto falado', () => {
+  const phrase = 'abasteci 150 reais de gasolina e deu 25 litros no posto ipiranga';
+
+  it('preenche o posto no formulário e só cobra o que ainda falta (o km)', () => {
+    const { applied, outcome } = run(phrase);
+    expect(applied.form.station).toBe('Ipiranga');
+    expect(outcome).toEqual({
+      kind: 'missing',
+      message: 'Falta informar o km',
+      focus: 'km',
+      errors: { km: 'Confirme o km do painel' },
+    });
+  });
+
+  it('com o km na frase, salva sozinho com o posto falado', () => {
+    const { outcome } = run(`${phrase} km 45300`);
+    expect(outcome).toMatchObject({
+      kind: 'entry',
+      summary: 'Ipiranga · R$ 150,00 · 25 L · 45.300 km',
+      value: { stationName: 'Ipiranga', fuelType: 'gasoline' },
+    });
+  });
+
+  it('posto já usado volta com a grafia gravada', () => {
+    const { applied } = run('150 reais no posto shell');
+    expect(applied.form.station).toBe('Shell');
+  });
+
+  it('sem posto na frase, mantém o que estava no formulário', () => {
+    const { applied } = run('150 reais, 25 litros', opened({ station: 'Shell' }));
+    expect(applied.form.station).toBe('Shell');
   });
 });
 

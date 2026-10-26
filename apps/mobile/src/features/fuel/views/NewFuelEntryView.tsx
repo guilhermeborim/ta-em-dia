@@ -20,7 +20,7 @@ import {
   NumberField,
   size,
   spacing,
-  ListeningDots,
+  ListeningOverlay,
   SpeechCard,
   SwitchRow,
   Text,
@@ -220,17 +220,14 @@ export function NewFuelEntryView() {
                   onPress={vm.talkButton.onPress}
                   style={styles.talk}
                 >
-                  {vm.talkButton.listening ? (
-                    <ListeningDots />
-                  ) : (
-                    <Icon name="mic" size={22} color={colors.text} />
-                  )}
+                  <Icon name="mic" size={22} color={colors.text} />
                 </Pressable>
               ) : null}
             </View>
           </View>
         ) : null}
       </KeyboardAvoidingView>
+      <ListeningOverlay visible={vm.voice.listening} onPress={vm.voice.stop} />
       <DatePicker
         visible={vm.pickerOpen}
         value={vm.pickerValue}

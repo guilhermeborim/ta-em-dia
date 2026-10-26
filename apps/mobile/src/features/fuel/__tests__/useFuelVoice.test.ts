@@ -3,7 +3,6 @@ import { talkButton, voiceCard } from '../viewmodels/useFuelVoice';
 
 const actions = {
   talk: jest.fn(),
-  acceptNotice: jest.fn(),
   stop: jest.fn(),
   cancel: jest.fn(),
   answer: jest.fn(),
@@ -17,12 +16,6 @@ const labels = (card: ReturnType<typeof voiceCard>) => card?.actions.map((a) => 
 describe('voiceCard', () => {
   it('parado, não mostra cartão', () => {
     expect(voiceCard({ step: 'idle' }, actions)).toBeNull();
-  });
-
-  it('o aviso do áudio diz para onde ele vai', () => {
-    const card = voiceCard({ step: 'notice' }, actions);
-    expect(card?.text).toContain('Apple ou do Google');
-    expect(labels(card)).toEqual(['Continuar', 'Agora não']);
   });
 
   it('ouvindo, não mostra cartão nem o texto falado', () => {
@@ -89,8 +82,7 @@ describe('talkButton', () => {
     expect(talkButton({ step: 'missing', message: 'x' }, actions)?.listening).toBe(false);
   });
 
-  it('some com aviso, pergunta ou resumo na tela', () => {
-    expect(talkButton({ step: 'notice' }, actions)).toBeNull();
+  it('some com pergunta ou resumo na tela', () => {
     expect(talkButton({ step: 'saved', id: 'x', summary: '' }, actions)).toBeNull();
   });
 });
