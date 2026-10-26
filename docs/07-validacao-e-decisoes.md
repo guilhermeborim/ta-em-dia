@@ -316,7 +316,7 @@ Sem frame no Figma (tela de edição, ação de arrastar, aviso de exclusão). A
 - [ ] Leitor de tela (TalkBack): o registro lê "toque para editar" e oferece a ação "Excluir".
 - [ ] Fonte grande: a ação "Excluir" não corta o texto.
 
-### 2.37 API: postos (`GET /v1/places`, C5)
+### 2.37 API: postos (`GET /v1/places`, C5, PR #76)
 
 Sem tela; o app só usa no C6. Em staging, depois do deploy (a migration `place_cells` roda no deploy), com um token de "Continuar sem login":
 
