@@ -92,13 +92,13 @@ São 22 telas, agrupadas por área.
 3. Usuário digita dois de três valores (preço/litro, litros, total); o terceiro é calculado.
 4. Salvar → volta ao Início com o cartão do mês atualizado e um toast com o km/l do trecho, quando der para calcular.
 
-**2b. Registrar abastecimento por voz (Fase C, a implementar)**
+**2b. Registrar abastecimento por voz (Fase C; voz feita no C4, posto pela localização no C6)**
 
-1. Na tela Abastecer, toque em **Falar**. Na primeira vez, o app explica e pede o microfone (e a localização "durante o uso", para sugerir o posto). Recusar não bloqueia: o formulário continua na mesma tela.
-2. O usuário fala do jeito que quiser: "abasteci 150 reais, 25 litros, 45 mil e 300, encheu". O texto aparece enquanto fala.
-3. Se estiver completo e válido, o app **salva sozinho** e mostra por 5 s o resumo ("Shell · R$ 150,00 · 25 L · 45.300 km") com **Desfazer** e **Editar**.
+1. Na tela Novo abastecimento, toque em **Falar** (botão no topo, acima das datas). Na primeira vez, um cartão explica que o áudio vai à Apple ou ao Google e que o app não o guarda ("Continuar" ou "Agora não"); depois o sistema pede o microfone (a localização entra no C6). Recusar não bloqueia: o formulário continua na mesma tela. O posto não é falado: vem do formulário (chip ou digitado antes de falar) e, no C6, da localização.
+2. O usuário fala do jeito que quiser: "abasteci 150 reais, 25 litros, 45 mil e 300, encheu". O texto aparece enquanto fala, com **Pronto** (para de ouvir) e **Cancelar**; 2 s de silêncio também encerram.
+3. Se estiver completo e válido, o app **salva sozinho** e mostra por 5 s o resumo ("Shell · R$ 150,00 · 25 L · 45.300 km") com **Desfazer** (apaga e deixa o formulário preenchido) e **Editar** (fica na tela; salvar atualiza o mesmo registro). Depois dos 5 s volta ao Início com o toast de sempre.
 4. Se algo for ambíguo, o app pergunta ("50 é o valor ou os litros?") com botões de resposta.
-5. Se faltar dado (por exemplo, o km), salva como **rascunho** "Incompleto" e avisa; às 20h chega o lembrete "Falta o km do abastecimento de hoje no Shell", que abre o rascunho para completar.
+5. Se faltar dado (por exemplo, o km; o km sugerido não conta, só o falado ou digitado), salva como **rascunho** "Incompleto" e avisa ("Salvo como rascunho · Falta o km"), também com Desfazer e Editar; às 20h chega o lembrete "Falta o km do abastecimento de hoje no Shell", que abre o rascunho para completar.
 6. Se um valor não passar na validação (preço do litro fora de R$ 2 a R$ 12, km menor que o último), o campo fica em vermelho e o app **não salva sozinho**.
 7. Sem microfone, com barulho ou sem entender, a pessoa preenche o formulário atual na mesma tela.
 
