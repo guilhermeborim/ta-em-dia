@@ -1,7 +1,9 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
+import { Alert } from 'react-native';
 import { useDb } from '../../../core/db';
-import { buildAverage } from '../../../core/fuel';
+import { buildAverage, deleteFuelEntry } from '../../../core/fuel';
+import { refreshReminders } from '../../../core/reminders';
 import { buildFilterChips, buildSections, type FuelFilter } from '../models/fuelList';
 import { loadFuelList, type FuelListData } from '../models/fuelList.repository';
 
@@ -25,6 +27,32 @@ export function useFuelListViewModel() {
     }, [db]),
   );
 
+  const remove = useCallback(
+    async (id: string) => {
+      await deleteFuelEntry(db, id);
+      // O km atual e as médias mudam: os avisos de manutenção dependem deles.
+      void refreshReminders(db);
+      setData(await loadFuelList(db));
+    },
+    [db],
+  );
+
+  /** Pergunta antes de excluir; cancelar (ou tocar fora) fecha o item arrastado de volta. */
+  const confirmDelete = useCallback(
+    (id: string, title: string, close: () => void) => {
+      Alert.alert(
+        'Excluir abastecimento?',
+        `${title}. Ele deixa de contar nos gastos e no consumo.`,
+        [
+          { text: 'Cancelar', style: 'cancel', onPress: close },
+          { text: 'Excluir', style: 'destructive', onPress: () => void remove(id) },
+        ],
+        { cancelable: true, onDismiss: close },
+      );
+    },
+    [remove],
+  );
+
   const entries = data?.entries ?? [];
   const chips = useMemo(() => buildFilterChips(entries), [entries]);
   // Se o combustível filtrado deixar de existir na lista, volta para "Tudo".
@@ -41,6 +69,8 @@ export function useFuelListViewModel() {
     average,
     selectFilter: setSelected,
     openNewEntry: () => router.push('/novo-abastecimento'),
+    openEntry: (id: string) => router.push({ pathname: '/abastecimento/[id]', params: { id } }),
+    confirmDelete,
     addVehicle: () => router.push('/primeiro-veiculo'),
   };
 }

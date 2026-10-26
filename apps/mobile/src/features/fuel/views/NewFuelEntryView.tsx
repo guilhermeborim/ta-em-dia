@@ -208,7 +208,7 @@ export function NewFuelEntryView() {
             ) : null}
             <View style={styles.saveRow}>
               <Button
-                label="Salvar abastecimento"
+                label={vm.isEditing ? 'Salvar alterações' : 'Salvar abastecimento'}
                 onPress={vm.save}
                 loading={vm.busy}
                 style={styles.flex}

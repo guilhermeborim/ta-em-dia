@@ -2,9 +2,11 @@ import {
   calculateMissingFuelAmount,
   resolveStationName,
   type FuelAmountField,
+  type FuelEntry,
 } from '@ta-em-dia/shared';
 import {
   atNoon,
+  formatKm,
   MONTH_NAMES_SHORT,
   parseDecimal,
   parseKm,
@@ -174,5 +176,22 @@ export function buildFuelEntryInput(
       fullTank: form.fullTank,
       stationName,
     },
+  };
+}
+
+/**
+ * Formulário preenchido com um abastecimento já salvo (a edição). Litros e total são os valores de
+ * entrada e o preço por litro é recalculado deles: assim o total gravado não muda por arredondamento.
+ */
+export function fuelFormFromEntry(entry: FuelEntry): FuelForm {
+  return {
+    fuelType: entry.fuelType,
+    pricePerLiter: '',
+    liters: formatDecimal(entry.liters, 'liters'),
+    total: formatDecimal(entry.total, 'total'),
+    amountOrder: ['liters', 'total'],
+    km: formatKm(String(entry.km)),
+    fullTank: entry.fullTank,
+    station: entry.stationName ?? '',
   };
 }

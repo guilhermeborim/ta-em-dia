@@ -55,6 +55,7 @@ export { ReorderableList } from './components/ReorderableList';
 export { SpeechCard, type SpeechCardAction, type SpeechCardTone } from './components/SpeechCard';
 export { SocialButton } from './components/SocialButton';
 export { StatTile } from './components/StatTile';
+export { SwipeToDelete } from './components/SwipeToDelete';
 export { SummaryCard } from './components/SummaryCard';
 export { SwitchRow } from './components/SwitchRow';
 export { TeaserCard } from './components/TeaserCard';
