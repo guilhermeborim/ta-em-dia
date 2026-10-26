@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { loginFlow } from '../../../core/auth/accountFlow';
 import { useAccountFlow } from '../../../core/auth/useAccountFlow';
+import { openExternalLink, type ExternalLink } from '../../../core/links';
 import { useLogin } from '../LoginProvider';
 
 const TOAST_MS = 2500;
@@ -71,6 +72,15 @@ export function useLoginViewModel() {
     }
   }, [continueWithoutLogin, router]);
 
+  // Termos e Privacidade abrem no navegador; sem URL no build, avisa "Em breve".
+  const openLink = useCallback(
+    async (kind: ExternalLink) => {
+      const notice = await openExternalLink(kind);
+      if (notice) showToast(notice.title);
+    },
+    [showToast],
+  );
+
   return {
     showApple: Platform.OS === 'ios',
     toast,
@@ -80,5 +90,7 @@ export function useLoginViewModel() {
     onGoogle: () => signIn('google'),
     onApple: () => signIn('apple'),
     skip,
+    openTerms: () => void openLink('terms'),
+    openPrivacy: () => void openLink('privacy'),
   };
 }

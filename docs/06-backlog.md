@@ -22,10 +22,6 @@ Plano completo: doc "Abastecimento por voz e posto único" (Claude Docs do proje
 
 Escolhas tomadas sobre os itens 3.9 a 3.23 de `docs/07-validacao-e-decisoes.md`. Cada item é um PR.
 
-### Para implementar
-
-- [ ] **Ajuda e contato, Termos e Privacidade**: trocar o "Em breve" por telas ou links. Depende do dono: e-mail ou página de suporte e as URLs públicas (`docs/05-privacidade-lgpd.md`, checklist antes de publicar).
-
 ### Decididas, sem trabalho
 
 - **Relatórios (3.9)**: "Ano" são os últimos 12 meses; em "Mês" o gráfico mostra também o mês anterior; Documentos não guarda valor (sem a categoria do Figma); o custo por km não inclui manutenção.

@@ -115,7 +115,7 @@ Aba Relatórios.
 
 - [ ] Cartão da conta "Sem login" com selo "Salvo no aparelho"; tocar mostra o aviso "Em breve".
 - [ ] Grupos de itens iguais ao Figma; número de veículos ao lado de Meus veículos; selo PREMIUM em Premium.
-- [ ] Conta e Ajuda e contato mostram "Em breve" (o aviso aparece **acima** do botão flutuante).
+- [ ] Ajuda e contato sem e-mail no build mostra "Em breve" (o aviso aparece **acima** do botão flutuante; com e-mail, ver 2.39).
 - [ ] Botão flutuante "Abastecer" abre o formulário e não cobre o último item da lista.
 - [ ] Premium abre em modal: título, 5 recursos, "Tenho interesse". Depois de tocar, o botão some e aparece "Anotado! Obrigado pelo interesse." e isso continua ao reabrir o app.
 - [ ] Em produção (`APP_ENV=production`) os atalhos "Status do app" e "Catálogo de componentes" não aparecem.
@@ -325,6 +325,16 @@ Sem tela; o app só usa no C6. Em staging, depois do deploy (a migration `place_
 - [ ] Os logs do Render não mostram o geohash (nem na linha do pedido nem no aviso de falha do Overpass).
 - [ ] Primeira chamada de uma célula com o host acordando do sono: ver se cabe no tempo de espera do app (Overpass leva de 1 a 10 s).
 
+### 2.39 Ajuda e contato, Termos e Privacidade (Mais, Configurações e Login, PR #77)
+
+Sem e-mail e sem URLs no build (o padrão hoje), tudo mostra "Em breve". Para testar o caminho completo, ponha valores de teste em `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_TERMS_URL` e `EXPO_PUBLIC_PRIVACY_URL` (`apps/mobile/.env`) e reinicie o Expo.
+
+- [ ] Sem valores: Ajuda e contato (Mais), Termos e Privacidade (Configurações e Login) avisam "Em breve"; em Configurações, os dois itens mostram "Em breve" abaixo do título.
+- [ ] Com e-mail: Ajuda e contato abre o app de e-mail com o endereço e o assunto "Tá em Dia: ajuda". Num aparelho sem app de e-mail, o aviso "Nenhum app de e-mail · Escreva para ...".
+- [ ] Com URLs: Termos de uso e Política de privacidade abrem no navegador do aparelho, em Configurações (seção nova "SOBRE") e no Login.
+- [ ] Login: "Termos de uso" e "Política de privacidade" aparecem em roxo dentro da frase; o toque pega mesmo sendo texto pequeno (fica abaixo de 44 pt).
+- [ ] Fonte grande do sistema: a frase do Login quebra sem cortar os links.
+
 ### 2.12 O que veio antes (não revisado aqui)
 
 Boas-vindas, Login offline, Aviso sem login, Primeiro veículo, Permissão de notificações, Abas, Novo abastecimento, Lista de abastecimentos, Início, Manutenções (lista, plano, registrar) e Alertas de manutenção (PRs até #26). Vale uma passada completa de fluxo: primeiro uso → primeiro veículo → notificações → primeiro abastecimento → ativar um lembrete de manutenção.
@@ -468,3 +478,13 @@ Código puro em `shared`, sem tela; nada a validar no aparelho. O que o reconhec
 - **Decimal por extenso só entra no preço** ("seis e vinte e nove o litro"). "Vinte litros e meio" e outras frações por extenso não são entendidas.
 - **Se corrigindo, vale o último citado** ("paguei 100 reais, não, foram 150 reais" → 150). Alternativa: ignorar a frase inteira e perguntar. Recomendação: manter.
 - **Limites conhecidos:** nada de data ("ontem", "dia 20" é ignorado), posto falado só no C4 (ver 3.36), "gás" sozinho não é GNV (só "gás natural" ou "GNV"), e dois combustíveis na mesma frase ficam com o último.
+
+### 3.39 Ajuda e contato, Termos e Privacidade: escolhas que fiz
+
+Valores por ambiente, decididos pelo dono em 26/10/2026: o e-mail de ajuda e as URLs públicas vêm de `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_TERMS_URL` e `EXPO_PUBLIC_PRIVACY_URL`, ainda vazias em `eas.json`. Falta o dono definir o e-mail e publicar os textos (`docs/05-privacidade-lgpd.md`, checklist antes de publicar). O resto foi escolha minha:
+
+- **Sem frame no Figma:** Termos e Privacidade ficam numa seção nova "SOBRE" no fim de Configurações, com os mesmos itens da lista; no Login, a frase que já existia ganhou os dois links em roxo. Alternativa: tela "Ajuda e contato" com e-mail, Termos e Privacidade juntos. Recomendação: manter; quando houver FAQ, a tela de Ajuda entra.
+- **Ajuda abre o e-mail direto** (sem tela intermediária), com o assunto "Tá em Dia: ajuda" e o corpo vazio: não manda versão do app nem modelo do aparelho. Alternativa: pré-preencher versão e sistema para facilitar o suporte. Recomendação: acrescentar a versão quando o app estiver nas lojas.
+- **Links abrem no navegador do sistema**, não dentro do app: `expo-web-browser` seria dependência nativa nova (exige development build). Recomendação: manter.
+- **Só `https://`:** URL `http://` ou e-mail inválido no build contam como vazio ("Em breve").
+- **Textos meus:** "SOBRE", "Nenhum app de e-mail", "Escreva para ...", "Não foi possível abrir o link" e o assunto do e-mail.

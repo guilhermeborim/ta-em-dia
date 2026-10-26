@@ -75,7 +75,15 @@ export function LoginView() {
         <Button label="Continuar sem login" variant="outline" loading={vm.busy} onPress={vm.skip} />
 
         <Text variant="small" color="text3" style={styles.legal}>
-          Ao continuar você aceita os Termos de uso e a Política de privacidade.
+          Ao continuar você aceita os{' '}
+          <Text variant="small" color="primary" accessibilityRole="link" onPress={vm.openTerms}>
+            Termos de uso
+          </Text>{' '}
+          e a{' '}
+          <Text variant="small" color="primary" accessibilityRole="link" onPress={vm.openPrivacy}>
+            Política de privacidade
+          </Text>
+          .
         </Text>
       </ScrollView>
 
