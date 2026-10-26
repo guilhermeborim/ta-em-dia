@@ -2,17 +2,14 @@ import {
   FUEL_PRICE_MAX,
   FUEL_PRICE_MIN,
   fuelEntryIssues,
-  missingFuelFields,
   type FuelAmountField,
   type FuelSpeechQuestion,
   type FuelSpeechResult,
 } from '@ta-em-dia/shared';
-import { getSetting, setSetting, type Db } from '../../../core/db';
-import type { NewFuelDraft, NewFuelEntry } from '../../../core/fuel';
-import { formatBRL, formatKm, formatNumber, parseDecimal, parseKm } from '../../../core/format';
+import type { NewFuelEntry } from '../../../core/fuel';
+import { formatBRL, formatKm, parseDecimal, parseKm } from '../../../core/format';
 import type { SpeechFailure } from '../../../core/speech';
 import {
-  buildFuelDraftInput,
   buildFuelEntryInput,
   deriveAmounts,
   formatDecimal,
@@ -22,8 +19,9 @@ import {
 
 /**
  * Registro por voz na tela Abastecer: o texto falado (já interpretado por `parseFuelSpeech`)
- * preenche o formulário e decide o que fazer. Completo e válido salva sozinho; faltando dado vira
- * rascunho; valor fora da regra fica em vermelho e não salva; ambíguo vira pergunta.
+ * preenche o formulário e decide o que fazer. Completo e válido salva sozinho; faltando dado ou
+ * com valor fora da regra, não salva: o campo fica em vermelho e o foco vai para ele; ambíguo vira
+ * pergunta.
  */
 
 const AMOUNTS: FuelAmountField[] = ['pricePerLiter', 'liters', 'total'];
@@ -52,6 +50,7 @@ export function applyFuelSpeech(
   if (fields.km !== undefined) next.km = formatKm(String(fields.km));
   if (fields.fuelType !== undefined && !result.fuelTypeFromContext) next.fuelType = fields.fuelType;
   if (fields.fullTank !== undefined) next.fullTank = fields.fullTank;
+  if (fields.stationName !== undefined) next.station = fields.stationName;
 
   return { form: next, kmSpoken: fields.km !== undefined };
 }
@@ -62,16 +61,22 @@ function understoodNothing(result: FuelSpeechResult): boolean {
   return (
     [...AMOUNTS, 'km' as const].every((field) => fields[field] === undefined) &&
     fields.fullTank === undefined &&
+    fields.stationName === undefined &&
     (fields.fuelType === undefined || result.fuelTypeFromContext)
   );
 }
 
+/** Campo que recebe o foco quando a voz não salva. */
+export type FuelFocusField = 'pricePerLiter' | 'liters' | 'total' | 'km' | 'station';
+
 export type FuelVoiceOutcome =
   | { kind: 'question'; question: FuelSpeechQuestion }
   | { kind: 'nothing' }
-  | { kind: 'invalid'; errors: FuelFormErrors }
-  | { kind: 'entry'; value: NewFuelEntry; summary: string }
-  | { kind: 'draft'; value: NewFuelDraft; summary: string; missing: string };
+  /** Valor fora da regra: campo em vermelho, nada salvo. */
+  | { kind: 'invalid'; errors: FuelFormErrors; focus: FuelFocusField }
+  /** Falta dado: campo em vermelho, nada salvo, e o card diz o que falta. */
+  | { kind: 'missing'; errors: FuelFormErrors; focus: FuelFocusField; message: string }
+  | { kind: 'entry'; value: NewFuelEntry };
 
 export interface FuelVoiceContext {
   vehicleId: string;
@@ -79,6 +84,8 @@ export interface FuelVoiceContext {
   stations: readonly string[];
   /** O km do formulário foi dito ou digitado (o sugerido não conta). */
   kmTouched: boolean;
+  /** Exige o km dito ou digitado (salvar sozinho). Sem isso, o km sugerido vale. */
+  strictKm: boolean;
   /** Km do último abastecimento completo do veículo. */
   lastKm: number | null;
 }
@@ -109,40 +116,35 @@ export function fuelIssueErrors(
   return errors;
 }
 
-/** "Shell · R$ 150,00 · 25 L · 45.300 km": só o que existe. */
-export function fuelVoiceSummary(value: {
-  stationName?: string;
-  total?: number;
-  liters?: number;
-  km?: number;
-}): string {
-  const parts: string[] = [];
-  if (value.stationName) parts.push(value.stationName);
-  if (value.total !== undefined) parts.push(formatBRL(value.total));
-  if (value.liters !== undefined) parts.push(`${formatNumber(value.liters, 0, 2)} L`);
-  if (value.km !== undefined) parts.push(`${formatKm(String(value.km))} km`);
-  return parts.join(' · ');
+/**
+ * Primeiro campo com erro, na ordem da tela (valores, km, posto). Nos valores, vai para o primeiro
+ * que ainda está vazio (total, litros, preço), que é o que a pessoa precisa preencher.
+ */
+export function focusFor(errors: FuelFormErrors, form: FuelForm): FuelFocusField {
+  if (errors.pricePerLiter) return 'pricePerLiter';
+  if (errors.amounts) {
+    const shown = deriveAmounts(form);
+    return (['total', 'liters', 'pricePerLiter'] as const).find((f) => shown[f] === '') ?? 'total';
+  }
+  if (errors.km) return 'km';
+  return 'station';
 }
 
-const MISSING_LABELS: Record<ReturnType<typeof missingFuelFields>[number], string> = {
-  station: 'o posto',
-  km: 'o km',
-  fuelType: 'o combustível',
-  fullTank: 'o tanque cheio',
-  amounts: 'os valores',
-};
+const MISSING_LABELS = { station: 'o posto', km: 'o km', amounts: 'os valores' } as const;
 
-/** "Falta o posto", "Falta o posto e o km". */
-export function missingText(missing: ReturnType<typeof missingFuelFields>): string {
-  const labels = missing.map((field) => MISSING_LABELS[field]);
+/** "Falta informar o posto", "Falta informar os valores, o km e o posto". */
+export function missingText(errors: FuelFormErrors): string {
+  const labels = (['amounts', 'km', 'station'] as const)
+    .filter((field) => errors[field])
+    .map((field) => MISSING_LABELS[field]);
   const list =
     labels.length <= 1 ? (labels[0] ?? '') : `${labels.slice(0, -1).join(', ')} e ${labels.at(-1)}`;
-  return `Falta ${list}`;
+  return `Falta informar ${list}`;
 }
 
 /**
  * O que fazer com a frase, com o formulário já preenchido por `applyFuelSpeech`. Ordem: pergunta,
- * nada entendido, validação (km e preço), completo (salva) e, por fim, rascunho.
+ * nada entendido, validação (km e preço), dado que falta e, por fim, completo (salva).
  */
 export function decideFuelVoice(
   result: FuelSpeechResult,
@@ -166,21 +168,22 @@ export function decideFuelVoice(
     },
     ctx.lastKm,
   );
-  if (issues.length > 0) return { kind: 'invalid', errors: fuelIssueErrors(issues, ctx.lastKm) };
-
-  const entry = buildFuelEntryInput(form, ctx);
-  if (entry.value && ctx.kmTouched) {
-    return { kind: 'entry', value: entry.value, summary: fuelVoiceSummary(entry.value) };
+  if (issues.length > 0) {
+    const errors = fuelIssueErrors(issues, ctx.lastKm);
+    return { kind: 'invalid', errors, focus: focusFor(errors, form) };
   }
 
-  const draft = buildFuelDraftInput(form, ctx);
-  if (!draft.value) return { kind: 'nothing' };
-  return {
-    kind: 'draft',
-    value: draft.value,
-    summary: fuelVoiceSummary(draft.value),
-    missing: missingText(missingFuelFields(draft.value)),
-  };
+  const entry = buildFuelEntryInput(form, ctx);
+  if (entry.value && (ctx.kmTouched || !ctx.strictKm)) {
+    return { kind: 'entry', value: entry.value };
+  }
+
+  const errors: FuelFormErrors = { ...entry.errors };
+  // O km que está no campo é só a sugestão: a pessoa precisa dizer ou confirmar.
+  if (!ctx.kmTouched && ctx.strictKm) {
+    errors.km = parseKm(form.km) === null ? 'Informe o km do painel' : 'Confirme o km do painel';
+  }
+  return { kind: 'missing', errors, focus: focusFor(errors, form), message: missingText(errors) };
 }
 
 /** Texto mostrado quando a fala não deu certo; o formulário continua na tela. */
@@ -199,17 +202,6 @@ export function speechFailureText(failure: SpeechFailure | 'nothing'): string {
     case 'error':
       return 'Não deu para ouvir agora. Preencha abaixo.';
   }
-}
-
-const NOTICE_KEY = 'fuel.voice_notice_seen';
-
-/** O aviso do áudio (uma vez, antes do primeiro uso) já foi aceito? */
-export async function voiceNoticeSeen(db: Db): Promise<boolean> {
-  return (await getSetting(db, NOTICE_KEY)) === '1';
-}
-
-export async function markVoiceNoticeSeen(db: Db): Promise<void> {
-  await setSetting(db, NOTICE_KEY, '1');
 }
 
 const ANSWER_LABELS: Record<FuelSpeechQuestion['options'][number], string> = {

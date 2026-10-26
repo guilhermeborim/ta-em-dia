@@ -4,8 +4,9 @@ import {
   FUEL_MAX_KM_JUMP,
   FUEL_PRICE_MAX,
   FUEL_PRICE_MIN,
-} from './fuelDraft';
+} from './fuelRules';
 import type { FuelEntry } from './schemas';
+import { normalizeStationName } from './stations';
 
 /**
  * Interpretador da frase falada no posto ("abasteci 150 reais, 25 litros, km 45300, encheu o
@@ -20,6 +21,9 @@ import type { FuelEntry } from './schemas';
  * 3. Sobrando valor e litros sem palavra: o par que dá valor ÷ litros entre R$ 2 e R$ 12 decide.
  * 4. Não deu para decidir (um número só, ou a conta não fecha): devolve uma pergunta. O app
  *    mostra a pergunta e repete a chamada com a resposta em `answers`.
+ *
+ * O posto também sai da frase (`parseSpokenStation`): um posto já usado citado pelo nome, o que vem
+ * depois de "posto" ("no posto Ipiranga") ou uma bandeira conhecida ("na Shell").
  */
 
 export type FuelSpeechFuelType = FuelEntry['fuelType'];
@@ -32,6 +36,8 @@ export interface FuelSpeechContext {
   lastKm?: number | null;
   /** Combustível do último abastecimento: vale quando a pessoa não diz qual foi. */
   lastFuelType?: FuelSpeechFuelType | null;
+  /** Postos já usados: se a frase cita um, volta o nome como está gravado. */
+  stations?: readonly string[];
 }
 
 export interface FuelSpeechFields {
@@ -42,6 +48,8 @@ export interface FuelSpeechFields {
   fuelType?: FuelSpeechFuelType;
   /** `true` encheu, `false` não encheu; ausente = a pessoa não falou. */
   fullTank?: boolean;
+  /** Nome do posto dito na frase ("Ipiranga"); ausente = a pessoa não falou. */
+  stationName?: string;
 }
 
 export interface FuelSpeechQuestion {
@@ -617,6 +625,147 @@ function detectFullTank(tokens: string[]): boolean | undefined {
   return result;
 }
 
+/* ------------------------------------------------------------------ posto */
+
+/** Palavra que encerra o nome do posto: o resto da frase já é outro assunto. */
+const STATION_STOP = new Set([
+  'e',
+  'com',
+  'que',
+  'deu',
+  'deram',
+  'foram',
+  'foi',
+  'fui',
+  'paguei',
+  'pago',
+  'gastei',
+  'gasto',
+  'valor',
+  'total',
+  'abasteci',
+  'abastecimento',
+  'a',
+  'o',
+  'os',
+  'as',
+  'no',
+  'na',
+  'em',
+  'por',
+  'para',
+  'pra',
+  'hoje',
+  'ontem',
+  'km',
+  'kms',
+  'quilometros',
+  'quilometragem',
+  'litro',
+  'litros',
+  'real',
+  'reais',
+  'gasolina',
+  'etanol',
+  'alcool',
+  'diesel',
+  'gnv',
+  'gas',
+  'encheu',
+  'enchi',
+  'completei',
+  'tanque',
+  'cheio',
+  'cheia',
+  'parcial',
+  'nao',
+  'mil',
+]);
+
+/** Ligações que podem estar dentro de um nome ("Posto da Barra") mas não no fim dele. */
+const STATION_LINKS = new Set(['de', 'da', 'do', 'das', 'dos']);
+
+/** Bandeiras que valem como posto mesmo sem a palavra "posto" ("abasteci na Shell"). */
+const STATION_BRANDS: Record<string, string> = {
+  shell: 'Shell',
+  ipiranga: 'Ipiranga',
+  petrobras: 'Petrobras',
+  texaco: 'Texaco',
+  raizen: 'Raízen',
+};
+
+const STATION_MAX_WORDS = 4;
+
+const plainWord = (word: string): string =>
+  normalizeStationName(word.replace(/[^\p{L}\p{N}]/gu, ''));
+
+function titleCase(words: string[]): string {
+  return words
+    .map((word, index) => {
+      const lower = word.toLowerCase();
+      if (lower === 'br') return 'BR';
+      if (index > 0 && STATION_LINKS.has(plainWord(lower))) return lower;
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(' ');
+}
+
+/**
+ * Posto dito na frase, ou `undefined`. Em ordem: (1) um posto já usado citado pelo nome (volta o
+ * nome gravado, com a grafia de sempre); (2) as palavras depois de "posto", até uma palavra que
+ * já é outro assunto ("posto Ipiranga e deu 25 litros" → "Ipiranga"); (3) uma bandeira conhecida.
+ */
+export function parseSpokenStation(
+  text: string,
+  known: readonly string[] = [],
+): string | undefined {
+  const words = text
+    .split(/\s+/)
+    .map((word) => word.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
+    .filter(Boolean);
+  const plain = words.map(plainWord);
+
+  // 1. Posto já usado: a sequência de palavras do nome aparece na frase. Nomes longos primeiro.
+  const candidates = known
+    .map((name) => ({ name, key: normalizeStationName(name).split(' ') }))
+    .filter(({ key }) => key.join('') !== '')
+    .sort((a, b) => b.key.length - a.key.length);
+  for (const { name, key } of candidates) {
+    for (let start = 0; start + key.length <= plain.length; start++) {
+      if (key.every((part, offset) => plain[start + offset] === plainWord(part))) {
+        return name.replace(/\s+/g, ' ').trim();
+      }
+    }
+  }
+
+  // 2. Depois de "posto".
+  const marker = plain.lastIndexOf('posto');
+  if (marker >= 0) {
+    const name: string[] = [];
+    for (let i = marker + 1; i < words.length && name.length < STATION_MAX_WORDS; i++) {
+      const word = plain[i]!;
+      if (STATION_STOP.has(word) || /^\d/.test(word)) break;
+      if (STATION_LINKS.has(word)) {
+        const next = plain[i + 1];
+        if (next === undefined || STATION_STOP.has(next) || /^\d/.test(next)) break;
+      }
+      name.push(words[i]!);
+    }
+    // "posto de gasolina Shell": "de" seguido de assunto encerra, e a bandeira (3) salva a frase.
+    if (name.length > 0) {
+      // "posto da barra": sem a palavra "posto" sobraria "Da Barra", que não é nome.
+      return titleCase(STATION_LINKS.has(plain[marker + 1]!) ? ['posto', ...name] : name);
+    }
+  }
+
+  // 3. Bandeira conhecida.
+  for (const word of plain) {
+    const brand = STATION_BRANDS[word];
+    if (brand) return brand;
+  }
+  return undefined;
+}
+
 /* ------------------------------------------------------------------ números sem palavra */
 
 const priceRatioOk = (price: number): boolean => price >= FUEL_PRICE_MIN && price <= FUEL_PRICE_MAX;
@@ -759,9 +908,11 @@ export function parseFuelSpeech(
 
   const spokenFuel = detectFuelType(tokens);
   const fullTank = detectFullTank(tokens);
+  const stationName = parseSpokenStation(text, context.stations);
   if (spokenFuel !== undefined) fields.fuelType = spokenFuel;
   else if (context.lastFuelType) fields.fuelType = context.lastFuelType;
   if (fullTank !== undefined) fields.fullTank = fullTank;
+  if (stationName !== undefined) fields.stationName = stationName;
 
   return {
     fields,

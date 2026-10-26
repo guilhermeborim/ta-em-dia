@@ -11,6 +11,7 @@ import {
   Chip,
   DatePicker,
   colors,
+  radius,
   ConsumptionCard,
   DocumentItem,
   EmptyState,
@@ -53,6 +54,7 @@ import {
   TimelineItem,
   TopBar,
   ProgressSheet,
+  ListeningDots,
   SpeechCard,
   Toast,
   typography,
@@ -287,24 +289,25 @@ export function ComponentsView() {
 
         <Section title="Cartão da voz">
           <SpeechCard
-            tone="listening"
-            title="Ouvindo…"
-            text="150 reais, 25 litros, km 45.300, encheu"
+            tone="info"
+            title="50 é o valor ou os litros?"
             actions={[
-              { label: 'Pronto', onPress: () => {}, variant: 'primary' },
-              { label: 'Cancelar', onPress: () => {}, variant: 'ghost' },
+              { label: 'Valor', onPress: () => {} },
+              { label: 'Litros', onPress: () => {} },
             ]}
           />
           <SpeechCard
-            tone="success"
-            title="Abastecimento salvo"
-            text="Shell · R$ 150,00 · 25 L · 45.300 km"
-            actions={[
-              { label: 'Desfazer', onPress: () => {}, variant: 'outline' },
-              { label: 'Editar', onPress: () => {} },
-            ]}
+            tone="warning"
+            title="Falta informar o km"
+            text="Preencha abaixo e toque em Salvar abastecimento."
           />
-          <SpeechCard tone="warning" title="Não ouvi nada. Toque em Falar de novo." />
+          <SpeechCard tone="danger" title="Confira os campos em vermelho e salve" />
+        </Section>
+
+        <Section title="Ouvindo (pontinhos)">
+          <View style={styles.dark}>
+            <ListeningDots color={colors.accent} dot={16} />
+          </View>
         </Section>
 
         <Section title="Toast">
@@ -421,7 +424,6 @@ export function ComponentsView() {
             kmPerLiter="11,8 km/l"
           />
           <FuelItem title="Ipiranga" details="28 set · 40 L · Etanol" total="R$ 188,00" />
-          <FuelItem title="26 out · Shell" details="Gasolina" total="—" incomplete />
           <FuelItem
             flat
             title="09 out · Shell"
@@ -471,13 +473,6 @@ export function ComponentsView() {
               title="Abastecimento"
               details="18 out · 38,2 L · 13,1 km/l"
               value="R$ 229,10"
-            />
-            <TimelineItem
-              kind="fuel"
-              title="Abastecimento"
-              details="26 out · 25,0 L"
-              value="R$ 150,00"
-              incomplete
             />
             <TimelineItem
               kind="maintenance"
@@ -665,6 +660,12 @@ const styles = StyleSheet.create({
   section: { gap: spacing.md },
   sectionBody: { gap: spacing.md },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md },
+  dark: {
+    alignItems: 'center',
+    padding: spacing.xxl,
+    borderRadius: radius.card,
+    backgroundColor: colors.text,
+  },
   swatch: { width: 84, gap: 4 },
   swatchColor: { height: 40, borderRadius: 8, borderWidth: 1, borderColor: colors.border },
   // A barra de topo já tem a margem lateral da tela.

@@ -24,7 +24,7 @@ export function useReminderLifecycle(enabled: boolean): void {
       if (state === 'active') void refreshReminders(db);
     });
     const stopOpened = onNotificationOpened((data) => {
-      const { planId, documentId, fuelDraftId, vehicleId } = data;
+      const { planId, documentId, vehicleId } = data;
       if (typeof planId === 'string') {
         router.push({ pathname: '/plano-manutencao/[id]', params: { id: planId } });
       } else if (typeof documentId === 'string') {
@@ -34,8 +34,6 @@ export function useReminderLifecycle(enabled: boolean): void {
             ? { pathname: '/documentos', params: { vehicleId } }
             : '/documentos',
         );
-      } else if (typeof fuelDraftId === 'string') {
-        router.push({ pathname: '/abastecimento/[id]', params: { id: fuelDraftId } });
       } else if (typeof vehicleId === 'string') {
         router.push({ pathname: '/veiculo/[id]/atualizar-km', params: { id: vehicleId } });
       }

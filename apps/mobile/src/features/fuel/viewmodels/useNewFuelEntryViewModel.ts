@@ -1,31 +1,18 @@
-import {
-  isFuelDraftComplete,
-  suggestStations,
-  type FuelAmountField,
-  type FuelDraft,
-} from '@ta-em-dia/shared';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { suggestStations, type FuelAmountField } from '@ta-em-dia/shared';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatKm } from '../../../core/format';
 import { useDb } from '../../../core/db';
 import { loadFuelFormContext, type FuelFormContext } from '../models/fuelContext';
-import {
-  addFuelDraft,
-  addFuelEntry,
-  getFuelRecord,
-  listStationNames,
-  updateFuelRecord,
-} from '../../../core/fuel';
+import { addFuelEntry, listStationNames } from '../../../core/fuel';
 import { useFlag } from '../../../core/flags/useFlag';
 import { refreshReminders } from '../../../core/reminders';
 import {
-  buildFuelDraftInput,
   buildFuelEntryInput,
   deriveAmounts,
   emptyFuelForm,
   entryDateFor,
   formatEntryDate,
-  fuelFormFromDraft,
   fuelTypeOptions,
   sanitizeAmount,
   touchAmount,
@@ -33,19 +20,18 @@ import {
   type FuelFormErrors,
   type FuelType,
 } from '../models/fuelForm';
+import type { FuelFocusField } from '../models/fuelVoice';
 import { useFuelVoice } from './useFuelVoice';
 
 /**
  * ViewModel do Novo abastecimento: sugestões, cálculo do terceiro valor, validação e gravação local.
- * Aberto com `id` na rota, é o "Completar abastecimento": carrega o rascunho e, ao salvar, ele vira
- * um abastecimento completo (mesmo id). O botão "Falar" (só no Novo) preenche e salva pela voz.
+ * O botão de falar preenche o formulário; salva sozinho só se "Salvar pela fala" estiver ligado e
+ * tudo certo. Se falta dado, não salva: mostra o card do que falta e leva o foco ao campo
+ * (`focusRequest`).
  */
 export function useNewFuelEntryViewModel() {
   const db = useDb();
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
-  const draftId = typeof params.id === 'string' ? params.id : undefined;
-  const [draft, setDraft] = useState<FuelDraft | null>(null);
   const [stations, setStations] = useState<string[]>([]);
   const [context, setContext] = useState<FuelFormContext | null>(null);
   const [form, setForm] = useState<FuelForm>(emptyFuelForm);
@@ -55,33 +41,16 @@ export function useNewFuelEntryViewModel() {
   // `null` = hoje (a data de agora, na hora de salvar); a pessoa troca pelo calendário.
   const [pickedDate, setPickedDate] = useState<Date | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
-  // Registro que a voz salvou e a pessoa pediu para editar: salvar atualiza esse mesmo id.
-  const [savedId, setSavedId] = useState<string | null>(null);
+  // Pedido de foco da voz; `nonce` faz o mesmo campo receber o foco de novo.
+  const [focusRequest, setFocusRequest] = useState<{ field: FuelFocusField; nonce: number } | null>(
+    null,
+  );
   const voiceEnabled = useFlag('fuel.voice');
 
   useEffect(() => {
     let active = true;
     loadFuelFormContext(db).then(async (value) => {
       if (!active) return;
-      if (draftId) {
-        const record = await getFuelRecord(db, draftId);
-        if (!active) return;
-        // Só o rascunho se completa por aqui; abastecimento completo ainda não tem edição.
-        if (!record || !('status' in record)) {
-          router.back();
-          return;
-        }
-        setDraft(record);
-        setKmTouched(record.km !== undefined);
-        setForm(
-          fuelFormFromDraft(record, {
-            fuelType: value.lastFuelType,
-            suggestedKm: value.suggestedKm,
-          }),
-        );
-        setContext(value);
-        return;
-      }
       setContext(value);
       setForm((prev) => ({
         ...prev,
@@ -95,7 +64,7 @@ export function useNewFuelEntryViewModel() {
     return () => {
       active = false;
     };
-  }, [db, draftId, router]);
+  }, [db]);
 
   const amounts = useMemo(() => deriveAmounts(form), [form]);
   const stationSuggestions = useMemo(
@@ -112,14 +81,10 @@ export function useNewFuelEntryViewModel() {
     setErrors((prev) => ({ ...prev, amounts: undefined, pricePerLiter: undefined }));
   }, []);
 
-  // Rascunho aberto mantém a data em que foi criado, a menos que a pessoa escolha outra.
-  const dateToSave = useCallback(
-    () => (pickedDate === null && draft ? draft.date : entryDateFor(pickedDate)),
-    [draft, pickedDate],
-  );
+  const dateToSave = useCallback(() => entryDateFor(pickedDate), [pickedDate]);
 
   const save = useCallback(async () => {
-    const vehicleId = draft?.vehicleId ?? context?.vehicle?.id;
+    const vehicleId = context?.vehicle?.id;
     if (!vehicleId) return;
     const result = buildFuelEntryInput(form, { vehicleId, date: dateToSave(), stations });
     if (result.errors) {
@@ -128,59 +93,14 @@ export function useNewFuelEntryViewModel() {
     }
     setBusy(true);
     try {
-      let id: string;
-      const existingId = draft?.id ?? savedId;
-      if (existingId) {
-        id = existingId;
-        const saved = await updateFuelRecord(db, { ...result.value, id });
-        // O rascunho foi excluído por outro caminho (ex.: sync): nada a completar.
-        if (!saved) {
-          router.back();
-          return;
-        }
-      } else {
-        id = (await addFuelEntry(db, result.value)).id;
-      }
+      const { id } = await addFuelEntry(db, result.value);
       // O km mudou: os avisos de manutenção dependem dele.
       void refreshReminders(db);
       router.dismissTo({ pathname: '/', params: { saved: id } });
     } finally {
       setBusy(false);
     }
-  }, [context, dateToSave, db, draft, form, router, savedId, stations]);
-
-  /** Guarda o que foi preenchido como rascunho "Incompleto", para completar depois. */
-  const saveDraft = useCallback(async () => {
-    const vehicleId = draft?.vehicleId ?? context?.vehicle?.id;
-    if (!vehicleId) return;
-    const result = buildFuelDraftInput(form, {
-      vehicleId,
-      date: dateToSave(),
-      stations,
-      kmTouched,
-    });
-    if (result.errors) {
-      setErrors(result.errors);
-      return;
-    }
-    // Já tem tudo o que um abastecimento completo precisa: não há o que deixar para depois.
-    if (isFuelDraftComplete(result.value)) {
-      await save();
-      return;
-    }
-    setBusy(true);
-    try {
-      const existingId = draft?.id ?? savedId;
-      if (existingId) {
-        await updateFuelRecord(db, { ...result.value, id: existingId, status: 'draft' });
-      } else await addFuelDraft(db, result.value);
-      // O lembrete das 20h depende do rascunho.
-      void refreshReminders(db);
-      router.back();
-    } finally {
-      setBusy(false);
-    }
-  }, [context, dateToSave, db, draft, form, kmTouched, router, save, savedId, stations]);
+  }, [context, dateToSave, db, form, router, stations]);
 
   const voice = useFuelVoice({
     db,
@@ -192,21 +112,18 @@ export function useNewFuelEntryViewModel() {
     setKmTouched,
     setErrors,
     date: dateToSave,
-    onDone: ({ id, draft: isDraft }) => {
-      if (isDraft) router.back();
-      else router.dismissTo({ pathname: '/', params: { saved: id } });
-    },
-    onEdit: setSavedId,
+    onSaved: (id) => router.dismissTo({ pathname: '/', params: { saved: id } }),
+    onFocus: (field) => setFocusRequest((prev) => ({ field, nonce: (prev?.nonce ?? 0) + 1 })),
   });
 
   return {
-    title: draft ? 'Completar abastecimento' : 'Novo abastecimento',
+    title: 'Novo abastecimento',
     loading: context === null,
     vehicle: context?.vehicle ?? null,
-    dateLabel: formatEntryDate(pickedDate ?? draft?.date ?? new Date()),
+    dateLabel: formatEntryDate(pickedDate ?? new Date()),
     pickerOpen,
     /** Data mostrada ao abrir o calendário. */
-    pickerValue: pickedDate ?? draft?.date ?? new Date(),
+    pickerValue: pickedDate ?? new Date(),
     /** Abastecimento no futuro não faz sentido; antes de 1990, também não. */
     pickerMin: new Date(1990, 0, 1),
     pickerMax: new Date(),
@@ -238,10 +155,9 @@ export function useNewFuelEntryViewModel() {
     close: () => router.back(),
     addVehicle: () => router.replace('/primeiro-veiculo'),
     save,
-    saveDraft,
-    isCompleting: draft !== null,
-    /** "Falar" só no Novo abastecimento, antes de a voz ter salvo algo para editar. */
-    canTalk: voiceEnabled && draft === null && savedId === null,
+    canTalk: voiceEnabled,
+    focusRequest,
     voice,
+    talkButton: voice.talkButton,
   };
 }

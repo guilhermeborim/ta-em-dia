@@ -240,6 +240,21 @@ export const MIGRATIONS: Migration[] = [
   CREATE INDEX idx_fuel_entries_vehicle_date ON fuel_entries (vehicle_id, date);
   `,
   },
+  `
+  -- O app não tem mais rascunho de abastecimento. Os que ficaram no aparelho (versão anterior) são
+  -- excluídos de forma lógica e a exclusão vai para o sync, para sumirem dos outros aparelhos. A
+  -- coluna status e as colunas que aceitam nulo ficam como estão (migration só adiciona).
+  INSERT INTO outbox (table_name, row_id, op, payload, updated_at)
+  SELECT 'fuel_entries', id, 'delete',
+         json_object('id', id, 'deletedAt', strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+         strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    FROM fuel_entries
+   WHERE status = 'draft' AND deleted_at IS NULL;
+  UPDATE fuel_entries
+     SET deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+         updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+   WHERE status = 'draft' AND deleted_at IS NULL;
+  `,
 ];
 
 export async function migrate(db: Db, migrations: Migration[] = MIGRATIONS): Promise<void> {

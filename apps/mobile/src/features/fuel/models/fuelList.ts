@@ -1,8 +1,7 @@
-import { segmentKmPerLiter, type FuelDraft, type FuelEntry } from '@ta-em-dia/shared';
+import { segmentKmPerLiter, type FuelEntry } from '@ta-em-dia/shared';
 import { formatBRL, MONTH_NAMES } from '../../../core/format';
 import {
   fuelTypeOptions,
-  toFuelDraftListItem,
   toFuelListItem,
   type FuelListItem,
   type FuelType,
@@ -43,19 +42,17 @@ function matches(entry: FuelEntry, filter: FuelFilter): boolean {
 
 /**
  * Lista por mês (do mais recente ao mais antigo) com o filtro aplicado. O km/l
- * de cada trecho é calculado com todos os abastecimentos, antes do filtro. Os rascunhos
- * ("Incompleto") entram na ordem da data, só em "Tudo", e ficam fora do total e da contagem do mês.
+ * de cada trecho é calculado com todos os abastecimentos, antes do filtro.
  */
 export function buildSections(
   entries: FuelEntry[],
   filter: FuelFilter,
   today: Date = new Date(),
-  drafts: FuelDraft[] = [],
 ): FuelListSection[] {
   const segments = segmentKmPerLiter(entries);
-  const sections: (FuelListSection & { spent: number; count: number; pending: number })[] = [];
+  const sections: (FuelListSection & { spent: number; count: number })[] = [];
 
-  const rows: { date: Date; item: FuelListItem; total: number | null }[] = [];
+  const rows: { date: Date; item: FuelListItem; total: number }[] = [];
   entries.forEach((entry, index) => {
     if (!matches(entry, filter)) return;
     rows.push({
@@ -64,12 +61,7 @@ export function buildSections(
       total: entry.total,
     });
   });
-  if (filter === 'all') {
-    for (const draft of drafts) {
-      rows.push({ date: draft.date, item: toFuelDraftListItem(draft), total: null });
-    }
-  }
-  // A ordenação é estável: no mesmo instante, os completos ficam na ordem de antes.
+  // A ordenação é estável: no mesmo instante, os abastecimentos ficam na ordem de antes.
   rows.sort((a, b) => b.date.getTime() - a.date.getTime());
 
   for (const { date, item, total } of rows) {
@@ -81,26 +73,18 @@ export function buildSections(
     if (!section) {
       const title =
         year === today.getFullYear() ? MONTH_NAMES[month] : `${MONTH_NAMES[month]} de ${year}`;
-      section = { key, title, summary: '', items: [], spent: 0, count: 0, pending: 0 };
+      section = { key, title, summary: '', items: [], spent: 0, count: 0 };
       sections.push(section);
     }
     section.items.push(item);
-    if (total === null) section.pending += 1;
-    else {
-      section.count += 1;
-      section.spent += total;
-    }
+    section.count += 1;
+    section.spent += total;
   }
 
   return sections
     .sort((a, b) => (a.key < b.key ? 1 : -1))
-    .map(({ spent, count, pending, ...section }) => ({
+    .map(({ spent, count, ...section }) => ({
       ...section,
-      summary: [
-        count > 0 ? `${count} abast. · ${formatBRL(spent)}` : null,
-        pending > 0 ? `${pending} incompleto${pending > 1 ? 's' : ''}` : null,
-      ]
-        .filter(Boolean)
-        .join(' · '),
+      summary: `${count} abast. · ${formatBRL(spent)}`,
     }));
 }

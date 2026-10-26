@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import { colors, fontFamily, typography } from '../theme/tokens';
 import { Text } from './Text';
@@ -8,6 +9,8 @@ interface NumberFieldProps extends Omit<TextInputProps, 'style' | 'keyboardType'
   prefix?: string;
   /** Mensagem de erro abaixo da caixa; a borda fica vermelha. */
   error?: string;
+  /** Para dar foco ao campo por código (ex.: o campo que falta depois da voz). */
+  ref?: Ref<TextInput>;
 }
 
 /** Campo de número grande (ex.: total pago): borda roxa de 2 pt e número em destaque. */
@@ -25,6 +28,9 @@ export function NumberField({ label, prefix, error, ...input }: NumberFieldProps
         ) : null}
         <TextInput
           {...input}
+          // Uma linha só, sem rolagem dentro da caixa (no Android o número grande rolava).
+          multiline={false}
+          scrollEnabled={false}
           accessibilityLabel={label}
           keyboardType={Platform.OS === 'android' ? 'numeric' : 'decimal-pad'}
           placeholderTextColor={colors.text3}
@@ -57,8 +63,9 @@ const styles = StyleSheet.create({
     padding: 0,
     fontFamily: fontFamily.display,
     fontSize: typography.display.fontSize,
-    lineHeight: typography.display.lineHeight,
     letterSpacing: typography.display.letterSpacing,
     color: colors.text,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
 });

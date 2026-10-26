@@ -4,7 +4,7 @@ import { Button, type ButtonVariant } from './Button';
 import { Icon, type IconName } from './Icon';
 import { Text, type TextColor } from './Text';
 
-export type SpeechCardTone = 'listening' | 'info' | 'success' | 'warning' | 'danger';
+export type SpeechCardTone = 'info' | 'warning' | 'danger';
 
 export interface SpeechCardAction {
   label: string;
@@ -21,14 +21,12 @@ interface SpeechCardProps {
 }
 
 const tones: Record<SpeechCardTone, { icon: IconName; color: TextColor; soft: string }> = {
-  listening: { icon: 'mic', color: 'primary', soft: colors.primarySoft },
   info: { icon: 'shield', color: 'primary', soft: colors.primarySoft },
-  success: { icon: 'check', color: 'success', soft: colors.successSoft },
   warning: { icon: 'alert', color: 'warning', soft: colors.warningSoft },
   danger: { icon: 'alert', color: 'danger', soft: colors.dangerSoft },
 };
 
-/** Cartão do registro por voz: ouvindo, pergunta, resumo salvo ou falha, com botões. */
+/** Cartão do registro por voz: pergunta, o que falta, campo em vermelho ou falha, com botões. */
 export function SpeechCard({ tone, title, text, actions = [] }: SpeechCardProps) {
   const t = tones[tone];
   return (

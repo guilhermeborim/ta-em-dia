@@ -11,6 +11,8 @@ export interface AppSettings {
   notifyOdometer: boolean;
   /** Antecedência dos prazos novos, em dias, do maior para o menor (padrão: 30 e 7). */
   documentNotifyDays: number[];
+  /** Falar um abastecimento completo e válido já salva (padrão: desligado; senão só preenche). */
+  voiceAutoSave: boolean;
 }
 
 const KEYS = {
@@ -18,9 +20,11 @@ const KEYS = {
   notifyDocuments: 'settings.notify_documents',
   notifyOdometer: 'settings.notify_odometer',
   documentNotifyDays: 'settings.document_notify_days',
+  voiceAutoSave: 'settings.voice_auto_save',
 } as const;
 
-export type ToggleSetting = 'notifyMaintenance' | 'notifyDocuments' | 'notifyOdometer';
+export type NotifySetting = 'notifyMaintenance' | 'notifyDocuments' | 'notifyOdometer';
+export type ToggleSetting = NotifySetting | 'voiceAutoSave';
 
 /** "30,7" → [30, 7]. Ignora o que não é uma opção válida; sem nada válido, volta ao padrão. */
 export function parseNotifyDays(text: string | null): number[] {
@@ -43,6 +47,7 @@ export async function loadSettings(db: Db): Promise<AppSettings> {
     notifyDocuments: await readFlag(db, KEYS.notifyDocuments, true),
     notifyOdometer: await readFlag(db, KEYS.notifyOdometer, false),
     documentNotifyDays: parseNotifyDays(await getSetting(db, KEYS.documentNotifyDays)),
+    voiceAutoSave: await readFlag(db, KEYS.voiceAutoSave, false),
   };
 }
 

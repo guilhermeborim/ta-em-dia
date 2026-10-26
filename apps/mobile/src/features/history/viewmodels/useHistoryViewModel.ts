@@ -40,11 +40,7 @@ export function useHistoryViewModel() {
   return {
     loading: data === null,
     hasVehicle: data?.vehicle != null,
-    isEmpty:
-      data !== null &&
-      data.entries.length === 0 &&
-      (data.drafts ?? []).length === 0 &&
-      data.records.length === 0,
+    isEmpty: data !== null && data.entries.length === 0 && data.records.length === 0,
     chips: historyFilters.map((chip) => ({ ...chip, selected: chip.filter === filter })),
     periods: historyPeriods,
     period,
@@ -56,7 +52,6 @@ export function useHistoryViewModel() {
     selectPeriod: setPeriod,
     togglePeriod: () => setPeriodOpen((open) => !open),
     back: () => router.back(),
-    openDraft: (id: string) => router.push({ pathname: '/abastecimento/[id]', params: { id } }),
     addVehicle: () => router.push('/primeiro-veiculo'),
   };
 }

@@ -7,8 +7,9 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Db } from '../../../core/db';
 import type { ButtonVariant, SpeechCardTone } from '../../../ui';
-import { addFuelDraft, addFuelEntry, deleteFuelEntry } from '../../../core/fuel';
+import { addFuelEntry } from '../../../core/fuel';
 import { refreshReminders } from '../../../core/reminders';
+import { loadSettings } from '../../../core/settings';
 import {
   isSpeechAvailable,
   requestSpeechPermission,
@@ -22,24 +23,21 @@ import {
   answerOptions,
   applyFuelSpeech,
   decideFuelVoice,
-  markVoiceNoticeSeen,
+  type FuelFocusField,
   speechFailureText,
-  voiceNoticeSeen,
 } from '../models/fuelVoice';
-
-/** Quanto tempo o resumo fica na tela antes de voltar (com "Desfazer" e "Editar"). */
-export const VOICE_SUMMARY_MS = 5000;
 
 export type FuelVoiceState =
   | { step: 'idle' }
-  /** Aviso de uma vez só: o áudio vai à Apple ou ao Google e o app o descarta. */
-  | { step: 'notice' }
-  | { step: 'listening'; text: string }
+  /** O texto falado não aparece na tela: só os pontinhos em tela cheia. */
+  | { step: 'listening' }
+  /** `text` fica guardado para repetir a interpretação com a resposta; não aparece na tela. */
   | { step: 'question'; text: string; question: FuelSpeechQuestion }
   /** Preencheu, mas algo ficou em vermelho: não salvou. */
-  | { step: 'invalid'; text: string }
-  | { step: 'failed'; message: string }
-  | { step: 'saved'; id: string; draft: boolean; title: string; summary: string };
+  | { step: 'invalid' }
+  /** Faltou dado: não salvou, o campo que falta ficou em vermelho e com o foco. */
+  | { step: 'missing'; message: string }
+  | { step: 'failed'; message: string };
 
 interface FuelVoiceDeps {
   db: Db;
@@ -51,24 +49,25 @@ interface FuelVoiceDeps {
   setKmTouched: (value: boolean) => void;
   setErrors: (errors: FuelFormErrors) => void;
   date: () => Date;
-  /** Fim dos 5 s do resumo: sai da tela. */
-  onDone: (saved: { id: string; draft: boolean }) => void;
-  /** "Editar": o registro salvo passa a ser o que o formulário atualiza. */
-  onEdit: (id: string) => void;
+  /** A voz salvou o abastecimento (só com "Salvar pela fala" ligado): sai da tela. */
+  onSaved: (id: string) => void;
+  /** Leva o cursor ao campo que falta ou está em vermelho. */
+  onFocus: (field: FuelFocusField) => void;
 }
 
 /**
- * Registro por voz na tela Abastecer: ouve, mostra o texto ao vivo, pergunta o que for ambíguo e
- * salva sozinho (completo ou rascunho). Qualquer falha deixa o formulário como estava.
+ * Registro por voz na tela Abastecer: ouve, pergunta o que for ambíguo e preenche o formulário.
+ * Com "Salvar pela fala" ligado (Configurações), completo e válido já salva; desligado (padrão), a
+ * pessoa confere e toca em Salvar. Faltando dado ou com valor fora da regra, nunca salva: deixa o
+ * campo em vermelho, leva o foco a ele e o card diz o que falta. Falha de reconhecimento deixa o
+ * formulário como estava.
  */
 export function useFuelVoice(deps: FuelVoiceDeps) {
   const [state, setState] = useState<FuelVoiceState>({ step: 'idle' });
   const session = useRef<SpeechSession | null>(null);
   const transcript = useRef('');
   const failure = useRef<SpeechFailure | null>(null);
-  const cancelled = useRef(false);
   const answers = useRef<FuelSpeechAnswers>({});
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Os callbacks do reconhecimento chegam depois: leem sempre o formulário mais recente.
   const latest = useRef(deps);
   latest.current = deps;
@@ -76,7 +75,6 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
   useEffect(
     () => () => {
       session.current?.abort();
-      if (timer.current) clearTimeout(timer.current);
     },
     [],
   );
@@ -90,6 +88,7 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
       {
         lastKm: d.context?.lastFuelKm ?? d.context?.suggestedKm ?? null,
         lastFuelType: d.context?.lastFuelType ?? null,
+        stations: d.stations,
       },
       answers.current,
     );
@@ -97,6 +96,7 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
       setState({ step: 'question', text, question: result.question });
       return;
     }
+    const { voiceAutoSave } = await loadSettings(d.db);
     const applied = applyFuelSpeech(d.form, result);
     const kmTouched = d.kmTouched || applied.kmSpoken;
     const outcome = decideFuelVoice(result, applied.form, {
@@ -104,6 +104,8 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
       date: d.date(),
       stations: d.stations,
       kmTouched,
+      // Salvar sozinho só com km dito ou digitado; sem salvar, o km sugerido vale como no formulário.
+      strictKm: voiceAutoSave,
       lastKm: d.context?.lastFuelKm ?? null,
     });
 
@@ -113,35 +115,27 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
     }
     d.setForm(applied.form);
     d.setKmTouched(kmTouched);
-    if (outcome.kind === 'invalid') {
+    if (outcome.kind === 'invalid' || outcome.kind === 'missing') {
       d.setErrors(outcome.errors);
-      setState({ step: 'invalid', text });
+      d.onFocus(outcome.focus);
+      setState(
+        outcome.kind === 'invalid'
+          ? { step: 'invalid' }
+          : { step: 'missing', message: outcome.message },
+      );
       return;
     }
     d.setErrors({});
+    setState({ step: 'idle' });
+    if (!voiceAutoSave) return;
 
-    const draft = outcome.kind === 'draft';
-    const id =
-      outcome.kind === 'entry'
-        ? (await addFuelEntry(d.db, outcome.value)).id
-        : (await addFuelDraft(d.db, outcome.value)).id;
+    const { id } = await addFuelEntry(d.db, outcome.value);
     void refreshReminders(d.db);
-    setState({
-      step: 'saved',
-      id,
-      draft,
-      title: draft ? `Salvo como rascunho · ${outcome.missing}` : 'Abastecimento salvo',
-      summary: outcome.summary,
-    });
-    timer.current = setTimeout(() => latest.current.onDone({ id, draft }), VOICE_SUMMARY_MS);
+    d.onSaved(id);
   }, []);
 
   const finish = useCallback(() => {
     session.current = null;
-    if (cancelled.current) {
-      setState({ step: 'idle' });
-      return;
-    }
     const text = transcript.current.trim();
     if (text === '') {
       setState({ step: 'failed', message: speechFailureText(failure.current ?? 'no-speech') });
@@ -158,13 +152,11 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
     }
     transcript.current = '';
     failure.current = null;
-    cancelled.current = false;
     answers.current = {};
-    setState({ step: 'listening', text: '' });
+    setState({ step: 'listening' });
     session.current = startSpeech({
       onText: (text) => {
         transcript.current = text;
-        setState({ step: 'listening', text });
       },
       onError: (value) => {
         failure.current = value;
@@ -178,15 +170,7 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
       setState({ step: 'failed', message: speechFailureText('unavailable') });
       return;
     }
-    if (!(await voiceNoticeSeen(latest.current.db))) {
-      setState({ step: 'notice' });
-      return;
-    }
-    await listen();
-  }, [listen]);
-
-  const acceptNotice = useCallback(async () => {
-    await markVoiceNoticeSeen(latest.current.db);
+    // A permissão do microfone é pedida aqui, no primeiro toque.
     await listen();
   }, [listen]);
 
@@ -199,106 +183,71 @@ export function useFuelVoice(deps: FuelVoiceDeps) {
     [interpret, state],
   );
 
-  const clearTimer = () => {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = null;
-  };
-
-  /** Apaga o que a voz salvou; o formulário fica preenchido para corrigir ou falar de novo. */
-  const undo = useCallback(async () => {
-    if (state.step !== 'saved') return;
-    clearTimer();
-    await deleteFuelEntry(latest.current.db, state.id);
-    void refreshReminders(latest.current.db);
-    setState({ step: 'idle' });
-  }, [state]);
-
-  /** Fica na tela para corrigir; salvar atualiza o mesmo registro. */
-  const edit = useCallback(() => {
-    if (state.step !== 'saved') return;
-    clearTimer();
-    latest.current.onEdit(state.id);
-    setState({ step: 'idle' });
-  }, [state]);
-
   const stop = useCallback(() => session.current?.stop(), []);
-  const cancel = useCallback(() => {
-    cancelled.current = true;
-    if (session.current) session.current.abort();
-    else setState({ step: 'idle' });
-  }, []);
   const dismiss = useCallback(() => setState({ step: 'idle' }), []);
 
   return {
     state,
-    card: voiceCard(state, { talk, acceptNotice, stop, cancel, answer, undo, edit, dismiss }),
-    /** O botão "Falar" aparece quando nada da voz está na tela (ou depois de uma falha). */
-    showTalkButton: state.step === 'idle',
+    card: voiceCard(state, { talk, answer, dismiss }),
+    talkButton: talkButton(state, { talk, stop }),
+    /** Tela de "ouvindo" (escurece tudo e mostra os pontinhos no centro). */
+    listening: state.step === 'listening',
     talk,
-    acceptNotice,
     /** Para de ouvir e interpreta o que já veio. */
     stop,
-    cancel,
     answer,
-    undo,
-    edit,
     dismiss,
   };
 }
 
 interface VoiceActions {
   talk: () => void;
-  acceptNotice: () => void;
   stop: () => void;
-  cancel: () => void;
   answer: (field: FuelSpeechField) => void;
-  undo: () => void;
-  edit: () => void;
   dismiss: () => void;
+}
+
+/**
+ * Botão de falar ao lado de "Salvar abastecimento". Some enquanto há pergunta na tela.
+ * Ouvindo, a tela inteira mostra os pontinhos e tocar nela para de ouvir.
+ */
+export function talkButton(
+  state: FuelVoiceState,
+  a: Pick<VoiceActions, 'talk' | 'stop'>,
+): { listening: boolean; label: string; onPress: () => void } | null {
+  if (state.step === 'listening') {
+    return { listening: true, label: 'Parar de ouvir', onPress: a.stop };
+  }
+  if (
+    state.step === 'idle' ||
+    state.step === 'failed' ||
+    state.step === 'invalid' ||
+    state.step === 'missing'
+  ) {
+    return { listening: false, label: 'Falar o abastecimento', onPress: a.talk };
+  }
+  return null;
 }
 
 /** Cartão da voz para cada passo (textos prontos para a tela); `null` quando não há nada. */
 export function voiceCard(
   state: FuelVoiceState,
-  a: VoiceActions,
+  a: Omit<VoiceActions, 'stop'>,
 ): {
   tone: SpeechCardTone;
   title: string;
   text?: string;
   actions: { label: string; onPress: () => void; variant?: ButtonVariant }[];
 } | null {
-  const quoted = (text: string) => `“${text}”`;
   switch (state.step) {
     case 'idle':
       return null;
-    case 'notice':
-      return {
-        tone: 'info',
-        title: 'Antes de falar',
-        text: 'Para virar texto, o áudio vai pela internet ao reconhecimento de fala da Apple ou do Google. O Tá em Dia não guarda o áudio, só os valores entendidos.',
-        actions: [
-          { label: 'Continuar', onPress: a.acceptNotice, variant: 'primary' },
-          { label: 'Agora não', onPress: a.dismiss, variant: 'ghost' },
-        ],
-      };
     case 'listening':
-      return {
-        tone: 'listening',
-        title: 'Ouvindo…',
-        text:
-          state.text === ''
-            ? 'Fale o valor, os litros e o km. Ex.: “150 reais, 25 litros, km 45.300, encheu”.'
-            : quoted(state.text),
-        actions: [
-          { label: 'Pronto', onPress: a.stop, variant: 'primary' },
-          { label: 'Cancelar', onPress: a.cancel, variant: 'ghost' },
-        ],
-      };
+      return null;
     case 'question':
       return {
         tone: 'info',
         title: state.question.text,
-        text: quoted(state.text),
         actions: [
           ...answerOptions(state.question).map((option) => ({
             label: option.label,
@@ -311,27 +260,20 @@ export function voiceCard(
       return {
         tone: 'danger',
         title: 'Confira os campos em vermelho e salve',
-        text: quoted(state.text),
-        actions: [{ label: 'Falar de novo', onPress: a.talk, variant: 'outline' }],
+        actions: [],
+      };
+    case 'missing':
+      return {
+        tone: 'warning',
+        title: state.message,
+        text: 'Preencha abaixo e toque em Salvar abastecimento.',
+        actions: [],
       };
     case 'failed':
       return {
         tone: 'warning',
         title: state.message,
-        actions: [
-          { label: 'Falar de novo', onPress: a.talk, variant: 'outline' },
-          { label: 'Fechar', onPress: a.dismiss, variant: 'ghost' },
-        ],
-      };
-    case 'saved':
-      return {
-        tone: 'success',
-        title: state.title,
-        text: state.summary || undefined,
-        actions: [
-          { label: 'Desfazer', onPress: a.undo, variant: 'outline' },
-          { label: 'Editar', onPress: a.edit },
-        ],
+        actions: [{ label: 'Fechar', onPress: a.dismiss, variant: 'ghost' }],
       };
   }
 }

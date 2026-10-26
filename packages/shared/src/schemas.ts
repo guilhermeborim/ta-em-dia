@@ -36,9 +36,8 @@ export const fuelEntrySchema = z.object({
 });
 
 /**
- * Abastecimento incompleto (rascunho): só o que se sabe até agora. Vira `FuelEntry` quando passa
- * na regra "completo" (`completeFuelDraft`). Vai pelo sync com `status: 'draft'`; o completo segue
- * sem `status`, como sempre foi, para a versão anterior do app e da API continuarem entendendo.
+ * Linha antiga de rascunho (`status: 'draft'`). O app não cria mais rascunho; o schema fica só para
+ * o sync continuar entendendo linhas que já existem na API ou em versões anteriores do app.
  */
 export const fuelDraftSchema = z.object({
   id: z.uuid(),
@@ -55,7 +54,7 @@ export const fuelDraftSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
-/** O que o sync leva em `fuel_entries`: o rascunho (com `status`) ou o abastecimento completo. */
+/** O que o sync leva em `fuel_entries`: o abastecimento completo ou uma linha legada de rascunho. */
 export const fuelEntrySyncSchema = z.union([fuelDraftSchema, fuelEntrySchema]);
 
 export const maintenancePlanSchema = z.object({

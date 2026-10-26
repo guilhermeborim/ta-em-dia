@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type Ref } from 'react';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import { colors, fontFamily, size, spacing } from '../theme/tokens';
 import { Icon, type IconName } from './Icon';
@@ -14,6 +14,8 @@ interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   error?: string;
   /** Botão de ícone à direita (ex.: abrir o calendário num campo de data). */
   action?: { icon: IconName; label: string; onPress: () => void };
+  /** Para dar foco ao campo por código (ex.: o campo que falta depois da voz). */
+  ref?: Ref<TextInput>;
 }
 
 /** Campo de texto: rótulo em cima, caixa de 52 pt. A borda fica roxa em foco. */
